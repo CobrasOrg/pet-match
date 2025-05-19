@@ -1,0 +1,50 @@
+name: Epic
+description: Define una nueva épica funcional que agrupa múltiples historias de usuario.
+title: "[EPIC X] Nombre de la épica"
+labels: ["epic"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: Describe el objetivo funcional de esta épica y el problema que busca resolver.
+      placeholder: |
+        Esta épica busca permitir que los dueños de mascotas visualicen y se postulen a solicitudes de donación creadas por veterinarias.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Alcance
+      description: ¿Qué funcionalidades incluye esta épica y qué queda fuera?
+      placeholder: |
+        Incluye: Visualización de solicitudes, filtros, detalles y postulación.
+        Excluye: Notificaciones en tiempo real (cubiertas por otra épica).
+    validations:
+      required: false
+
+  - type: textarea
+    id: success_criteria
+    attributes:
+      label: Criterios de éxito
+      description: ¿Qué condiciones deben cumplirse para dar esta épica como completada?
+      placeholder: |
+        - Todas las historias de usuario completadas.
+        - Validación de UX positiva en test con usuarios.
+        - QA aprobado.
+    validations:
+      required: true
+
+  - type: textarea
+    id: related_user_stories
+    attributes:
+      label: Historias de usuario relacionadas
+      description: Lista de historias que forman parte de esta épica (puedes vincularlas más tarde).
+      placeholder: |
+        - #23 [HU 4.1] Visualizar solicitudes
+        - #24 [HU 4.2] Filtrar solicitudes
+        - #25 [HU 4.3] Ver detalles
+        - #26 [HU 4.4] Postular a una solicitud
+    validations:
+      required: false

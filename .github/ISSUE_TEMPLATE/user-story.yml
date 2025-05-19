@@ -1,0 +1,47 @@
+name: User Story
+description: Crea una historia de usuario con detalles técnicos y criterios de aceptación.
+title: "[HU X.X] Nombre corto de la historia"
+labels: ["user story"]
+body:
+  - type: textarea
+    id: user_story
+    attributes:
+      label: Historia de usuario
+      description: Escribe la historia siguiendo el formato “Como [rol], quiero [acción], para [beneficio]”.
+      placeholder: |
+        Como dueño de mascota, quiero ver un feed con las solicitudes activas, para saber dónde y cuándo se necesitan donantes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Criterios de aceptación
+      description: Lista de comportamientos esperados y condiciones para aprobar esta historia.
+      placeholder: |
+        - El feed debe mostrar solo solicitudes activas.
+        - Cada tarjeta debe incluir especie, urgencia y ubicación.
+        - El usuario puede acceder al detalle desde la tarjeta.
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical_notes
+    attributes:
+      label: Notas técnicas / detalles de implementación
+      description: Consideraciones técnicas, dependencias o ideas importantes para el dev team.
+      placeholder: |
+        - El backend debe exponer un endpoint `/api/solicitudes/activas`.
+        - La vista debe permitir scroll infinito.
+        - Usar componente `CardSolicitud` ya definido.
+    validations:
+      required: false
+
+  - type: input
+    id: related_epic
+    attributes:
+      label: ID de la épica relacionada
+      description: Número del issue épico al que pertenece esta historia (sin #)
+      placeholder: "22"
+    validations:
+      required: true
