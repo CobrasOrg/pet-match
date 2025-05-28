@@ -1,13 +1,25 @@
 name: User Story
 description: Crea una historia de usuario con detalles técnicos y criterios de aceptación.
 title: "[HU X.X] Nombre corto de la historia"
-labels: ["user story"]
+
 body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Tipo
+      description: Tipo de issue
+      options:
+        - Epic
+        - User Story
+        - Task
+    validations:
+      required: true
+
   - type: textarea
     id: user_story
     attributes:
       label: Historia de usuario
-      description: Escribe la historia siguiendo el formato “Como [rol], quiero [acción], para [beneficio]”.
+      description: Escribe la historia siguiendo el formato "Como [rol], quiero [acción], para [beneficio]".
       placeholder: |
         Como dueño de mascota, quiero ver un feed con las solicitudes activas, para saber dónde y cuándo se necesitan donantes.
     validations:
@@ -43,5 +55,18 @@ body:
       label: ID de la épica relacionada
       description: Número del issue épico al que pertenece esta historia (sin #)
       placeholder: "22"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stack
+    attributes:
+      label: Stack Tecnológico
+      description: Stack tecnológico involucrado en esta historia
+      options:
+        - Frontend
+        - Backend
+        - Database
+        - Fullstack
     validations:
       required: true

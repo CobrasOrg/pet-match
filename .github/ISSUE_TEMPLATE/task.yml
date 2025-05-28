@@ -1,0 +1,77 @@
+name: Task
+description: Crear una tarea relacionada con una historia de usuario específica
+title: "[TASK-HUXX-Y] "
+
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Tipo
+      description: Tipo de issue
+      options:
+        - Epic
+        - User Story
+        - Task
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: Descripción detallada de lo que se debe implementar
+      placeholder: |
+        Desarrollar el formulario de registro con los siguientes requisitos:
+        - Validación del formulario
+        - Integración con el backend
+        - Manejo de errores
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Criterios de Aceptación
+      description: Condiciones que deben cumplirse para considerar esta tarea como completada
+      placeholder: |
+        - Todos los campos del formulario están correctamente validados
+        - El formulario se envía exitosamente al backend
+        - Los mensajes de error se muestran apropiadamente
+        - Las pruebas unitarias pasan
+    validations:
+      required: true
+
+  - type: input
+    id: related-story
+    attributes:
+      label: Historia de Usuario Relacionada
+      description: ID de la historia de usuario a la que pertenece esta tarea
+      placeholder: "HU-33"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stack
+    attributes:
+      label: Stack Tecnológico
+      description: Stack tecnológico involucrado en esta tarea
+      options:
+        - Frontend
+        - Backend
+        - Database
+        - Fullstack
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridad
+      description: Nivel de prioridad de la tarea
+      options:
+        - crítica
+        - alta
+        - media
+        - baja
+    validations:
+      required: true 
