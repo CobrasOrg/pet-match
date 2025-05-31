@@ -1,20 +1,8 @@
 name: Task
 description: Crear una tarea relacionada con una historia de usuario específica
-title: "[TASK-HUXX-Y] "
+title: "[TASK-HUX.X-Y] "
 
 body:
-  - type: dropdown
-    id: type
-    attributes:
-      label: Tipo
-      description: Tipo de issue
-      options:
-        - Epic
-        - User Story
-        - Task
-    validations:
-      required: true
-
   - type: textarea
     id: description
     attributes:
@@ -46,32 +34,6 @@ body:
     attributes:
       label: Historia de Usuario Relacionada
       description: ID de la historia de usuario a la que pertenece esta tarea
-      placeholder: "HU-33"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: stack
-    attributes:
-      label: Stack Tecnológico
-      description: Stack tecnológico involucrado en esta tarea
-      options:
-        - Frontend
-        - Backend
-        - Database
-        - Fullstack
-    validations:
-      required: true
-
-  - type: dropdown
-    id: priority
-    attributes:
-      label: Prioridad
-      description: Nivel de prioridad de la tarea
-      options:
-        - crítica
-        - alta
-        - media
-        - baja
+      placeholder: "HU-3.3"
     validations:
       required: true 

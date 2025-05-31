@@ -3,18 +3,6 @@ description: Define una nueva épica funcional que agrupa múltiples historias d
 title: "[EPIC X] Nombre de la épica"
 
 body:
-  - type: dropdown
-    id: type
-    attributes:
-      label: Tipo
-      description: Tipo de issue
-      options:
-        - Epic
-        - User Story
-        - Task
-    validations:
-      required: true
-
   - type: textarea
     id: description
     attributes:
@@ -60,16 +48,3 @@ body:
         - #26 [HU 4.4] Postular a una solicitud
     validations:
       required: false
-
-  - type: dropdown
-    id: stack
-    attributes:
-      label: Stack Tecnológico
-      description: Stack tecnológico involucrado en esta épica
-      options:
-        - Frontend
-        - Backend
-        - Database
-        - Fullstack
-    validations:
-      required: true

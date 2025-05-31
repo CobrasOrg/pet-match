@@ -3,18 +3,6 @@ description: Crea una historia de usuario con detalles técnicos y criterios de 
 title: "[HU X.X] Nombre corto de la historia"
 
 body:
-  - type: dropdown
-    id: type
-    attributes:
-      label: Tipo
-      description: Tipo de issue
-      options:
-        - Epic
-        - User Story
-        - Task
-    validations:
-      required: true
-
   - type: textarea
     id: user_story
     attributes:
@@ -54,19 +42,6 @@ body:
     attributes:
       label: ID de la épica relacionada
       description: Número del issue épico al que pertenece esta historia (sin #)
-      placeholder: "22"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: stack
-    attributes:
-      label: Stack Tecnológico
-      description: Stack tecnológico involucrado en esta historia
-      options:
-        - Frontend
-        - Backend
-        - Database
-        - Fullstack
+      placeholder: "2"
     validations:
       required: true
