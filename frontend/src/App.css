@@ -1,0 +1,648 @@
+/* Importar fuente personalizada desde Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Aptos:wght@400;500;600;700&display=swap');
+
+/* Variables CSS para mantener consistencia en colores y valores */
+:root {
+  /* Paleta de colores principal */
+  --primary: #6096B4;           /* Azul principal */
+  --primary-light: #93BFCF;     /* Azul claro para hover/focus */
+  --primary-dark: #4A7B95;      /* Azul oscuro para interacciones */
+  --secondary: #BDCDD6;         /* Color secundario */
+  --background: #EEE9DA;        /* Fondo general de la app */
+  --surface: #FFFFFF;           /* Fondo de componentes */
+
+  /* Colores de texto */
+  --text-primary: #2C3E50;      /* Texto principal */
+  --text-secondary: #5D6D7E;    /* Texto secundario/subtítulos */
+  --border: #D5DBDB;            /* Bordes */
+
+  /* Colores de estado */
+  --success: #27AE60;           /* Verde para éxito */
+  --warning: #F39C12;           /* Amarillo para advertencias */
+  --error: #E74C3C;             /* Rojo para errores */
+
+  /* Colores específicos del header */
+  --header-bg: #FFFFFF;         /* Fondo del header */
+  --header-shadow: rgba(96, 150, 180, 0.1); /* Sombra del header */
+}
+
+/* Reset básico para eliminar estilos por defecto del navegador */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box; /* Incluir padding y border en el tamaño total */
+}
+
+/* Estilos base del body */
+body {
+  font-family: 'Aptos', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.6;                    /* Espaciado entre líneas legible */
+  color: var(--text-primary);
+  background-color: var(--background);
+  -webkit-font-smoothing: antialiased; /* Suavizado de fuentes en WebKit */
+  -moz-osx-font-smoothing: grayscale;  /* Suavizado de fuentes en Firefox */
+}
+
+/* ===========================================
+   ESTILOS DEL HEADER
+   =========================================== */
+
+.app-header {
+  background-color: var(--header-bg);
+  box-shadow: 0 2px 10px var(--header-shadow);
+  position: sticky;     /* Se mantiene fijo al hacer scroll */
+  top: 0;              /* Pegado a la parte superior */
+  z-index: 1000;       /* Por encima de otros elementos */
+  border-bottom: 1px solid var(--border);
+  width: 100%;         /* Ocupa todo el ancho */
+}
+
+/* Container del header con padding responsive */
+.header-container {
+  width: 100%;
+  max-width: none;     /* Sin restricción de ancho máximo */
+  margin: 0;
+  padding: 1rem 2rem;  /* Padding base para móvil */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 70px;    /* Altura mínima en móvil */
+}
+
+/* Ajustes para tablet y desktop */
+@media (min-width: 768px) {
+  .header-container {
+    padding: 1.5rem 3rem;
+    min-height: 80px;    /* Altura mayor en desktop */
+  }
+}
+
+/* Ajustes para pantallas grandes */
+@media (min-width: 1200px) {
+  .header-container {
+    padding: 1.5rem 4rem;
+  }
+}
+
+/* Sección del logo y branding */
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;        /* Espacio entre logo y texto */
+}
+
+/* Estilos del logo */
+.logo {
+  height: 40px;        /* Tamaño para móvil */
+  width: auto;         /* Mantener proporción */
+  border-radius: 8px;
+}
+
+/* Logo más grande en desktop */
+@media (min-width: 768px) {
+  .logo {
+    height: 50px;
+  }
+}
+
+/* Container del texto del branding */
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Nombre de la aplicación */
+.app-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* Nombre más grande en desktop */
+@media (min-width: 768px) {
+  .app-name {
+    font-size: 1.5rem;
+  }
+}
+
+/* Tagline de la aplicación */
+.app-tagline {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Tagline más grande en desktop */
+@media (min-width: 768px) {
+  .app-tagline {
+    font-size: 0.875rem;
+  }
+}
+
+/* Sección de navegación */
+.nav-section {
+  display: flex;
+  align-items: center;
+}
+
+/* Botón de navegación/menú */
+.nav-button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  color: var(--text-primary);
+}
+
+/* Efectos hover y focus del botón */
+.nav-button:hover {
+  background-color: var(--secondary);
+}
+
+.nav-button:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Icono hamburguesa */
+.hamburger-icon {
+  font-size: 1.5rem;
+  display: block;
+}
+
+/* Icono más pequeño en desktop */
+@media (min-width: 768px) {
+  .hamburger-icon {
+    font-size: 1.25rem;
+  }
+}
+
+/* ===========================================
+   ESTILOS DEL CONTENIDO PRINCIPAL
+   =========================================== */
+
+/* Container principal responsive */
+.container {
+  width: 100%;
+  max-width: none;     /* Sin restricción de ancho */
+  margin: 0;
+  padding: 1rem 2rem;  /* Padding base */
+  min-height: calc(100vh - 70px); /* Altura mínima menos el header */
+}
+
+/* Ajustes responsive del container */
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem 3rem;
+    min-height: calc(100vh - 80px); /* Ajustar por header más alto */
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    padding: 2rem 4rem;
+  }
+}
+
+@media (min-width: 1600px) {
+  .container {
+    padding: 2rem 6rem; /* Más padding en pantallas ultra-wide */
+  }
+}
+
+/* Contenido de la página */
+.page-content {
+  padding-top: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .page-content {
+    padding-top: 1.5rem;
+  }
+}
+
+/* Header del contenido */
+.content-header {
+  margin-bottom: 2rem;
+  text-align: center;  /* Centrado en móvil */
+}
+
+/* Alineación izquierda en desktop */
+@media (min-width: 768px) {
+  .content-header {
+    text-align: left;
+    margin-bottom: 3rem;
+  }
+}
+
+/* Título de la sección */
+.section-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* Títulos más grandes en diferentes breakpoints */
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 2.25rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .section-title {
+    font-size: 2.5rem;
+  }
+}
+
+/* Subtítulo de la sección */
+.section-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+/* Subtítulos más grandes en diferentes breakpoints */
+@media (min-width: 768px) {
+  .section-subtitle {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .section-subtitle {
+    font-size: 1.25rem;
+  }
+}
+
+/* ===========================================
+   GRID DE SOLICITUDES RESPONSIVE
+   =========================================== */
+
+/* Grid base - 1 columna en móvil */
+.solicitudes-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
+/* 2 columnas en tablets pequeños */
+@media (min-width: 640px) {
+  .solicitudes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* 3 columnas en desktop */
+@media (min-width: 1024px) {
+  .solicitudes-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+  }
+}
+
+/* 4 columnas en pantallas grandes */
+@media (min-width: 1280px) {
+  .solicitudes-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3rem;
+  }
+}
+
+/* 5 columnas en pantallas ultra-wide */
+@media (min-width: 1600px) {
+  .solicitudes-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3rem;
+  }
+}
+
+/* ===========================================
+   ESTILOS DE LAS CARDS
+   =========================================== */
+
+/* Estilos base de la card */
+.card {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(96, 150, 180, 0.1);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;    /* Transiciones suaves */
+  display: flex;
+  flex-direction: column;
+  height: 100%;                 /* Altura uniforme en el grid */
+  width: 100%;
+}
+
+/* Efectos hover de la card */
+.card:hover {
+  box-shadow: 0 8px 25px rgba(96, 150, 180, 0.15);
+  transform: translateY(-2px);  /* Efecto de elevación */
+}
+
+/* Estilo focus para accesibilidad */
+.card:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Header de la card */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;                   /* Espacio entre elementos */
+}
+
+/* Información de la mascota */
+.pet-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;                     /* Toma el espacio disponible */
+  min-width: 0;                /* Permite text-overflow */
+}
+
+/* Icono de la mascota */
+.pet-icon {
+  font-size: 2rem;
+  flex-shrink: 0;              /* No se encoge */
+}
+
+/* Detalles de la mascota */
+.pet-details {
+  min-width: 0;                /* Permite text-overflow */
+  flex: 1;
+}
+
+/* Nombre de la mascota */
+.pet-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  word-wrap: break-word;       /* Rompe palabras largas */
+}
+
+/* Tipo de mascota */
+.pet-type {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+  margin: 0;
+}
+
+/* Badge de urgencia */
+.urgency-badge {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 12px;
+  white-space: nowrap;         /* No rompe líneas */
+  flex-shrink: 0;              /* No se encoge */
+}
+
+/* Contenido de la card */
+.card-content {
+  flex: 1;                     /* Toma el espacio restante */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Grid de información */
+.info-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* 2 columnas en pantallas medianas */
+@media (min-width: 640px) {
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Item de información */
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* El primer item ocupa toda la fila (tipo de sangre) */
+@media (min-width: 640px) {
+  .info-item:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Label de información */
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;     /* Espaciado entre letras */
+}
+
+/* Valor de información */
+.info-value {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Tipo de sangre destacado */
+.blood-type {
+  font-size: 0.875rem;
+  color: var(--primary);
+  font-weight: 600;
+  background-color: rgba(96, 150, 180, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* Descripción del caso */
+.description {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0.5rem 0;
+  flex: 1;                     /* Toma el espacio disponible */
+}
+
+/* Fecha de creación */
+.date {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: auto;            /* Se empuja hacia abajo */
+}
+
+/* Botón principal */
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.875rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-family: inherit;        /* Hereda la fuente */
+  width: 100%;                 /* Ancho completo */
+  margin-top: 1rem;
+}
+
+/* Efectos del botón */
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-1px); /* Ligera elevación */
+}
+
+.btn-primary:focus {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+.btn-primary:active {
+  transform: translateY(0);    /* Vuelve a posición original */
+}
+
+/* ===========================================
+   COMPONENTES UTILITARIOS
+   =========================================== */
+
+/* Container de loading */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  gap: 0.5rem;
+}
+
+/* Spinner animado */
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--secondary);
+  border-top: 2px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite; /* Animación continua */
+}
+
+/* Container de error */
+.error-container {
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Mensaje de error */
+.error-message {
+  color: var(--error);
+  font-weight: 500;
+}
+
+/* Mensaje cuando no hay más resultados */
+.no-more-results {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem;
+  font-size: 0.875rem;
+}
+
+/* ===========================================
+   CLASES UTILITARIAS DE COLOR
+   =========================================== */
+
+/* Colores de urgencia alta */
+.text-red-700 {
+  color: #C53030;
+}
+
+.bg-red-100 {
+  background-color: #FED7D7;
+}
+
+/* Colores de urgencia media */
+.text-orange-700 {
+  color: #C05621;
+}
+
+.bg-orange-100 {
+  background-color: #FEEBC8;
+}
+
+/* Colores de urgencia baja */
+.text-green-700 {
+  color: #2F855A;
+}
+
+.bg-green-100 {
+  background-color: #C6F6D5;
+}
+
+/* Colores por defecto */
+.text-gray-700 {
+  color: #4A5568;
+}
+
+.bg-gray-100 {
+  background-color: #F7FAFC;
+}
+
+/* ===========================================
+   ANIMACIONES
+   =========================================== */
+
+/* Animación de rotación para el spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===========================================
+   ACCESIBILIDAD
+   =========================================== */
+
+/* Clase para ocultar elementos visualmente pero mantenerlos para lectores de pantalla */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Respeto por las preferencias de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .btn-primary,
+  .spinner {
+    animation: none;             /* Desactiva animaciones */
+    transition: none;            /* Desactiva transiciones */
+  }
+}
