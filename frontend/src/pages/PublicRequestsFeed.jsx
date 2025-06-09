@@ -21,258 +21,17 @@ import {
 } from 'lucide-react';
 import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
 import { PhoneIcon } from '@heroicons/react/24/outline';
-import { BOGOTA_LOCALITIES, getLocalityLabel } from '@/constants/locations';
-
-// Constantes optimizadas
-const SPECIES_LABELS = {
-  canine: 'Perro',
-  feline: 'Gato'
-};
-
-const URGENCY_LEVELS = [
-  { value: 'high', label: 'Alta urgencia' },
-  { value: 'medium', label: 'Urgencia media' }
-];
+import {
+  BOGOTA_LOCALITIES,
+  getLocalityLabel,
+  SPECIES,
+  URGENCY_LEVELS,
+  generateMockRequests,
+  formatDate
+} from '../constants';
 
 // Placeholder optimizado para mejorar LCP
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhcmdhbmRvLi4uPC90ZXh0Pjwvc3ZnPg==';
-
-// Funciones optimizadas con memoización
-const getSpeciesEmoji = (() => {
-  const cache = {
-    canine: '🐶',
-    feline: '🐱'
-  };
-  return (species) => cache[species] || '';
-})();
-
-const getUrgencyBadge = (() => {
-  const cache = {
-    high: {
-      label: 'URGENCIA ALTA',
-      bgColor: 'bg-red-500',
-      textColor: 'text-white',
-      icon: AlertTriangleIcon
-    },
-    medium: {
-      label: 'URGENCIA MEDIA',
-      bgColor: 'bg-orange-500',
-      textColor: 'text-white',
-      icon: ClockIcon
-    }
-  };
-  return (urgency) => cache[urgency] || cache.medium;
-})();
-
-// Función de fecha optimizada con caché
-const formatDate = (() => {
-  const cache = new Map();
-
-  return (dateString) => {
-    if (cache.has(dateString)) {
-      return cache.get(dateString);
-    }
-
-    const date = new Date(dateString);
-    const today = new Date();
-    const diffTime = today.getTime() - date.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-    let result;
-    if (diffTime < 0) {
-      result = 'Fecha futura';
-    } else if (diffMinutes < 60) {
-      result = diffMinutes < 1 ? 'Hace unos segundos' : `Hace ${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''}`;
-    } else if (diffHours < 24) {
-      result = `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
-    } else if (diffDays === 0) {
-      result = 'Hoy';
-    } else if (diffDays === 1) {
-      result = 'Hace 1 día';
-    } else if (diffDays < 30) {
-      result = `Hace ${diffDays} días`;
-    } else if (diffDays < 365) {
-      const diffMonths = Math.floor(diffDays / 30);
-      result = `Hace ${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
-    } else {
-      const diffYears = Math.floor(diffDays / 365);
-      result = `Hace ${diffYears} año${diffYears !== 1 ? 's' : ''}`;
-    }
-
-    cache.set(dateString, result);
-    return result;
-  };
-})();
-
-// Datos estáticos únicos con imágenes reales de mascotas
-const generateStaticRequests = () => {
-  const now = new Date();
-
-  return [
-    {
-      id: 'REQ-001',
-      petName: 'Rocky',
-      species: 'canine',
-      bloodType: 'DEA 1.1+',
-      urgency: 'high',
-      minWeight: 25,
-      description: 'Rocky es un pastor alemán de 5 años que ha sido diagnosticado con anemia severa después de una complicación durante una cirugía de emergencia. Su hemograma muestra valores críticos y necesita una transfusión de sangre urgente para estabilizar su condición. Es un perro muy cariñoso y luchador que ha estado bajo cuidados intensivos las últimas 48 horas.',
-      location: 'Clínica VetCentral, Av. Principal 123',
-      locality: 'suba',
-      status: 'active',
-      date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Veterinaria San Patricio',
-      image: 'https://images.unsplash.com/photo-1551717743-49959800b1f6?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 300 123 4567"
-    },
-    {
-      id: 'REQ-002',
-      petName: 'Luna',
-      species: 'feline',
-      bloodType: 'A',
-      urgency: 'medium',
-      minWeight: 4,
-      description: 'Luna es una hermosa gata siamés de 3 años que necesita una transfusión de sangre como preparación para una cirugía compleja programada para la próxima semana. Fue rescatada hace un año de la calle en condiciones muy precarias y desde entonces ha sido el amor de la familia que la adoptó.',
-      location: 'Hospital Veterinario Felino Especializado, Calle Los Veterinarios 456',
-      locality: 'chapinero',
-      status: 'active',
-      date: new Date(now.getTime() - 9 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Clínica Gatuna VIP',
-      image: 'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 301 234 5678"
-    },
-    {
-      id: 'REQ-003',
-      petName: 'Max',
-      species: 'canine',
-      bloodType: 'DEA 1.1-',
-      urgency: 'high',
-      minWeight: 20,
-      description: 'Max es un golden retriever de 4 años que sufrió un grave accidente automovilístico esta madrugada mientras paseaba con su dueño. Afortunadamente no tiene fracturas graves, pero perdió mucha sangre debido a laceraciones internas. Es un perro muy activo, le encanta nadar y jugar en el parque con otros perros.',
-      location: 'Hospital Veterinario de Emergencias 24/7, Av. Las Condes 789',
-      locality: 'kennedy',
-      status: 'active',
-      date: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Hospital Vet Central',
-      image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 302 345 6789"
-    },
-    {
-      id: 'REQ-004',
-      petName: 'Bella',
-      species: 'feline',
-      bloodType: 'B',
-      urgency: 'medium',
-      minWeight: 3.5,
-      description: 'Bella es una gata persa de 2 años que necesita una transfusión debido a una anemia causada por parásitos. Está siendo tratada en una clínica especializada y su pronóstico es muy bueno con el tratamiento adecuado. Es muy cariñosa y le encanta estar cerca de las personas.',
-      location: 'Clínica Veterinaria Zona Norte, Calle 170 #45-32',
-      locality: 'usaquen',
-      status: 'active',
-      date: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Vet Norte',
-      image: 'https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 303 456 7890"
-    },
-    {
-      id: 'REQ-005',
-      petName: 'Charlie',
-      species: 'canine',
-      bloodType: 'DEA 3+',
-      urgency: 'high',
-      minWeight: 18,
-      description: 'Charlie es un beagle de 6 años que desarrolló una anemia hemolítica autoinmune. Es un perro muy alegre y sociable que siempre está moviendo la cola. Su familia está muy preocupada y esperanzada en encontrar un donante compatible pronto.',
-      location: 'Clínica Veterinaria Central, Carrera 15 #85-20',
-      locality: 'fontibón',
-      status: 'active',
-      date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Clínica Animales Felices',
-      image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 304 567 8901"
-    },
-    {
-      id: 'REQ-006',
-      petName: 'Mia',
-      species: 'feline',
-      bloodType: 'AB',
-      urgency: 'medium',
-      minWeight: 3,
-      description: 'Mia es una gatita mestiza de 1 año que necesita una transfusión para una cirugía reconstructiva después de un accidente. A pesar de su corta edad, ha mostrado una gran fortaleza y ganas de vivir. Su tipo de sangre AB es poco común, por lo que necesitamos ayuda urgente.',
-      location: 'Hospital Veterinario Especializado, Av. Boyacá #90-15',
-      locality: 'engativá',
-      status: 'active',
-      date: new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Hospital Veterinario 24h',
-      image: 'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 305 678 9012"
-    },
-    {
-      id: 'REQ-007',
-      petName: 'Zeus',
-      species: 'canine',
-      bloodType: 'DEA 1.1+',
-      urgency: 'high',
-      minWeight: 30,
-      description: 'Zeus es un rottweiler de 7 años que necesita una transfusión después de una cirugía de emergencia por torsión gástrica. Es un perro muy noble y protector de su familia. Los veterinarios han logrado estabilizar la torsión, pero ahora necesita apoyo sanguíneo para su recuperación.',
-      location: 'Clínica Veterinaria Sur, Calle 40 Sur #25-10',
-      locality: 'bosa',
-      status: 'active',
-      date: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Vet Plus',
-      image: 'https://images.unsplash.com/photo-1505628346881-b72b27e84993?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 306 789 0123"
-    },
-    {
-      id: 'REQ-008',
-      petName: 'Coco',
-      species: 'feline',
-      bloodType: 'A',
-      urgency: 'medium',
-      minWeight: 4.5,
-      description: 'Coco es un gato ragdoll de 4 años que desarrolló anemia debido a una enfermedad renal crónica. Es un gato muy tranquilo y cariñoso que disfruta de las caricias y los mimos. Su familia está trabajando con los veterinarios para manejar su condición a largo plazo.',
-      location: 'Clínica Pet Care, Av. NQS #65-45',
-      locality: 'teusaquillo',
-      status: 'active',
-      date: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Clínica Pet Care',
-      image: 'https://images.unsplash.com/photo-1513245543132-31f507417b26?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 307 890 1234"
-    },
-    {
-      id: 'REQ-009',
-      petName: 'Buddy',
-      species: 'canine',
-      bloodType: 'DEA 4+',
-      urgency: 'medium',
-      minWeight: 22,
-      description: 'Buddy es un labrador mestizo de 5 años que necesita una transfusión antes de una cirugía para remover un tumor benigno en el abdomen. Es un perro muy juguetón y le encanta perseguir pelotas. Su cirugía está programada para la próxima semana.',
-      location: 'Hospital Veterinario Norte, Calle 127 #15-30',
-      locality: 'usaquen',
-      status: 'active',
-      date: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Vet Norte',
-      image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 308 901 2345"
-    },
-    {
-      id: 'REQ-010',
-      petName: 'Nala',
-      species: 'feline',
-      bloodType: 'B',
-      urgency: 'high',
-      minWeight: 3.8,
-      description: 'Nala es una gata bengalí de 3 años que sufrió una intoxicación accidental y desarrolló anemia hemolítica. Es una gata muy activa y curiosa que ama explorar. Los veterinarios están trabajando para eliminar las toxinas de su sistema, pero necesita apoyo sanguíneo inmediato.',
-      location: 'Clínica de Emergencias Veterinarias, Av. Caracas #50-20',
-      locality: 'chapinero',
-      status: 'active',
-      date: new Date(now.getTime() - 8 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Clínica Gatuna VIP',
-      image: 'https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?w=400&h=300&fit=crop&auto=format',
-      vetContact: "+57 309 012 3456"
-    }
-  ];
-};
 
 // Hook de debounce optimizado
 const useDebounce = (value, delay) => {
@@ -319,7 +78,6 @@ const OptimizedImage = memo(({ src, alt, petName, className }) => {
       setHasError(true);
     };
 
-    // Usar requestAnimationFrame para no bloquear el hilo principal
     requestAnimationFrame(() => {
       img.src = src;
     });
@@ -347,10 +105,10 @@ const OptimizedImage = memo(({ src, alt, petName, className }) => {
 OptimizedImage.displayName = 'OptimizedImage';
 
 // Componente de tarjeta memoizado
-const RequestCard = memo(({ request, index }) => {
-  const urgencyBadge = useMemo(() => getUrgencyBadge(request.urgency), [request.urgency]);
-  const UrgencyIcon = urgencyBadge.icon;
-  const speciesEmoji = useMemo(() => getSpeciesEmoji(request.species), [request.species]);
+const RequestCard = memo(({ request }) => {
+  const urgencyInfo = useMemo(() => URGENCY_LEVELS[request.urgency], [request.urgency]);
+  const UrgencyIcon = request.urgency === 'high' ? AlertTriangleIcon : ClockIcon;
+  const speciesInfo = useMemo(() => SPECIES[request.species], [request.species]);
   const formattedDate = useMemo(() => formatDate(request.date), [request.date]);
   const localityLabel = useMemo(() => getLocalityLabel(request.locality), [request.locality]);
 
@@ -372,12 +130,12 @@ const RequestCard = memo(({ request, index }) => {
           {/* Badge de urgencia */}
           <div className="absolute top-0 right-0 z-10">
             <div
-                className={`${urgencyBadge.bgColor} ${urgencyBadge.textColor} px-2 py-1 rounded-bl-lg rounded-tr-lg flex items-center gap-1 text-xs font-medium`}
+                className={`${urgencyInfo.color} ${urgencyInfo.textColor} px-2 py-1 rounded-bl-lg rounded-tr-lg flex items-center gap-1 text-xs font-medium`}
                 role="status"
-                aria-label={`Nivel de urgencia: ${urgencyBadge.label}`}
+                aria-label={`Nivel de urgencia: ${urgencyInfo.label}`}
             >
               <UrgencyIcon className="h-3 w-3" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only">{urgencyBadge.label}</span>
+              <span className="sr-only sm:not-sr-only">{urgencyInfo.label}</span>
             </div>
           </div>
 
@@ -405,9 +163,9 @@ const RequestCard = memo(({ request, index }) => {
               <span
                   className="text-xl sm:text-2xl"
                   role="img"
-                  aria-label={`${SPECIES_LABELS[request.species]}`}
+                  aria-label={`${speciesInfo.label}`}
               >
-                {speciesEmoji}
+                {speciesInfo.emoji}
               </span>
                 <div className="min-w-0 flex-1">
                   <h2
@@ -417,7 +175,7 @@ const RequestCard = memo(({ request, index }) => {
                     {request.petName}
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-600 truncate">
-                    {SPECIES_LABELS[request.species]} • {localityLabel}
+                    {speciesInfo.label} • {localityLabel}
                   </p>
                 </div>
               </header>
@@ -505,7 +263,7 @@ const RequestCard = memo(({ request, index }) => {
               <div className="relative overflow-hidden rounded-lg w-full">
                 <OptimizedImage
                     src={request.image}
-                    alt={`Fotografía de ${request.petName}, ${SPECIES_LABELS[request.species]} que necesita donación de sangre`}
+                    alt={`Fotografía de ${request.petName}, ${speciesInfo.label} que necesita donación de sangre`}
                     petName={request.petName}
                     className="w-full h-40 sm:h-48 lg:h-64 object-cover"
                 />
@@ -543,7 +301,7 @@ export default function PublicRequestsFeed() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Cargar datos estáticos una sola vez
+  // Cargar datos una sola vez
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -552,8 +310,8 @@ export default function PublicRequestsFeed() {
       try {
         // Simular tiempo de carga realista
         await new Promise(resolve => setTimeout(resolve, 500));
-        const staticRequests = generateStaticRequests();
-        setRequests(staticRequests);
+        const mockData = generateMockRequests();
+        setRequests(mockData);
       } catch (err) {
         setError('Error al cargar las solicitudes');
         console.error('Error loading data:', err);
@@ -621,11 +379,8 @@ export default function PublicRequestsFeed() {
   // Filtrar solicitudes (memoizado)
   const filteredRequests = useMemo(() => {
     return requests.filter(req => {
-      const isValidSpecies = req.species === 'canine' || req.species === 'feline';
-      const isValidUrgency = req.urgency === 'high' || req.urgency === 'medium';
-
       const matchesSearch = !debouncedSearchTerm || [
-        req.species,
+        SPECIES[req.species]?.label,
         req.bloodType,
         req.location,
         req.clinicName,
@@ -643,10 +398,11 @@ export default function PublicRequestsFeed() {
           (!filters.location || req.location.toLowerCase().includes(filters.location.toLowerCase()))
       );
 
-      return req.status === 'active' && isValidSpecies && isValidUrgency && matchesSearch && matchesFilters;
+      return req.status === 'active' && matchesSearch && matchesFilters;
     });
   }, [requests, debouncedSearchTerm, filters]);
 
+  // Estados de carga y error
   if (isLoading) {
     return (
         <div className="container mx-auto p-4 sm:p-6 text-center" role="status" aria-live="polite">
@@ -660,127 +416,133 @@ export default function PublicRequestsFeed() {
     return (
         <div className="container mx-auto p-4 sm:p-6 text-center" role="alert">
           <AlertCircleIcon className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-4 text-red-500" />
-          <p className="text-red-600 mb-4 text-sm sm:text-base">{error}</p>
-          <Button onClick={() => window.location.reload()}>
-            Intentar de nuevo
-          </Button>
+          <p className="text-sm sm:text-base text-gray-600">{error}</p>
         </div>
     );
   }
 
   return (
-      <main className="container mx-auto p-3 sm:p-4 lg:p-6 bg-green-50 rounded-lg shadow-md max-w-7xl">
-        {/* Encabezado semántico */}
-        <header className="mb-6 sm:mb-8 text-center">
-          <h1 className="text-xl sm:text-2xl font-bold mb-2">
+      <div className="container mx-auto p-4 space-y-4">
+        {/* Header */}
+        <div className="text-center space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
             Solicitudes de Donación de Sangre
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 mb-2">
-            Encuentra perros y gatos que necesitan tu ayuda en Bogotá
+          <p className="text-sm sm:text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Ayuda a salvar vidas. Estas mascotas necesitan urgentemente donaciones de sangre.
+            Cada donación puede hacer la diferencia entre la vida y la muerte.
           </p>
-          <p className="text-xs sm:text-sm text-gray-500" aria-live="polite">
-            {filteredRequests.length} solicitud{filteredRequests.length !== 1 ? 'es' : ''} activa{filteredRequests.length !== 1 ? 's' : ''}
-          </p>
-        </header>
+        </div>
 
-        {/* Sección de filtros */}
-        <section aria-label="Filtros de búsqueda">
-          <Card className="mb-4 sm:mb-6">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-                  <div className="relative flex-1">
-                    <label htmlFor="search-input" className="sr-only">
-                      Buscar solicitudes por nombre, especie, tipo de sangre, localidad o clínica
-                    </label>
-                    <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
-                    <Input
-                        id="search-input"
-                        placeholder="Buscar por nombre, especie, tipo de sangre, localidad o clínica..."
-                        className="pl-10 text-sm sm:text-base"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        aria-describedby="search-help"
-                    />
-                    <div id="search-help" className="sr-only">
-                      Utiliza este campo para buscar solicitudes por cualquier criterio relevante
-                    </div>
-                  </div>
+        {/* Barra de búsqueda y filtros */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+          {/* Búsqueda */}
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+            <Input
+                type="text"
+                placeholder="Buscar por mascota, tipo de sangre, ubicación..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 sm:pl-10 pr-4 text-sm sm:text-base"
+                aria-label="Buscar solicitudes de donación"
+            />
+          </div>
+
+          {/* Botón de filtros y contador */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 text-xs sm:text-sm"
+                aria-expanded={showFilters}
+                aria-controls="filters-panel"
+            >
+              <FilterIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Filtros</span>
+              {showFilters ? (
+                  <ChevronUpIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              ) : (
+                  <ChevronDownIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              )}
+            </Button>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <p className="text-xs sm:text-sm text-gray-600">
+                <span className="font-medium">{filteredRequests.length}</span> solicitud{filteredRequests.length !== 1 ? 'es' : ''} encontrada{filteredRequests.length !== 1 ? 's' : ''}
+              </p>
+              {(filters.species.length > 0 || filters.bloodType.length > 0 || filters.urgency.length > 0 ||
+                  filters.locality.length > 0 || filters.location) && (
                   <Button
-                      variant="outline"
-                      onClick={() => setShowFilters(!showFilters)}
-                      className="flex items-center gap-2 w-full md:w-auto text-sm"
-                      aria-expanded={showFilters}
-                      aria-controls="filters-panel"
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="text-xs sm:text-sm text-red-600 hover:text-red-800 hover:bg-red-50 p-1 sm:p-2"
                   >
-                    <FilterIcon className="h-4 w-4" aria-hidden="true" />
-                    {showFilters ? (
-                        <>
-                          <ChevronUpIcon className="h-4 w-4" aria-hidden="true" />
-                          <span className="hidden sm:inline">Ocultar filtros</span>
-                          <span className="sm:hidden">Ocultar</span>
-                        </>
-                    ) : (
-                        <>
-                          <ChevronDownIcon className="h-4 w-4" aria-hidden="true" />
-                          <span className="hidden sm:inline">Mostrar filtros</span>
-                          <span className="sm:hidden">Filtros</span>
-                        </>
-                    )}
+                    Limpiar filtros
                   </Button>
-                </div>
+              )}
+            </div>
+          </div>
 
-                {showFilters && (
-                    <div id="filters-panel" role="region" aria-label="Panel de filtros avanzados">
-                      <FiltersPanel
-                          speciesLabels={SPECIES_LABELS}
-                          localityOptions={BOGOTA_LOCALITIES}
-                          filters={filters}
-                          onFilterChange={handleFilterChange}
-                          onClearFilters={clearFilters}
-                      />
-                    </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <ActiveFilters
-              speciesLabels={SPECIES_LABELS}
-              urgencyLevels={URGENCY_LEVELS}
-              localityOptions={BOGOTA_LOCALITIES}
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={clearFilters}
-          />
-        </section>
-
-        {/* Sección de resultados */}
-        <section aria-label="Solicitudes de donación" aria-live="polite">
-          {filteredRequests.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 sm:py-12 text-center">
-                  <AlertCircleIcon className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mb-4" aria-hidden="true" />
-                  <p className="text-gray-500 text-sm sm:text-base mb-4">
-                    {Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : f !== '') || debouncedSearchTerm.trim()
-                        ? "No hay solicitudes que coincidan con tus filtros. Prueba ajustando los criterios."
-                        : "No hay solicitudes activas en este momento."}
-                  </p>
-                  {(Object.values(filters).some(f => Array.isArray(f) ? f.length > 0 : f !== '') || debouncedSearchTerm.trim()) && (
-                      <Button variant="outline" onClick={clearFilters}>
-                        Limpiar filtros
-                      </Button>
-                  )}
-                </CardContent>
-              </Card>
-          ) : (
-              <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:gap-6">
-                {filteredRequests.map((request, index) => (
-                    <RequestCard key={request.id} request={request} index={index} />
-                ))}
+          {/* Panel de filtros */}
+          {showFilters && (
+              <div id="filters-panel" className="border-t pt-3 sm:pt-4">
+                <FiltersPanel
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                />
               </div>
           )}
-        </section>
-      </main>
+
+          {/* Filtros activos */}
+          <ActiveFilters
+              filters={filters}
+              onFilterRemove={handleFilterChange}
+              onClearAll={clearFilters}
+          />
+        </div>
+
+        {/* Lista de solicitudes */}
+        {filteredRequests.length === 0 ? (
+            <Card className="p-6 sm:p-8 text-center">
+              <CardContent className="space-y-3 sm:space-y-4">
+                <AlertCircleIcon className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-gray-400" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900">
+                  No se encontraron solicitudes
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 max-w-md mx-auto">
+                  No hay solicitudes que coincidan con tus criterios de búsqueda.
+                  Intenta ajustar los filtros o la búsqueda.
+                </p>
+                {(filters.species.length > 0 || filters.bloodType.length > 0 ||
+                    filters.urgency.length > 0 || filters.locality.length > 0 ||
+                    filters.location || searchTerm) && (
+                    <Button
+                        variant="outline"
+                        onClick={clearFilters}
+                        className="text-xs sm:text-sm"
+                    >
+                      Mostrar todas las solicitudes
+                    </Button>
+                )}
+              </CardContent>
+            </Card>
+        ) : (
+            <div
+                className="grid gap-4 sm:gap-6"
+                role="feed"
+                aria-label={`${filteredRequests.length} solicitudes de donación de sangre`}
+            >
+              {filteredRequests.map((request, index) => (
+                  <RequestCard
+                      key={request.id}
+                      request={request}
+                      index={index}
+                  />
+              ))}
+            </div>
+        )}
+      </div>
   );
 }

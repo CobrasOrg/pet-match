@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,23 +34,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from 'sonner';
 import { PhoneIcon } from '@heroicons/react/24/outline';
-import { BOGOTA_LOCALITIES, getLocalityLabel } from '@/constants/locations';
+import {
+  BOGOTA_LOCALITIES,
+  getLocalityLabel,
+  SPECIES,
+  URGENCY_LEVELS,
+  generateMockRequests,
+  formatDate
+} from '../constants';
 import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
 
-// Constantes optimizadas
-const SPECIES_LABELS = {
-  canine: 'Perro',
-  feline: 'Gato'
-};
-
-const URGENCY_LEVELS = [
-  { value: 'high', label: 'Alta urgencia' },
-  { value: 'medium', label: 'Urgencia media' }
-];
-
+// Placeholder optimizado
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhcmdhbmRvLi4uPC90ZXh0Pjwvc3ZnPg==';
 
-// Definición de estados optimizada
+// Definición de estados
 const STATUSES = {
   active: {
     label: 'Activa',
@@ -66,174 +64,6 @@ const STATUSES = {
     color: 'bg-red-100 text-red-800',
     icon: XCircleIcon
   }
-};
-
-// Funciones optimizadas con memoización
-const getSpeciesEmoji = (() => {
-  const cache = {
-    canine: '🐶',
-    feline: '🐱'
-  };
-  return (species) => cache[species] || '🐾';
-})();
-
-const getUrgencyBadge = (() => {
-  const cache = {
-    high: {
-      label: 'URGENCIA ALTA',
-      bgColor: 'bg-red-500',
-      textColor: 'text-white',
-      icon: AlertTriangleIcon
-    },
-    medium: {
-      label: 'URGENCIA MEDIA',
-      bgColor: 'bg-orange-500',
-      textColor: 'text-white',
-      icon: ClockIcon
-    },
-    low: {
-      label: 'URGENCIA BAJA',
-      bgColor: 'bg-yellow-500',
-      textColor: 'text-white',
-      icon: ClockIcon
-    }
-  };
-  return (urgency) => cache[urgency] || cache.medium;
-})();
-
-// Función de fecha optimizada con caché
-const formatDate = (() => {
-  const cache = new Map();
-
-  return (dateString) => {
-    if (cache.has(dateString)) {
-      return cache.get(dateString);
-    }
-
-    const date = new Date(dateString);
-    const today = new Date();
-    const diffTime = today.getTime() - date.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-    let result;
-    if (diffTime < 0) {
-      result = 'Fecha futura';
-    } else if (diffMinutes < 60) {
-      result = diffMinutes < 1 ? 'Hace unos segundos' : `Hace ${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''}`;
-    } else if (diffHours < 24) {
-      result = `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
-    } else if (diffDays === 0) {
-      result = 'Hoy';
-    } else if (diffDays === 1) {
-      result = 'Hace 1 día';
-    } else if (diffDays < 30) {
-      result = `Hace ${diffDays} días`;
-    } else if (diffDays < 365) {
-      const diffMonths = Math.floor(diffDays / 30);
-      result = `Hace ${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
-    } else {
-      const diffYears = Math.floor(diffDays / 365);
-      result = `Hace ${diffYears} año${diffYears !== 1 ? 's' : ''}`;
-    }
-
-    cache.set(dateString, result);
-    return result;
-  };
-})();
-
-// Datos estáticos únicos con imágenes reales
-const generateStaticRequests = () => {
-  const now = new Date();
-
-  return [
-    {
-      id: 'REQ-001',
-      petName: 'Rocky',
-      species: 'canine',
-      bloodType: 'DEA 1.1+',
-      urgency: 'high',
-      minWeight: 25,
-      description: 'Rocky es un pastor alemán de 5 años que ha sido diagnosticado con anemia severa después de una complicación durante una cirugía de emergencia. Su hemograma muestra valores críticos y necesita una transfusión de sangre urgente para estabilizar su condición.',
-      location: 'Clínica VetCentral, Av. Principal 123',
-      locality: 'suba',
-      contact: '+57 300 123 4567',
-      status: 'active',
-      date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Veterinaria San Patricio',
-      image: 'https://images.unsplash.com/photo-1551717743-49959800b1f6?w=400&h=300&fit=crop&auto=format',
-      vetContact: '+57 300 123 4567'
-    },
-    {
-      id: 'REQ-002',
-      petName: 'Luna',
-      species: 'feline',
-      bloodType: 'A',
-      urgency: 'medium',
-      minWeight: 4,
-      description: 'Luna es una hermosa gata siamés de 3 años que necesita una transfusión de sangre como preparación para una cirugía compleja programada para la próxima semana.',
-      location: 'Hospital Felino, Calle Secundaria 456',
-      locality: 'chapinero',
-      contact: '+57 301 234 5678',
-      status: 'completed',
-      date: new Date(now.getTime() - 16 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Clínica Gatuna VIP',
-      image: 'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=300&fit=crop&auto=format',
-      vetContact: '+57 301 234 5678'
-    },
-    {
-      id: 'REQ-003',
-      petName: 'Max',
-      species: 'canine',
-      bloodType: 'DEA 1.1-',
-      urgency: 'high',
-      minWeight: 20,
-      description: 'Max es un golden retriever de 4 años que sufrió un grave accidente automovilístico. Afortunadamente no tiene fracturas graves, pero perdió mucha sangre debido a laceraciones internas.',
-      location: 'Hospital Veterinario Norte, Calle 200 #15-30',
-      locality: 'usaquen',
-      contact: '+57 302 345 6789',
-      status: 'cancelled',
-      date: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Hospital Vet Norte',
-      image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop&auto=format',
-      vetContact: '+57 302 345 6789'
-    },
-    {
-      id: 'REQ-004',
-      petName: 'Bella',
-      species: 'feline',
-      bloodType: 'B',
-      urgency: 'medium',
-      minWeight: 3.5,
-      description: 'Bella es una gata persa de 2 años que necesita una transfusión debido a una anemia causada por parásitos. Está siendo tratada en una clínica especializada.',
-      location: 'Clínica Veterinaria Zona Norte, Calle 170 #45-32',
-      locality: 'usaquen',
-      contact: '+57 303 456 7890',
-      status: 'active',
-      date: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Vet Norte',
-      image: 'https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?w=400&h=300&fit=crop&auto=format',
-      vetContact: '+57 303 456 7890'
-    },
-    {
-      id: 'REQ-005',
-      petName: 'Charlie',
-      species: 'canine',
-      bloodType: 'DEA 3+',
-      urgency: 'high',
-      minWeight: 18,
-      description: 'Charlie es un beagle de 6 años que desarrolló una anemia hemolítica autoinmune. Es un perro muy alegre y sociable.',
-      location: 'Clínica Veterinaria Central, Carrera 15 #85-20',
-      locality: 'fontibón',
-      contact: '+57 304 567 8901',
-      status: 'completed',
-      date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Clínica Animales Felices',
-      image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&h=300&fit=crop&auto=format',
-      vetContact: '+57 304 567 8901'
-    }
-  ];
 };
 
 // Hook de debounce optimizado
@@ -309,10 +139,10 @@ OptimizedImage.displayName = 'OptimizedImage';
 
 // Componente RequestCard memoizado
 const RequestCard = memo(({ request }) => {
-  const urgencyBadge = useMemo(() => getUrgencyBadge(request.urgency), [request.urgency]);
-  const UrgencyIcon = urgencyBadge.icon;
+  const urgencyInfo = useMemo(() => URGENCY_LEVELS[request.urgency], [request.urgency]);
+  const UrgencyIcon = request.urgency === 'high' ? AlertTriangleIcon : ClockIcon;
   const StatusIcon = STATUSES[request.status].icon;
-  const speciesEmoji = useMemo(() => getSpeciesEmoji(request.species), [request.species]);
+  const speciesInfo = useMemo(() => SPECIES[request.species], [request.species]);
   const formattedDate = useMemo(() => formatDate(request.date), [request.date]);
   const localityLabel = useMemo(() => getLocalityLabel(request.locality), [request.locality]);
 
@@ -326,15 +156,15 @@ const RequestCard = memo(({ request }) => {
           {/* Badge de urgencia */}
           <div className="absolute top-0 right-0 z-10">
             <div
-                className={`${urgencyBadge.bgColor} ${urgencyBadge.textColor} px-2 py-1 rounded-bl-lg rounded-tr-lg flex items-center gap-1 text-xs font-medium`}
+                className={`${urgencyInfo.color} ${urgencyInfo.textColor} px-2 py-1 rounded-bl-lg rounded-tr-lg flex items-center gap-1 text-xs font-medium`}
                 role="status"
-                aria-label={`Nivel de urgencia: ${urgencyBadge.label}`}
+                aria-label={`Nivel de urgencia: ${urgencyInfo.label}`}
             >
               <UrgencyIcon className="h-3 w-3" aria-hidden="true" />
-              <span className="hidden sm:inline">{urgencyBadge.label}</span>
+              <span className="hidden sm:inline">{urgencyInfo.label}</span>
               <span className="sm:hidden">
-              {urgencyBadge.label.includes('ALTA') ? 'ALTA' :
-                  urgencyBadge.label.includes('MEDIA') ? 'MEDIA' : 'BAJA'}
+              {urgencyInfo.label.includes('ALTA') ? 'ALTA' :
+                  urgencyInfo.label.includes('MEDIA') ? 'MEDIA' : 'BAJA'}
             </span>
             </div>
           </div>
@@ -363,9 +193,9 @@ const RequestCard = memo(({ request }) => {
               <span
                   className="text-xl sm:text-2xl"
                   role="img"
-                  aria-label={SPECIES_LABELS[request.species]}
+                  aria-label={speciesInfo.label}
               >
-                {speciesEmoji}
+                {speciesInfo.emoji}
               </span>
                 <div className="flex-1 min-w-0">
                   <h2
@@ -375,7 +205,7 @@ const RequestCard = memo(({ request }) => {
                     {request.petName || 'Mascota'}
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-600 truncate">
-                    {SPECIES_LABELS[request.species] || 'Otra especie'} • {localityLabel}
+                    {speciesInfo.label || 'Otra especie'} • {localityLabel}
                   </p>
                 </div>
               </header>
@@ -471,7 +301,7 @@ const RequestCard = memo(({ request }) => {
               <div className="relative overflow-hidden rounded-lg w-full">
                 <OptimizedImage
                     src={request.image || `https://via.placeholder.com/400x300/e5e7eb/6b7280?text=${request.petName || 'Mascota'}`}
-                    alt={`Fotografía de ${request.petName || 'la mascota'}, ${SPECIES_LABELS[request.species]} que necesita donación de sangre`}
+                    alt={`Fotografía de ${request.petName || 'la mascota'}, ${speciesInfo.label} que necesita donación de sangre`}
                     petName={request.petName || 'Mascota'}
                     className="w-full h-40 sm:h-48 lg:h-64 object-cover"
                 />
@@ -557,7 +387,7 @@ export default function RequestsPage() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Cargar datos estáticos
+  // Cargar datos
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -565,8 +395,8 @@ export default function RequestsPage() {
 
       try {
         await new Promise(resolve => setTimeout(resolve, 300));
-        const staticRequests = generateStaticRequests();
-        setRequests(staticRequests);
+        const mockData = generateMockRequests();
+        setRequests(mockData);
       } catch (err) {
         setError('Error al cargar las solicitudes');
         console.error('Error loading data:', err);
@@ -659,7 +489,7 @@ export default function RequestsPage() {
           .filter(req => req.status === status)
           .filter(req => {
             const matchesSearch = !debouncedSearchTerm || [
-              req.species,
+              SPECIES[req.species]?.label,
               req.bloodType,
               req.petName,
               req.location,
@@ -732,141 +562,100 @@ export default function RequestsPage() {
             <DialogHeader>
               <DialogTitle>Nueva Solicitud de Donación</DialogTitle>
             </DialogHeader>
-            <BloodRequestForm onSuccess={handleRequestCreated} />
+            <BloodRequestForm onRequestCreated={handleRequestCreated} />
           </DialogContent>
         </Dialog>
 
-        {/* Sección de filtros */}
-        <section aria-label="Filtros de búsqueda">
-          <Card className="mb-4 lg:mb-6">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-                  <div className="relative flex-1">
-                    <label htmlFor="search-input" className="sr-only">
-                      Buscar solicitudes por nombre, especie, tipo de sangre o localidad
-                    </label>
-                    <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
-                    <Input
-                        id="search-input"
-                        placeholder="Buscar por nombre, especie, tipo de sangre, localidad..."
-                        className="pl-10 text-sm sm:text-base"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        aria-describedby="search-help"
-                    />
-                    <div id="search-help" className="sr-only">
-                      Utiliza este campo para buscar solicitudes por cualquier criterio relevante
-                    </div>
-                  </div>
-                  <Button
-                      variant="outline"
-                      onClick={() => setShowFilters(!showFilters)}
-                      className="flex items-center gap-2 w-full md:w-auto"
-                      aria-expanded={showFilters}
-                      aria-controls="filters-panel"
-                  >
-                    <FilterIcon className="h-4 w-4" aria-hidden="true" />
-                    {showFilters ? (
-                        <>
-                          <ChevronUpIcon className="h-4 w-4" aria-hidden="true" />
-                          <span className="hidden sm:inline">Ocultar filtros</span>
-                          <span className="sm:hidden">Ocultar</span>
-                        </>
-                    ) : (
-                        <>
-                          <ChevronDownIcon className="h-4 w-4" aria-hidden="true" />
-                          <span className="hidden sm:inline">Mostrar filtros</span>
-                          <span className="sm:hidden">Filtros</span>
-                        </>
-                    )}
-                  </Button>
-                </div>
+        {/* Controles de búsqueda y filtros */}
+        <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 mb-6">
+          {/* Búsqueda */}
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+            <Input
+                type="text"
+                placeholder="Buscar por mascota, clínica, tipo de sangre..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 sm:pl-10 pr-4 text-sm sm:text-base"
+                aria-label="Buscar solicitudes"
+            />
+          </div>
 
-                {showFilters && (
-                    <div id="filters-panel" role="region" aria-label="Panel de filtros avanzados">
-                      <FiltersPanel
-                          speciesLabels={SPECIES_LABELS}
-                          localityOptions={BOGOTA_LOCALITIES}
-                          filters={filters}
-                          onFilterChange={handleFilterChange}
-                          onClearFilters={clearFilters}
-                      />
-                    </div>
-                )}
+          {/* Controles de filtros */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 text-xs sm:text-sm"
+                aria-expanded={showFilters}
+                aria-controls="filters-panel"
+            >
+              <FilterIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Filtros</span>
+              {showFilters ? (
+                  <ChevronUpIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              ) : (
+                  <ChevronDownIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+              )}
+            </Button>
+
+            {(filters.species.length > 0 || filters.bloodType.length > 0 ||
+                filters.urgency.length > 0 || filters.locality.length > 0 || searchTerm) && (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="text-xs sm:text-sm text-red-600 hover:text-red-800 hover:bg-red-50"
+                >
+                  Limpiar filtros
+                </Button>
+            )}
+          </div>
+
+          {/* Panel de filtros */}
+          {showFilters && (
+              <div id="filters-panel" className="border-t pt-3 sm:pt-4">
+                <FiltersPanel
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                />
               </div>
-            </CardContent>
-          </Card>
+          )}
 
+          {/* Filtros activos */}
           <ActiveFilters
-              speciesLabels={SPECIES_LABELS}
-              urgencyLevels={URGENCY_LEVELS}
-              localityOptions={BOGOTA_LOCALITIES}
               filters={filters}
-              onFilterChange={handleFilterChange}
-              onClearFilters={clearFilters}
+              onFilterRemove={handleFilterChange}
+              onClearAll={clearFilters}
           />
         </section>
 
-        {/* Sección de pestañas */}
-        <section aria-label="Estados de solicitudes">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 w-full mb-4 lg:mb-6" role="tablist">
-              <TabsTrigger
-                  value="active"
-                  className="text-xs sm:text-sm px-2 sm:px-4"
-                  role="tab"
-                  aria-controls="active-panel"
-                  aria-selected={activeTab === 'active'}
-              >
-                <ActivityIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Activas</span>
-                <span className="sm:hidden">Act.</span>
-                <span className="ml-1" aria-label={`${filteredRequests('active').length} solicitudes activas`}>
-                ({filteredRequests('active').length})
-              </span>
-              </TabsTrigger>
-              <TabsTrigger
-                  value="completed"
-                  className="text-xs sm:text-sm px-2 sm:px-4"
-                  role="tab"
-                  aria-controls="completed-panel"
-                  aria-selected={activeTab === 'completed'}
-              >
-                <CheckCircle2Icon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Completadas</span>
-                <span className="sm:hidden">Comp.</span>
-                <span className="ml-1" aria-label={`${filteredRequests('completed').length} solicitudes completadas`}>
-                ({filteredRequests('completed').length})
-              </span>
-              </TabsTrigger>
-              <TabsTrigger
-                  value="cancelled"
-                  className="text-xs sm:text-sm px-2 sm:px-4"
-                  role="tab"
-                  aria-controls="cancelled-panel"
-                  aria-selected={activeTab === 'cancelled'}
-              >
-                <XCircleIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Canceladas</span>
-                <span className="sm:hidden">Canc.</span>
-                <span className="ml-1" aria-label={`${filteredRequests('cancelled').length} solicitudes canceladas`}>
-                ({filteredRequests('cancelled').length})
-              </span>
-              </TabsTrigger>
-            </TabsList>
+        {/* Tabs para estados */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="active" className="text-xs sm:text-sm">
+              Activas ({filteredRequests('active').length})
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="text-xs sm:text-sm">
+              Completadas ({filteredRequests('completed').length})
+            </TabsTrigger>
+            <TabsTrigger value="cancelled" className="text-xs sm:text-sm">
+              Canceladas ({filteredRequests('cancelled').length})
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="active" id="active-panel" role="tabpanel" aria-labelledby="active-tab">
-              <RequestList requests={filteredRequests('active')} status="active" />
-            </TabsContent>
-            <TabsContent value="completed" id="completed-panel" role="tabpanel" aria-labelledby="completed-tab">
-              <RequestList requests={filteredRequests('completed')} status="completed" />
-            </TabsContent>
-            <TabsContent value="cancelled" id="cancelled-panel" role="tabpanel" aria-labelledby="cancelled-tab">
-              <RequestList requests={filteredRequests('cancelled')} status="cancelled" />
-            </TabsContent>
-          </Tabs>
-        </section>
+          <TabsContent value="active">
+            <RequestList requests={filteredRequests('active')} status="active" />
+          </TabsContent>
+
+          <TabsContent value="completed">
+            <RequestList requests={filteredRequests('completed')} status="completed" />
+          </TabsContent>
+
+          <TabsContent value="cancelled">
+            <RequestList requests={filteredRequests('cancelled')} status="cancelled" />
+          </TabsContent>
+        </Tabs>
       </main>
   );
 }
