@@ -1,0 +1,31 @@
+import React from 'react'
+import { Route, Routes } from 'react-router-dom'
+import ClinicHome from './pages/ClinicHome'
+import NavBar from './components/NavBar'
+import RequestsPage from './pages/RequestsPage'
+import RequestDetailPage from './pages/RequestDetailPage'
+import PublicRequestsFeed from './pages/PublicRequestsFeed'
+import DonationApplicationForm from '@/components/DonationApplicationForm'
+import RequestApplications from '@/components/RequestApplications'
+import HomePage from '@/components/HomePage'
+
+const App = () => {
+  return (
+    <div>
+      <NavBar />
+      <div className='px-6 md:px-16 lg:px-24 xl:px-32'>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/clinic" element={<ClinicHome />} />
+          <Route path="/requests" element={<RequestsPage />} />
+          <Route path="/requests/:id" element={<RequestDetailPage />} />
+          <Route path="/public" element={<PublicRequestsFeed />} />
+          <Route path="/apply/:id" element={<DonationApplicationForm />} />
+          <Route path="/requests/:id/applications" element={<RequestApplications />} />
+        </Routes>
+      </div>
+    </div>
+  )
+}
+
+export default App
