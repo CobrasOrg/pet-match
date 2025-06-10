@@ -1,6 +1,5 @@
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
-import ClinicHome from './pages/ClinicHome'
 import NavBar from './components/NavBar'
 import RequestsPage from './pages/RequestsPage'
 import RequestDetailPage from './pages/RequestDetailPage'
@@ -16,7 +15,6 @@ const App = () => {
       <div className='px-6 md:px-16 lg:px-24 xl:px-32'>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/clinic" element={<ClinicHome />} />
           <Route path="/requests" element={<RequestsPage />} />
           <Route path="/requests/:id" element={<RequestDetailPage />} />
           <Route path="/public" element={<PublicRequestsFeed />} />
