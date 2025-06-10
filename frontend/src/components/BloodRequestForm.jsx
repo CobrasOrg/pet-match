@@ -1,4 +1,6 @@
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import {
     Form,
     FormControl,
@@ -23,8 +25,37 @@ import { useRef } from 'react';
 import { toast } from 'sonner';
 import { BOGOTA_LOCALITIES } from '@/constants/locations';
 
-export default function BloodRequestForm({ onSuccess }) {
-    const form = useForm();
+// Esquema de validación con Zod
+const formSchema = z.object({
+    species: z.string().min(1, "Selecciona una especie"),
+    bloodType: z.string().min(1, "Selecciona un tipo de sangre"),
+    urgency: z.string().min(1, "Selecciona un nivel de urgencia"),
+    minWeight: z.number().min(0.1, "El peso debe ser mayor a 0"),
+    description: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
+    locality: z.string().min(1, "Selecciona una localidad"),
+    clinicName: z.string().min(1, "Ingresa el nombre de la clínica"),
+    location: z.string().min(1, "Ingresa la dirección completa"),
+    contact: z.string().regex(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/, "Ingrese un número de teléfono válido"),
+    photo: z.any().optional()
+});
+
+export default function BloodRequestForm({ onRequestCreated }) {
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            species: "",
+            bloodType: "",
+            urgency: "",
+            minWeight: 0,
+            description: "",
+            locality: "",
+            clinicName: "",
+            location: "",
+            contact: "",
+            photo: null
+        }
+    });
+
     const fileInputRef = useRef(null);
 
     // Observar el valor de la especie seleccionada
@@ -35,58 +66,57 @@ export default function BloodRequestForm({ onSuccess }) {
         switch (species) {
             case 'canine':
                 return [
-                    { value: "DEA 1.1 Positivo", label: "DEA 1.1 Positivo" },
-                    { value: "DEA 1.1 Negativo", label: "DEA 1.1 Negativo" },
-                    { value: "DEA 1.2 Positivo", label: "DEA 1.2 Positivo" },
-                    { value: "DEA 1.2 Negativo", label: "DEA 1.2 Negativo" },
-                    { value: "DEA 3 Positivo", label: "DEA 3 Positivo" },
-                    { value: "DEA 3 Negativo", label: "DEA 3 Negativo" },
-                    { value: "DEA 4 Positivo", label: "DEA 4 Positivo" },
-                    { value: "DEA 4 Negativo", label: "DEA 4 Negativo" },
-                    { value: "DEA 5 Positivo", label: "DEA 5 Positivo" },
-                    { value: "DEA 5 Negativo", label: "DEA 5 Negativo" },
-                    { value: "DEA 6 Positivo", label: "DEA 6 Positivo" },
-                    { value: "DEA 6 Negativo", label: "DEA 6 Negativo" },
-                    { value: "DEA 7 Positivo", label: "DEA 7 Positivo" },
-                    { value: "DEA 7 Negativo", label: "DEA 7 Negativo" },
-                    { value: "DEA 8 Positivo", label: "DEA 8 Positivo" },
-                    { value: "DEA 8 Negativo", label: "DEA 8 Negativo" },
-                    { value: "Donante Universal", label: "Donante Universal" }
+                    { value: "DEA 1.1+", label: "DEA 1.1 Positivo" },
+                    { value: "DEA 1.1-", label: "DEA 1.1 Negativo" },
+                    { value: "DEA 1.2+", label: "DEA 1.2 Positivo" },
+                    { value: "DEA 1.2-", label: "DEA 1.2 Negativo" },
+                    { value: "DEA 3+", label: "DEA 3 Positivo" },
+                    { value: "DEA 3-", label: "DEA 3 Negativo" },
+                    { value: "DEA 4+", label: "DEA 4 Positivo" },
+                    { value: "DEA 4-", label: "DEA 4 Negativo" },
+                    { value: "DEA 5+", label: "DEA 5 Positivo" },
+                    { value: "DEA 5-", label: "DEA 5 Negativo" },
+                    { value: "DEA 6+", label: "DEA 6 Positivo" },
+                    { value: "DEA 6-", label: "DEA 6 Negativo" },
+                    { value: "DEA 7+", label: "DEA 7 Positivo" },
+                    { value: "DEA 7-", label: "DEA 7 Negativo" },
+                    { value: "DEA 8+", label: "DEA 8 Positivo" },
+                    { value: "DEA 8-", label: "DEA 8 Negativo" },
+                    { value: "Universal", label: "Donante Universal" }
                 ];
             case 'feline':
                 return [
-                    { value: "Tipo A", label: "Tipo A" },
-                    { value: "Tipo B", label: "Tipo B" },
-                    { value: "Tipo AB", label: "Tipo AB" }
+                    { value: "A", label: "Tipo A" },
+                    { value: "B", label: "Tipo B" },
+                    { value: "AB", label: "Tipo AB" }
                 ];
             default:
                 return [];
         }
     };
 
-    // Función simplificada para manejar el envío del formulario
+    // Función para manejar el envío del formulario
     const handleSubmit = (data) => {
         try {
-            console.log('Datos del formulario (para backend):', data);
+            console.log('Datos del formulario:', data);
 
-            // Simulamos la respuesta exitosa que vendría del backend
+            // Simulamos la respuesta exitosa
             const mockResponse = {
                 ...data,
                 id: `REQ-${Math.random().toString(36).substr(2, 8)}`,
                 status: 'active',
                 date: new Date().toISOString(),
-                // Agregar campos adicionales para compatibilidad
                 petName: `Mascota ${Math.floor(Math.random() * 100)}`,
-                clinicName: 'Clínica Demo',
-                image: 'https://via.placeholder.com/400x300/e5e7eb/6b7280?text=Mascota',
+                image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop&auto=format',
                 vetContact: data.contact
             };
 
             form.reset();
+            toast.success('Solicitud creada exitosamente');
 
-            // Llama a la función onSuccess con los datos simulados
-            if (onSuccess) {
-                onSuccess(mockResponse);
+            // Llama a la función callback
+            if (onRequestCreated) {
+                onRequestCreated(mockResponse);
             }
 
         } catch (error) {
@@ -106,15 +136,14 @@ export default function BloodRequestForm({ onSuccess }) {
         <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Campo Especie - Solo Perro y Gato */}
+                    {/* Campo Especie */}
                     <FormField
                         control={form.control}
                         name="species"
-                        rules={{ required: "Este campo es obligatorio" }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Especie *</FormLabel>
-                                <Select onValueChange={handleSpeciesChange} defaultValue={field.value}>
+                                <Select onValueChange={handleSpeciesChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Seleccionar especie" />
@@ -130,19 +159,16 @@ export default function BloodRequestForm({ onSuccess }) {
                         )}
                     />
 
-                    {/* Campo Tipo de Sangre - DINÁMICO SEGÚN ESPECIE */}
+                    {/* Campo Tipo de Sangre */}
                     <FormField
                         control={form.control}
                         name="bloodType"
-                        rules={{
-                            required: selectedSpecies ? "Este campo es obligatorio" : false
-                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Tipo de Sangre *</FormLabel>
                                 <Select
                                     onValueChange={field.onChange}
-                                    defaultValue={field.value}
+                                    value={field.value}
                                     disabled={!selectedSpecies}
                                 >
                                     <FormControl>
@@ -167,7 +193,7 @@ export default function BloodRequestForm({ onSuccess }) {
                                 <FormDescription>
                                     {!selectedSpecies
                                         ? "Selecciona primero la especie para ver los tipos de sangre disponibles"
-                                        : "Especificar sistema de grupo sanguíneo"
+                                        : "Especifica el sistema de grupo sanguíneo"
                                     }
                                 </FormDescription>
                                 <FormMessage />
@@ -185,7 +211,7 @@ export default function BloodRequestForm({ onSuccess }) {
                                 <FormControl>
                                     <RadioGroup
                                         onValueChange={field.onChange}
-                                        defaultValue={field.value}
+                                        value={field.value}
                                         className="flex flex-col space-y-1"
                                     >
                                         <FormItem className="flex items-center space-x-3 space-y-0">
@@ -215,10 +241,6 @@ export default function BloodRequestForm({ onSuccess }) {
                     <FormField
                         control={form.control}
                         name="minWeight"
-                        rules={{
-                            required: "Este campo es obligatorio",
-                            min: { value: 0, message: "El peso debe ser positivo" }
-                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Peso Mínimo Requerido (kg) *</FormLabel>
@@ -227,7 +249,7 @@ export default function BloodRequestForm({ onSuccess }) {
                                         type="number"
                                         placeholder="Ej: 25"
                                         {...field}
-                                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                                     />
                                 </FormControl>
                                 <FormDescription>
@@ -243,7 +265,6 @@ export default function BloodRequestForm({ onSuccess }) {
                 <FormField
                     control={form.control}
                     name="description"
-                    rules={{ required: "Este campo es obligatorio" }}
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Descripción del Caso *</FormLabel>
@@ -265,11 +286,10 @@ export default function BloodRequestForm({ onSuccess }) {
                     <FormField
                         control={form.control}
                         name="locality"
-                        rules={{ required: "Este campo es obligatorio" }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Localidad de Bogotá *</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Seleccionar localidad" />
@@ -295,7 +315,6 @@ export default function BloodRequestForm({ onSuccess }) {
                     <FormField
                         control={form.control}
                         name="clinicName"
-                        rules={{ required: "Este campo es obligatorio" }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Nombre de la Clínica *</FormLabel>
@@ -318,7 +337,6 @@ export default function BloodRequestForm({ onSuccess }) {
                 <FormField
                     control={form.control}
                     name="location"
-                    rules={{ required: "Este campo es obligatorio" }}
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Dirección Completa de la Clínica *</FormLabel>
@@ -340,19 +358,12 @@ export default function BloodRequestForm({ onSuccess }) {
                 <FormField
                     control={form.control}
                     name="contact"
-                    rules={{
-                        required: "Este campo es obligatorio",
-                        pattern: {
-                            value: /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/,
-                            message: "Ingrese un número de teléfono válido"
-                        }
-                    }}
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Contacto de Emergencia *</FormLabel>
                             <FormControl>
                                 <Input
-                                    placeholder="Teléfono con código de área"
+                                    placeholder="Ej: +57 300 123 4567"
                                     {...field}
                                 />
                             </FormControl>
@@ -361,7 +372,7 @@ export default function BloodRequestForm({ onSuccess }) {
                     )}
                 />
 
-                {/* Campo Foto (Opcional) - Se mantiene pero no se procesará realmente */}
+                {/* Campo Foto (Opcional) */}
                 <FormField
                     control={form.control}
                     name="photo"
@@ -376,7 +387,7 @@ export default function BloodRequestForm({ onSuccess }) {
                                     className="hidden"
                                     onChange={(e) => {
                                         field.onChange(e.target.files?.[0]);
-                                        console.log('Imagen seleccionada (en producción se enviaría al backend)');
+                                        console.log('Imagen seleccionada');
                                     }}
                                 />
                                 <Button
@@ -403,8 +414,9 @@ export default function BloodRequestForm({ onSuccess }) {
                 <Button
                     type="submit"
                     className="w-full bg-blue-400 hover:bg-blue-500 py-6 text-lg"
+                    disabled={form.formState.isSubmitting}
                 >
-                    Publicar Solicitud de Donación
+                    {form.formState.isSubmitting ? 'Enviando...' : 'Publicar Solicitud de Donación'}
                 </Button>
             </form>
         </Form>
