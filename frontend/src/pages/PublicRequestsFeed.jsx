@@ -347,7 +347,7 @@ const OptimizedImage = memo(({ src, alt, petName, className }) => {
 OptimizedImage.displayName = 'OptimizedImage';
 
 // Componente de tarjeta memoizado
-const RequestCard = memo(({ request, index }) => {
+const RequestCard = memo(({ request}) => {
   const urgencyBadge = useMemo(() => getUrgencyBadge(request.urgency), [request.urgency]);
   const UrgencyIcon = urgencyBadge.icon;
   const speciesEmoji = useMemo(() => getSpeciesEmoji(request.species), [request.species]);
