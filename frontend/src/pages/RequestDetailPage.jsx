@@ -342,30 +342,6 @@ export default function RequestDetailPage() {
                 )}
               </CardContent>
             </Card>
-
-            {/* Donantes compatibles */}
-            {(request.status === 'active' || request.status === 'review') && request.donorMatches?.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base sm:text-lg">Donantes compatibles</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 sm:space-y-4">
-                    {request.donorMatches.map(donor => (
-                        <div key={donor.id} className="border rounded-lg p-3 sm:p-4">
-                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-4">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-medium text-sm sm:text-base truncate">{donor.name}</h3>
-                              <p className="text-xs sm:text-sm text-gray-600 truncate">{donor.contact}</p>
-                            </div>
-                            <Button variant="outline" size="sm" className="w-full sm:w-auto text-xs sm:text-sm">
-                              Contactar
-                            </Button>
-                          </div>
-                        </div>
-                    ))}
-                  </CardContent>
-                </Card>
-            )}
           </div>
 
           {/* Columna derecha responsiva */}

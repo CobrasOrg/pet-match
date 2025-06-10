@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -32,20 +31,95 @@ import {
 import BloodRequestForm from '@/components/BloodRequestForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Toaster } from "@/components/ui/sonner";
-import { toast } from 'sonner';
 import { PhoneIcon } from '@heroicons/react/24/outline';
-import {
-  BOGOTA_LOCALITIES,
-  getLocalityLabel,
-  SPECIES,
-  URGENCY_LEVELS,
-  generateMockRequests,
-  formatDate
-} from '../constants';
+import { BOGOTA_LOCALITIES, getLocalityLabel } from '@/constants/locations';
 import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
+
+// Constantes optimizadas
+const SPECIES_LABELS = {
+  canine: 'Perro',
+  feline: 'Gato'
+};
+
+const URGENCY_LEVELS = [
+  { value: 'high', label: 'Alta urgencia' },
+  { value: 'medium', label: 'Urgencia media' }
+];
 
 // Placeholder optimizado
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhcmdhbmRvLi4uPC90ZXh0Pjwvc3ZnPg==';
+
+// Datos mock mejorados
+const generateMockRequests = () => {
+  const now = new Date();
+
+  return [
+    {
+      id: 'REQ-001',
+      petName: 'Rocky',
+      species: 'canine',
+      bloodType: 'DEA 1.1+',
+      urgency: 'high',
+      minWeight: 25,
+      description: 'Rocky es un pastor alemán de 5 años que ha sido diagnosticado con anemia severa después de una complicación durante una cirugía de emergencia.',
+      location: 'Clínica VetCentral, Av. Principal 123',
+      locality: 'suba',
+      status: 'active',
+      date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      clinicName: 'Veterinaria San Patricio',
+      image: 'https://images.unsplash.com/photo-1551717743-49959800b1f6?w=400&h=300&fit=crop&auto=format',
+      vetContact: "+57 300 123 4567"
+    },
+    {
+      id: 'REQ-002',
+      petName: 'Luna',
+      species: 'feline',
+      bloodType: 'A',
+      urgency: 'medium',
+      minWeight: 4,
+      description: 'Luna es una hermosa gata siamés de 3 años que necesita una transfusión de sangre como preparación para una cirugía compleja.',
+      location: 'Hospital Veterinario Felino, Calle Los Veterinarios 456',
+      locality: 'chapinero',
+      status: 'completed',
+      date: new Date(now.getTime() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+      clinicName: 'Clínica Gatuna VIP',
+      image: 'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=400&h=300&fit=crop&auto=format',
+      vetContact: "+57 301 234 5678"
+    },
+    {
+      id: 'REQ-003',
+      petName: 'Max',
+      species: 'canine',
+      bloodType: 'DEA 1.1-',
+      urgency: 'high',
+      minWeight: 20,
+      description: 'Max es un golden retriever de 4 años que sufrió un grave accidente automovilístico esta madrugada.',
+      location: 'Hospital Veterinario de Emergencias 24/7, Av. Las Condes 789',
+      locality: 'kennedy',
+      status: 'active',
+      date: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
+      clinicName: 'Hospital Vet Central',
+      image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=300&fit=crop&auto=format',
+      vetContact: "+57 302 345 6789"
+    },
+    {
+      id: 'REQ-004',
+      petName: 'Charlie',
+      species: 'canine',
+      bloodType: 'DEA 3+',
+      urgency: 'medium',
+      minWeight: 18,
+      description: 'Charlie es un beagle de 6 años que desarrolló una anemia hemolítica autoinmune.',
+      location: 'Clínica Veterinaria Central, Carrera 15 #85-20',
+      locality: 'fontibón',
+      status: 'cancelled',
+      date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      clinicName: 'Clínica Animales Felices',
+      image: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400&h=300&fit=crop&auto=format',
+      vetContact: "+57 304 567 8901"
+    }
+  ];
+};
 
 // Definición de estados
 const STATUSES = {
@@ -65,6 +139,48 @@ const STATUSES = {
     icon: XCircleIcon
   }
 };
+
+// Función de fecha optimizada con caché
+const formatDate = (() => {
+  const cache = new Map();
+
+  return (dateString) => {
+    if (cache.has(dateString)) {
+      return cache.get(dateString);
+    }
+
+    const date = new Date(dateString);
+    const today = new Date();
+    const diffTime = today.getTime() - date.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+
+    let result;
+    if (diffTime < 0) {
+      result = 'Fecha futura';
+    } else if (diffMinutes < 60) {
+      result = diffMinutes < 1 ? 'Hace unos segundos' : `Hace ${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''}`;
+    } else if (diffHours < 24) {
+      result = `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
+    } else if (diffDays === 0) {
+      result = 'Hoy';
+    } else if (diffDays === 1) {
+      result = 'Hace 1 día';
+    } else if (diffDays < 30) {
+      result = `Hace ${diffDays} días`;
+    } else if (diffDays < 365) {
+      const diffMonths = Math.floor(diffDays / 30);
+      result = `Hace ${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
+    } else {
+      const diffYears = Math.floor(diffDays / 365);
+      result = `Hace ${diffYears} año${diffYears !== 1 ? 's' : ''}`;
+    }
+
+    cache.set(dateString, result);
+    return result;
+  };
+})();
 
 // Hook de debounce optimizado
 const useDebounce = (value, delay) => {
@@ -139,10 +255,21 @@ OptimizedImage.displayName = 'OptimizedImage';
 
 // Componente RequestCard memoizado
 const RequestCard = memo(({ request }) => {
-  const urgencyInfo = useMemo(() => URGENCY_LEVELS[request.urgency], [request.urgency]);
+  const urgencyInfo = useMemo(() => {
+    return request.urgency === 'high' ? {
+      label: 'URGENCIA ALTA',
+      color: 'bg-red-500',
+      textColor: 'text-white'
+    } : {
+      label: 'URGENCIA MEDIA',
+      color: 'bg-orange-500',
+      textColor: 'text-white'
+    };
+  }, [request.urgency]);
+  
   const UrgencyIcon = request.urgency === 'high' ? AlertTriangleIcon : ClockIcon;
   const StatusIcon = STATUSES[request.status].icon;
-  const speciesInfo = useMemo(() => SPECIES[request.species], [request.species]);
+  const speciesEmoji = request.species === 'canine' ? '🐶' : '🐱';
   const formattedDate = useMemo(() => formatDate(request.date), [request.date]);
   const localityLabel = useMemo(() => getLocalityLabel(request.locality), [request.locality]);
 
@@ -163,9 +290,8 @@ const RequestCard = memo(({ request }) => {
               <UrgencyIcon className="h-3 w-3" aria-hidden="true" />
               <span className="hidden sm:inline">{urgencyInfo.label}</span>
               <span className="sm:hidden">
-              {urgencyInfo.label.includes('ALTA') ? 'ALTA' :
-                  urgencyInfo.label.includes('MEDIA') ? 'MEDIA' : 'BAJA'}
-            </span>
+                {urgencyInfo.label.includes('ALTA') ? 'ALTA' : 'MEDIA'}
+              </span>
             </div>
           </div>
 
@@ -190,13 +316,13 @@ const RequestCard = memo(({ request }) => {
             <div className="lg:w-2/3 flex flex-col space-y-2 sm:space-y-3 order-2 lg:order-1 p-3 sm:p-4 lg:p-5">
               {/* Header */}
               <header className="flex items-center gap-2 sm:gap-3">
-              <span
-                  className="text-xl sm:text-2xl"
-                  role="img"
-                  aria-label={speciesInfo.label}
-              >
-                {speciesInfo.emoji}
-              </span>
+                <span
+                    className="text-xl sm:text-2xl"
+                    role="img"
+                    aria-label={SPECIES_LABELS[request.species]}
+                >
+                  {speciesEmoji}
+                </span>
                 <div className="flex-1 min-w-0">
                   <h2
                       id={`request-title-${request.id}`}
@@ -205,7 +331,7 @@ const RequestCard = memo(({ request }) => {
                     {request.petName || 'Mascota'}
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-600 truncate">
-                    {speciesInfo.label || 'Otra especie'} • {localityLabel}
+                    {SPECIES_LABELS[request.species]} • {localityLabel}
                   </p>
                 </div>
               </header>
@@ -301,7 +427,7 @@ const RequestCard = memo(({ request }) => {
               <div className="relative overflow-hidden rounded-lg w-full">
                 <OptimizedImage
                     src={request.image || `https://via.placeholder.com/400x300/e5e7eb/6b7280?text=${request.petName || 'Mascota'}`}
-                    alt={`Fotografía de ${request.petName || 'la mascota'}, ${speciesInfo.label} que necesita donación de sangre`}
+                    alt={`Fotografía de ${request.petName || 'la mascota'}, ${SPECIES_LABELS[request.species]} que necesita donación de sangre`}
                     petName={request.petName || 'Mascota'}
                     className="w-full h-40 sm:h-48 lg:h-64 object-cover"
                 />
@@ -345,24 +471,13 @@ const RequestList = memo(({ requests, status }) => {
 RequestList.displayName = 'RequestList';
 
 // Función para parsear filtros desde URL
-const parseFiltersFromURL = (searchParams) => {
-  const species = searchParams.getAll('especie');
-  const bloodType = searchParams.getAll('tipo_sangre');
-  const urgency = searchParams.getAll('urgencia');
-  const locality = searchParams.getAll('localidad');
-  const search = searchParams.get('busqueda') || '';
-  const tab = searchParams.get('estado') || 'active';
-
-  return {
-    species,
-    bloodType,
-    urgency,
-    locality,
-    location: '',
-    search,
-    tab
-  };
-};
+const parseFiltersFromURL = (searchParams) => ({
+  species: searchParams.getAll('especie'),
+  bloodType: searchParams.getAll('tipo_sangre'),
+  urgency: searchParams.getAll('urgencia'),
+  locality: searchParams.getAll('localidad'),
+  location: searchParams.get('ubicacion') || ''
+});
 
 // Componente principal
 export default function RequestsPage() {
@@ -373,17 +488,10 @@ export default function RequestsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Estado inicial desde URL
-  const urlParams = useMemo(() => parseFiltersFromURL(searchParams), [searchParams]);
-  const [searchTerm, setSearchTerm] = useState(urlParams.search);
-  const [activeTab, setActiveTab] = useState(urlParams.tab);
-  const [filters, setFilters] = useState({
-    species: urlParams.species,
-    bloodType: urlParams.bloodType,
-    urgency: urlParams.urgency,
-    locality: urlParams.locality,
-    location: ''
-  });
+  // Estado de filtros
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('busqueda') || '');
+  const [activeTab, setActiveTab] = useState(searchParams.get('estado') || 'active');
+  const [filters, setFilters] = useState(() => parseFiltersFromURL(searchParams));
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -425,6 +533,10 @@ export default function RequestsPage() {
     filters.urgency.forEach(urgency => newParams.append('urgencia', urgency));
     filters.locality.forEach(locality => newParams.append('localidad', locality));
 
+    if (filters.location.trim()) {
+      newParams.set('ubicacion', filters.location.trim());
+    }
+
     setSearchParams(newParams, { replace: true });
   }, [setSearchParams]);
 
@@ -449,7 +561,6 @@ export default function RequestsPage() {
 
     setRequests(prev => [requestWithId, ...prev]);
     setIsModalOpen(false);
-    toast.success('Solicitud creada exitosamente');
   }, []);
 
   // Manejar cambios en filtros
@@ -489,12 +600,13 @@ export default function RequestsPage() {
           .filter(req => req.status === status)
           .filter(req => {
             const matchesSearch = !debouncedSearchTerm || [
-              SPECIES[req.species]?.label,
+              req.species,
               req.bloodType,
               req.petName,
               req.location,
               req.clinicName,
-              getLocalityLabel(req.locality)
+              getLocalityLabel(req.locality),
+              SPECIES_LABELS[req.species]
             ].some(field =>
                 field?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
             );
@@ -503,7 +615,8 @@ export default function RequestsPage() {
                 (filters.species.length === 0 || filters.species.includes(req.species)) &&
                 (filters.bloodType.length === 0 || filters.bloodType.includes(req.bloodType)) &&
                 (filters.urgency.length === 0 || filters.urgency.includes(req.urgency)) &&
-                (filters.locality.length === 0 || filters.locality.includes(req.locality))
+                (filters.locality.length === 0 || filters.locality.includes(req.locality)) &&
+                (!filters.location || req.location.toLowerCase().includes(filters.location.toLowerCase()))
             );
 
             return matchesSearch && matchesFilters;
@@ -566,67 +679,75 @@ export default function RequestsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Controles de búsqueda y filtros */}
-        <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 mb-6">
-          {/* Búsqueda */}
-          <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
-            <Input
-                type="text"
-                placeholder="Buscar por mascota, clínica, tipo de sangre..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 sm:pl-10 pr-4 text-sm sm:text-base"
-                aria-label="Buscar solicitudes"
-            />
-          </div>
+        {/* Sección de filtros */}
+        <section aria-label="Filtros de búsqueda">
+          <Card className="mb-4 sm:mb-6">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col gap-3 sm:gap-4">
+                <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+                  <div className="relative flex-1">
+                    <label htmlFor="search-input" className="sr-only">
+                      Buscar solicitudes por nombre, especie, tipo de sangre, localidad o clínica
+                    </label>
+                    <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
+                    <Input
+                        id="search-input"
+                        placeholder="Buscar por mascota, clínica, tipo de sangre, localidad..."
+                        className="pl-10 text-sm sm:text-base"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        aria-describedby="search-help"
+                    />
+                    <div id="search-help" className="sr-only">
+                      Utiliza este campo para buscar solicitudes por cualquier criterio relevante
+                    </div>
+                  </div>
+                  <Button
+                      variant="outline"
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="flex items-center gap-2 w-full md:w-auto text-sm"
+                      aria-expanded={showFilters}
+                      aria-controls="filters-panel"
+                  >
+                    <FilterIcon className="h-4 w-4" aria-hidden="true" />
+                    {showFilters ? (
+                        <>
+                          <ChevronUpIcon className="h-4 w-4" aria-hidden="true" />
+                          <span className="hidden sm:inline">Ocultar filtros</span>
+                          <span className="sm:hidden">Ocultar</span>
+                        </>
+                    ) : (
+                        <>
+                          <ChevronDownIcon className="h-4 w-4" aria-hidden="true" />
+                          <span className="hidden sm:inline">Mostrar filtros</span>
+                          <span className="sm:hidden">Filtros</span>
+                        </>
+                    )}
+                  </Button>
+                </div>
 
-          {/* Controles de filtros */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 text-xs sm:text-sm"
-                aria-expanded={showFilters}
-                aria-controls="filters-panel"
-            >
-              <FilterIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span>Filtros</span>
-              {showFilters ? (
-                  <ChevronUpIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              ) : (
-                  <ChevronDownIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              )}
-            </Button>
-
-            {(filters.species.length > 0 || filters.bloodType.length > 0 ||
-                filters.urgency.length > 0 || filters.locality.length > 0 || searchTerm) && (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="text-xs sm:text-sm text-red-600 hover:text-red-800 hover:bg-red-50"
-                >
-                  Limpiar filtros
-                </Button>
-            )}
-          </div>
-
-          {/* Panel de filtros */}
-          {showFilters && (
-              <div id="filters-panel" className="border-t pt-3 sm:pt-4">
-                <FiltersPanel
-                    filters={filters}
-                    onFilterChange={handleFilterChange}
-                />
+                {showFilters && (
+                    <div id="filters-panel" role="region" aria-label="Panel de filtros avanzados">
+                      <FiltersPanel
+                          speciesLabels={SPECIES_LABELS}
+                          localityOptions={BOGOTA_LOCALITIES}
+                          filters={filters}
+                          onFilterChange={handleFilterChange}
+                          onClearFilters={clearFilters}
+                      />
+                    </div>
+                )}
               </div>
-          )}
+            </CardContent>
+          </Card>
 
-          {/* Filtros activos */}
           <ActiveFilters
+              speciesLabels={SPECIES_LABELS}
+              urgencyLevels={URGENCY_LEVELS}
+              localityOptions={BOGOTA_LOCALITIES}
               filters={filters}
-              onFilterRemove={handleFilterChange}
-              onClearAll={clearFilters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={clearFilters}
           />
         </section>
 

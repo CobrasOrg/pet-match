@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
@@ -26,7 +25,8 @@ import {
   ScaleIcon,
   PhoneIcon,
   MailIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon,
+  EyeIcon
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import DonorProfileDialog from './CardMascotaPostulada';
 
 // Constantes para especies
 const SPECIES_LABELS = {
@@ -44,41 +45,76 @@ const SPECIES_LABELS = {
   feline: 'Gato'
 };
 
-// Datos de ejemplo (luego reemplazar con API real)
+// Datos de ejemplo actualizados con fotos y más información
 const MOCK_APPLICATIONS = [
   {
     id: 'APP-001',
     requestId: 'REQ-001',
     petName: 'Max',
+    petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=150&h=150&fit=crop&crop=face',
     species: 'canine',
     breed: 'Labrador Retriever',
     age: 3,
     weight: 28,
     bloodType: 'DEA 1.1+',
     lastVaccination: '2023-10-15',
-    healthStatus: 'Excelente',
+    healthStatus: 'Excelente estado de salud. Todas las vacunas al día. Sin historial de enfermedades graves.',
     ownerName: 'Juan Pérez',
-    ownerPhone: '+1234567890',
-    ownerEmail: 'juan@example.com',
-    status: 'pending', // pending, approved, rejected
-    applicationDate: '2023-11-20T14:30:00Z'
+    ownerPhone: '+57 310 123 4567',
+    ownerEmail: 'juan.perez@example.com',
+    ownerAddress: 'Calle 100 #15-20, Chapinero, Bogotá',
+    status: 'pending',
+    applicationDate: '2023-11-20T14:30:00Z',
+    donationHistory: [
+      { date: '2023-08-15', clinic: 'Clínica Veterinaria Central' },
+      { date: '2023-05-10', clinic: 'Hospital Animal Norte' }
+    ]
   },
   {
     id: 'APP-002',
     requestId: 'REQ-001',
     petName: 'Bella',
+    petPhoto: 'https://images.unsplash.com/photo-1551717743-49959800b1f6?w=150&h=150&fit=crop&crop=face',
     species: 'canine',
     breed: 'Pastor Alemán',
     age: 4,
     weight: 30,
     bloodType: 'DEA 1.1+',
     lastVaccination: '2023-09-20',
-    healthStatus: 'Bueno, con alergias leves',
+    healthStatus: 'Buen estado general. Presenta alergias leves a ciertos alimentos, pero controladas. Historial de donaciones exitosas.',
     ownerName: 'María Gómez',
-    ownerPhone: '+0987654321',
-    ownerEmail: 'maria@example.com',
-    status: 'pending',
-    applicationDate: '2023-11-21T10:15:00Z'
+    ownerPhone: '+57 320 987 6543',
+    ownerEmail: 'maria.gomez@example.com',
+    ownerAddress: 'Carrera 7 #85-32, Zona Rosa, Bogotá',
+    status: 'approved',
+    applicationDate: '2023-11-21T10:15:00Z',
+    donationHistory: [
+      { date: '2023-07-20', clinic: 'Veterinaria Animales Felices' }
+    ]
+  },
+  {
+    id: 'APP-003',
+    requestId: 'REQ-001',
+    petName: 'Rocky',
+    petPhoto: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=150&h=150&fit=crop&crop=face',
+    species: 'canine',
+    breed: 'Golden Retriever',
+    age: 5,
+    weight: 32,
+    bloodType: 'DEA 1.1+',
+    lastVaccination: '2023-11-01',
+    healthStatus: 'Excelente condición física. Donante experimentado con múltiples donaciones exitosas.',
+    ownerName: 'Carlos Rodríguez',
+    ownerPhone: '+57 315 456 7890',
+    ownerEmail: 'carlos.rodriguez@example.com',
+    ownerAddress: 'Avenida 68 #45-12, Engativá, Bogotá',
+    status: 'rejected',
+    applicationDate: '2023-11-19T16:45:00Z',
+    donationHistory: [
+      { date: '2023-09-10', clinic: 'Clínica Veterinaria del Norte' },
+      { date: '2023-06-15', clinic: 'Hospital Animal Central' },
+      { date: '2023-03-20', clinic: 'Veterinaria San José' }
+    ]
   }
 ];
 
@@ -89,18 +125,18 @@ const STATUSES = {
 };
 
 export default function RequestApplications() {
-  const { id } = useParams(); // ID de la solicitud
+  const { id } = useParams();
   const [applications, setApplications] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
 
   useEffect(() => {
-    // Simulación de carga de datos
     const fetchApplications = async () => {
       setIsLoading(true);
       try {
-        // En producción sería: const response = await fetch(`/api/requests/${id}/applications`);
         const filtered = MOCK_APPLICATIONS.filter(app => app.requestId === id);
         setApplications(filtered);
       } catch (error) {
@@ -114,14 +150,12 @@ export default function RequestApplications() {
   }, [id]);
 
   const filteredApplications = applications.filter(app => {
-    // Filtro por término de búsqueda
     if (searchTerm &&
         !app.petName.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !app.ownerName.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
 
-    // Filtro por estado
     if (statusFilter !== 'all' && app.status !== statusFilter) {
       return false;
     }
@@ -133,8 +167,12 @@ export default function RequestApplications() {
     setApplications(prev => prev.map(app =>
         app.id === applicationId ? { ...app, status: newStatus } : app
     ));
-    // Aquí iría la llamada API para actualizar el estado en el backend
     console.log(`Cambiando aplicación ${applicationId} a estado ${newStatus}`);
+  };
+
+  const handleViewProfile = (application) => {
+    setSelectedApplication(application);
+    setIsProfileDialogOpen(true);
   };
 
   if (isLoading) {
@@ -147,7 +185,6 @@ export default function RequestApplications() {
 
   return (
       <div className="container mx-auto p-4">
-        {/* Botón de Volver agregado aquí */}
         <div className="mb-4">
           <Button asChild variant="outline">
             <Link to={`/requests/${id}`} className="flex items-center">
@@ -168,7 +205,6 @@ export default function RequestApplications() {
           </CardHeader>
 
           <CardContent>
-            {/* Filtros */}
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="relative flex-1">
                 <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -213,19 +249,36 @@ export default function RequestApplications() {
                     {filteredApplications.map((app) => (
                         <TableRow key={app.id}>
                           <TableCell>
-                            <div className="font-medium">{app.petName}</div>
-                            <div className="text-sm text-gray-500">
-                              {app.species === 'canine' ? (
-                                  <span className="flex items-center">
-                            <DogIcon className="h-4 w-4 mr-1" />
-                                    {SPECIES_LABELS[app.species]} - {app.breed}
-                          </span>
-                              ) : (
-                                  <span className="flex items-center">
-                            <CatIcon className="h-4 w-4 mr-1" />
-                                    {SPECIES_LABELS[app.species]} - {app.breed}
-                          </span>
-                              )}
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
+                                {app.petPhoto ? (
+                                  <img 
+                                    src={app.petPhoto} 
+                                    alt={app.petName}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  app.species === 'canine' ? 
+                                    <DogIcon className="h-6 w-6 text-gray-400" /> : 
+                                    <CatIcon className="h-6 w-6 text-gray-400" />
+                                )}
+                              </div>
+                              <div>
+                                <div className="font-medium">{app.petName}</div>
+                                <div className="text-sm text-gray-500">
+                                  {app.species === 'canine' ? (
+                                      <span className="flex items-center">
+                                        <DogIcon className="h-4 w-4 mr-1" />
+                                        {SPECIES_LABELS[app.species]} - {app.breed}
+                                      </span>
+                                  ) : (
+                                      <span className="flex items-center">
+                                        <CatIcon className="h-4 w-4 mr-1" />
+                                        {SPECIES_LABELS[app.species]} - {app.breed}
+                                      </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -238,12 +291,14 @@ export default function RequestApplications() {
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            {app.bloodType || 'Desconocido'}
+                            <Badge variant="outline" className="bg-red-50 text-red-700">
+                              {app.bloodType || 'Desconocido'}
+                            </Badge>
                           </TableCell>
                           <TableCell className="text-center">
-                      <span className="flex items-center justify-center">
-                        <ScaleIcon className="h-4 w-4 mr-1" /> {app.weight} kg
-                      </span>
+                            <span className="flex items-center justify-center">
+                              <ScaleIcon className="h-4 w-4 mr-1" /> {app.weight} kg
+                            </span>
                           </TableCell>
                           <TableCell>
                             <Badge className={STATUSES[app.status].color}>
@@ -251,32 +306,36 @@ export default function RequestApplications() {
                               <span className="ml-1">{STATUSES[app.status].label}</span>
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">
+                            <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              {app.status !== 'approved' && (
-                                  <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-8 text-green-600 border-green-200"
-                                      onClick={() => handleStatusChange(app.id, 'approved')}
-                                  >
-                                    <CheckCircle2Icon className="h-4 w-4 mr-1" />
-                                    Aprobar
-                                  </Button>
-                              )}
-                              {app.status !== 'rejected' && (
-                                  <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-8 text-red-600 border-red-200"
-                                      onClick={() => handleStatusChange(app.id, 'rejected')}
-                                  >
-                                    <XCircleIcon className="h-4 w-4 mr-1" />
-                                    Rechazar
-                                  </Button>
-                              )}
-                              <Button variant="outline" size="sm" className="h-8">
-                                Ver detalles
+                              <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8"
+                                  onClick={() => handleViewProfile(app)}
+                              >
+                                <EyeIcon className="h-4 w-4 mr-1" />
+                                Ver Detalles
+                              </Button>
+                              <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 text-green-600 border-green-200 hover:bg-green-50"
+                                  onClick={() => handleStatusChange(app.id, 'approved')}
+                                  disabled={app.status === 'approved'}
+                              >
+                                <CheckCircle2Icon className="h-4 w-4 mr-1" />
+                                Aprobar
+                              </Button>
+                              <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                                  onClick={() => handleStatusChange(app.id, 'rejected')}
+                                  disabled={app.status === 'rejected'}
+                              >
+                                <XCircleIcon className="h-4 w-4 mr-1" />
+                                Rechazar
                               </Button>
                             </div>
                           </TableCell>
@@ -287,6 +346,13 @@ export default function RequestApplications() {
             )}
           </CardContent>
         </Card>
+
+        {/* Dialog para ver perfil completo */}
+        <DonorProfileDialog
+            application={selectedApplication}
+            isOpen={isProfileDialogOpen}
+            onClose={() => setIsProfileDialogOpen(false)}
+        />
       </div>
   );
 }
