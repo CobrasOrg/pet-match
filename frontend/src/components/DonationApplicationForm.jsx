@@ -28,6 +28,8 @@ import {
   ClipboardListIcon
 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import Lottie from "lottie-react";
+import dog from "@/assets/dog.json";
 
 const speciesOptions = [
   { value: 'canine', label: 'Perro', icon: <DogIcon className="h-4 w-4 mr-2" /> },
@@ -35,8 +37,8 @@ const speciesOptions = [
 ];
 
 const bloodTypeOptions = {
-  canine: ['DEA 1.1+', 'DEA 1.1-', 'DEA 1.2+', 'DEA 1.2-', 'DEA 3+', 'DEA 3-', 'Desconocido'],
-  feline: ['A', 'B', 'AB', 'Desconocido']
+  canine: ['DEA 1.1', 'DEA 1.2', 'DEA 3', 'DEA 4', 'DEA 5', 'DEA 7', 'DEA 8'],
+  feline: ['A', 'B', 'AB']
 };
 
 export default function DonationApplicationForm() {
@@ -370,8 +372,9 @@ export default function DonationApplicationForm() {
             )}
           />
 
-          <div className="flex justify-end">
-            <Button type="submit" className="bg-pink-600 hover:bg-pink-700 px-8 py-6 text-lg">
+          <div className="flex justify-center items-center mt-4"> 
+            <Lottie animationData={dog} loop={true} className="w-32 h-32 mb-2" />
+            <Button type="submit" className="bg-pink-600 hover:bg-pink-700 px-8 py-8 text-lg h-10">
               Enviar solicitud de donación
             </Button>
           </div>

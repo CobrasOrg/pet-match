@@ -3,10 +3,10 @@ import { Route, Routes } from 'react-router-dom'
 import NavBar from './components/NavBar'
 import RequestsPage from './pages/RequestsPage'
 import RequestDetailPage from './pages/RequestDetailPage'
-import PublicRequestsFeed from './pages/PublicRequestsFeed'
+import PublicRequestsFeed from './pages/PublicRequestsPage'
 import DonationApplicationForm from '@/components/DonationApplicationForm'
-import RequestApplications from '@/components/RequestApplications'
-import HomePage from '@/components/HomePage'
+import RequestApplications from '@/pages/RequestApplicationsPage'
+import HomePage from '@/pages/HomePage'
 
 const App = () => {
   return (
