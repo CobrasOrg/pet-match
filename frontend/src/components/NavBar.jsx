@@ -38,7 +38,7 @@ const NavBar = () => {
     }, [profileMenuOpen]);
 
     return (
-        <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all">
+        <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all z-10">
             <NavLink to="/" className="flex items-center gap-3">
                 <img className="h-12 w-auto" src="/logo_petmatch.png" alt="PetMatch logo" />
                 <div className="flex flex-col">
@@ -163,8 +163,8 @@ const NavBar = () => {
 
             {/* Mobile Menu */}
             <div className={`${open ? 'flex' : 'hidden'} absolute top-[60px] left-0 w-full bg-white shadow-md py-4 flex-col items-start gap-4 px-5 text-sm md:hidden`}>
-                <NavLink to="/information" className="block w-full py-2" onClick={() => setOpen(false)}>Información</NavLink>
-                <NavLink to="/clinics" className="block w-full py-2" onClick={() => setOpen(false)}>Veterinarias</NavLink>
+        
+        
 
                 {isLoggedIn ? (
                     <div className="w-full border-t border-gray-200 pt-3 mt-2">

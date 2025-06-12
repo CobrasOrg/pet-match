@@ -66,23 +66,13 @@ export default function BloodRequestForm({ onRequestCreated }) {
         switch (species) {
             case 'canine':
                 return [
-                    { value: "DEA 1.1+", label: "DEA 1.1 Positivo" },
-                    { value: "DEA 1.1-", label: "DEA 1.1 Negativo" },
-                    { value: "DEA 1.2+", label: "DEA 1.2 Positivo" },
-                    { value: "DEA 1.2-", label: "DEA 1.2 Negativo" },
-                    { value: "DEA 3+", label: "DEA 3 Positivo" },
-                    { value: "DEA 3-", label: "DEA 3 Negativo" },
-                    { value: "DEA 4+", label: "DEA 4 Positivo" },
-                    { value: "DEA 4-", label: "DEA 4 Negativo" },
-                    { value: "DEA 5+", label: "DEA 5 Positivo" },
-                    { value: "DEA 5-", label: "DEA 5 Negativo" },
-                    { value: "DEA 6+", label: "DEA 6 Positivo" },
-                    { value: "DEA 6-", label: "DEA 6 Negativo" },
-                    { value: "DEA 7+", label: "DEA 7 Positivo" },
-                    { value: "DEA 7-", label: "DEA 7 Negativo" },
-                    { value: "DEA 8+", label: "DEA 8 Positivo" },
-                    { value: "DEA 8-", label: "DEA 8 Negativo" },
-                    { value: "Universal", label: "Donante Universal" }
+                    { value: "DEA 1.1", label: "DEA 1.1" },
+                    { value: "DEA 1.2", label: "DEA 1.2" },
+                    { value: "DEA 3", label: "DEA 3" },
+                    { value: "DEA 4", label: "DEA 4" },
+                    { value: "DEA 5", label: "DEA 5" },
+                    { value: "DEA 7", label: "DEA 7" },
+                    { value: "DEA 8", label: "DEA 8" }
                 ];
             case 'feline':
                 return [

@@ -37,7 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import DonorProfileDialog from './CardMascotaPostulada';
+import DonorProfileDialog from '../components/CardMascotaPostulada';
 
 // Constantes para especies
 const SPECIES_LABELS = {
