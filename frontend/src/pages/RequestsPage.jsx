@@ -190,7 +190,7 @@ const generateMockRequests = () => {
 // Definición de estados actualizada
 const STATUSES = {
   pending: {
-    label: 'Pendiente',
+    label: 'En revisión',
     color: 'bg-yellow-100 text-yellow-800',
     icon: ClockIcon
   },
@@ -456,7 +456,7 @@ RequestCard.displayName = 'RequestCard';
 const RequestList = memo(({ requests, status }) => {
   const getStatusLabel = (status) => {
     const labels = {
-      pending: 'pendientes',
+      pending: 'en revisión',
       active: 'activas',
       completed: 'completadas',
       cancelled: 'canceladas'
@@ -666,7 +666,7 @@ export default function RequestsPage() {
   }
 
   return (
-    <main className="container mx-auto p-3 sm:p-4 lg:p-6 bg-green-50 rounded-lg shadow-md max-w-7xl">
+    <main className="container mx-auto p-3 sm:p-4 lg:p-6 bg-soft-green rounded-lg shadow-md max-w-7xl">
       <Toaster position="top-center" />
 
       {/* Header semántico */}
@@ -781,7 +781,7 @@ export default function RequestsPage() {
             <span className="ml-1">({filteredRequests('active').length})</span>
           </TabsTrigger>
             <TabsTrigger value="pending" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-yellow-500 data-[state=active]:text-white">
-            <span className="hidden sm:inline">Pendientes</span>
+            <span className="hidden sm:inline">En revisión</span>
             <span className="sm:hidden">Pend.</span>
             <span className="ml-1">({filteredRequests('pending').length})</span>
           </TabsTrigger>

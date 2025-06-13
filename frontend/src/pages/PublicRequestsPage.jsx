@@ -609,16 +609,17 @@ export default function PublicRequestsFeed() {
     <main className="container mx-auto p-3 sm:p-4 lg:p-6 bg-green-50 rounded-lg shadow-md max-w-7xl">
       {/* Encabezado semántico */}
       <header className="mb-6 sm:mb-8 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-gray-800">
-          Solicitudes de Donación de Sangre
-        </h1>
-        <p className="text-base text-gray-600 mb-2">
-          Encuentra perros y gatos que necesitan tu ayuda en Bogotá
-        </p>
-        <p className="text-sm text-gray-500" aria-live="polite">
-          {filteredRequests.length} solicitud{filteredRequests.length !== 1 ? 'es' : ''} activa{filteredRequests.length !== 1 ? 's' : ''}
-        </p>
-      </header>
+          <h1 className="text-3xl font-extrabold text-gray-900 mt-5">
+            🩸 ¡Ayuda a salvar vidas peludas!
+          </h1>
+           <p className="mt-2 text-lg text-gray-700">
+            Encuentra perros y gatos que necesitan tu ayuda en Bogotá.
+             Tu mascota puede ser un héroe hoy.
+          </p>
+          <p className="text-xs sm:text-sm text-gray-500" aria-live="polite">
+            {filteredRequests.length} solicitud{filteredRequests.length !== 1 ? 'es' : ''} activa{filteredRequests.length !== 1 ? 's' : ''}
+          </p>
+        </header>
 
       {/* Sección de filtros */}
       <section aria-label="Filtros de búsqueda">

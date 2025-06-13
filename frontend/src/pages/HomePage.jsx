@@ -4,8 +4,8 @@ import cat from '../assets/cat.json';
 
 const HomePage = () => {
   return (
-    <div className='mt-10' style={{
-      backgroundColor: 'lightblue',
+    <div className='mt-10 rounded-lg' style={{
+      backgroundColor: '#87CEEB',
       padding: '20px',
       textAlign: 'center'
     }}>
