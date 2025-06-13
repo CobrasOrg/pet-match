@@ -45,13 +45,17 @@ const SPECIES_LABELS = {
   feline: 'Gato'
 };
 
-// Datos de ejemplo actualizados con fotos y más información
+// Función para obtener emoji de especie
+const getSpeciesEmoji = (species) => {
+  return species === 'canine' ? '🐶' : '🐱';
+};
+
+// Datos de ejemplo actualizados sin fotos
 const MOCK_APPLICATIONS = [
   {
     id: 'APP-001',
     requestId: 'REQ-001',
     petName: 'Max',
-    petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=150&h=150&fit=crop&crop=face',
     species: 'canine',
     breed: 'Labrador Retriever',
     age: 3,
@@ -74,7 +78,6 @@ const MOCK_APPLICATIONS = [
     id: 'APP-002',
     requestId: 'REQ-001',
     petName: 'Bella',
-    petPhoto: 'https://images.unsplash.com/photo-1551717743-49959800b1f6?w=150&h=150&fit=crop&crop=face',
     species: 'canine',
     breed: 'Pastor Alemán',
     age: 4,
@@ -96,7 +99,6 @@ const MOCK_APPLICATIONS = [
     id: 'APP-003',
     requestId: 'REQ-001',
     petName: 'Rocky',
-    petPhoto: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=150&h=150&fit=crop&crop=face',
     species: 'canine',
     breed: 'Golden Retriever',
     age: 5,
@@ -250,21 +252,14 @@ export default function RequestApplications() {
                         <TableRow key={app.id}>
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                {app.petPhoto ? (
-                                  <img 
-                                    src={app.petPhoto} 
-                                    alt={app.petName}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  app.species === 'canine' ? 
-                                    <DogIcon className="h-6 w-6 text-gray-400" /> : 
-                                    <CatIcon className="h-6 w-6 text-gray-400" />
-                                )}
+                              {/* Círculo con emoji en lugar de imagen */}
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-100 to-pink-200 border-2 border-pink-300 flex items-center justify-center flex-shrink-0">
+                                <span className="text-xl" role="img" aria-label={SPECIES_LABELS[app.species]}>
+                                  {getSpeciesEmoji(app.species)}
+                                </span>
                               </div>
                               <div>
-                                <div className="font-medium">{app.petName}</div>
+                                <div className="font-medium text-blue-600">{app.petName}</div>
                                 <div className="text-sm text-gray-500">
                                   {app.species === 'canine' ? (
                                       <span className="flex items-center">
@@ -278,26 +273,32 @@ export default function RequestApplications() {
                                       </span>
                                   )}
                                 </div>
+                                <div className="text-xs text-gray-400">
+                                  {app.age} {app.age === 1 ? 'año' : 'años'}
+                                </div>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div>{app.ownerName}</div>
-                            <div className="text-sm text-gray-500 flex items-center">
-                              <PhoneIcon className="h-3 w-3 mr-1" /> {app.ownerPhone}
+                            <div className="font-medium">{app.ownerName}</div>
+                            <div className="text-sm text-gray-500 flex items-center mt-1">
+                              <PhoneIcon className="h-3 w-3 mr-1 flex-shrink-0" /> 
+                              <span className="truncate">{app.ownerPhone}</span>
                             </div>
-                            <div className="text-sm text-gray-500 flex items-center">
-                              <MailIcon className="h-3 w-3 mr-1" /> {app.ownerEmail}
+                            <div className="text-sm text-gray-500 flex items-center mt-1">
+                              <MailIcon className="h-3 w-3 mr-1 flex-shrink-0" /> 
+                              <span className="truncate">{app.ownerEmail}</span>
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant="outline" className="bg-red-50 text-red-700">
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
                               {app.bloodType || 'Desconocido'}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
-                            <span className="flex items-center justify-center">
-                              <ScaleIcon className="h-4 w-4 mr-1" /> {app.weight} kg
+                            <span className="flex items-center justify-center font-medium">
+                              <ScaleIcon className="h-4 w-4 mr-1 text-blue-500" /> 
+                              {app.weight} kg
                             </span>
                           </TableCell>
                           <TableCell>
@@ -306,7 +307,7 @@ export default function RequestApplications() {
                               <span className="ml-1">{STATUSES[app.status].label}</span>
                             </Badge>
                           </TableCell>
-                            <TableCell className="text-right">
+                          <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button
                                   variant="outline"
@@ -315,7 +316,8 @@ export default function RequestApplications() {
                                   onClick={() => handleViewProfile(app)}
                               >
                                 <EyeIcon className="h-4 w-4 mr-1" />
-                                Ver Detalles
+                                <span className="hidden sm:inline">Ver Detalles</span>
+                                <span className="sm:hidden">Ver</span>
                               </Button>
                               <Button
                                   variant="outline"
@@ -325,7 +327,8 @@ export default function RequestApplications() {
                                   disabled={app.status === 'approved'}
                               >
                                 <CheckCircle2Icon className="h-4 w-4 mr-1" />
-                                Aprobar
+                                <span className="hidden sm:inline">Aprobar</span>
+                                <span className="sm:hidden">✓</span>
                               </Button>
                               <Button
                                   variant="outline"
@@ -335,7 +338,8 @@ export default function RequestApplications() {
                                   disabled={app.status === 'rejected'}
                               >
                                 <XCircleIcon className="h-4 w-4 mr-1" />
-                                Rechazar
+                                <span className="hidden sm:inline">Rechazar</span>
+                                <span className="sm:hidden">✗</span>
                               </Button>
                             </div>
                           </TableCell>
