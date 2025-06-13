@@ -7,6 +7,7 @@ import PublicRequestsFeed from './pages/PublicRequestsPage'
 import DonationApplicationForm from '@/components/DonationApplicationForm'
 import RequestApplications from '@/pages/RequestApplicationsPage'
 import HomePage from '@/pages/HomePage'
+import Footer from '@/components/Footer'
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/requests/:id/applications" element={<RequestApplications />} />
         </Routes>
       </div>
+      <Footer /> 
     </div>
   )
 }

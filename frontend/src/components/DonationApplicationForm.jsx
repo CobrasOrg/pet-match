@@ -74,7 +74,7 @@ export default function DonationApplicationForm() {
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold">Formulario de Donación</h1>
+        <h1 className="text-2xl font-bold mt-4">Formulario de Donación</h1>
         <p className="text-gray-600">Proporciona información sobre tu mascota para evaluar su aptitud como donante</p>
       </div>
 
@@ -372,14 +372,11 @@ export default function DonationApplicationForm() {
             )}
           />
 
-          <div className="flex flex-col justify-center items-center mt-8 space-y-4">
-            <Button 
-              type="submit" 
-              className="bg-pink-600 hover:bg-pink-700 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-medium min-h-[48px] w-full max-w-sm"
-            >
+          <div className="flex flex-col items-center"> 
+            <Lottie animationData={dog} loop={true} className="w-32 h-32" />
+            <Button type="submit" className="bg-blue-600 hover:bg-blue-700  px-7 py-6 text-md ">
               Enviar solicitud de donación
             </Button>
-            <Lottie animationData={dog} loop={true} className="w-24 h-24 sm:w-32 sm:h-32" />
           </div>
         </form>
       </Form>

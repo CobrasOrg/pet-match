@@ -403,7 +403,7 @@ export default function BloodRequestForm({ onRequestCreated }) {
 
                 <Button
                     type="submit"
-                    className="w-full bg-blue-400 hover:bg-blue-500 py-6 text-lg"
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-md font-semibold text-white rounded-lg transition-colors duration-200"
                     disabled={form.formState.isSubmitting}
                 >
                     {form.formState.isSubmitting ? 'Enviando...' : 'Publicar Solicitud de Donación'}

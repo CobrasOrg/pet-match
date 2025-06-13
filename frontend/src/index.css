@@ -6,6 +6,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.bg-soft-green {
+  background-color:  #E9F9F5;
+}
+
+
 
 
 *{
