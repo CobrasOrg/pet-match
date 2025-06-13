@@ -372,11 +372,14 @@ export default function DonationApplicationForm() {
             )}
           />
 
-          <div className="flex justify-center items-center mt-4"> 
-            <Lottie animationData={dog} loop={true} className="w-32 h-32 mb-2" />
-            <Button type="submit" className="bg-pink-600 hover:bg-pink-700 px-8 py-8 text-lg h-10">
+          <div className="flex flex-col justify-center items-center mt-8 space-y-4">
+            <Button 
+              type="submit" 
+              className="bg-pink-600 hover:bg-pink-700 px-6 py-3 sm:px-8 sm:py-4 text-base sm:text-lg font-medium min-h-[48px] w-full max-w-sm"
+            >
               Enviar solicitud de donación
             </Button>
+            <Lottie animationData={dog} loop={true} className="w-24 h-24 sm:w-32 sm:h-32" />
           </div>
         </form>
       </Form>

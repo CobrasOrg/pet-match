@@ -4,7 +4,10 @@ import { NavLink, useNavigate } from 'react-router-dom';
 
 const NavBar = () => {
     const [open, setOpen] = React.useState(false);
-    const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+    // Inicializar desde localStorage
+    const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
+        return localStorage.getItem('isLoggedIn') === 'true';
+    });
     const [userType, setUserType] = React.useState(null); // 'owner' o 'clinic'
     const [profileMenuOpen, setProfileMenuOpen] = React.useState(false);
     const navigate = useNavigate();
@@ -13,12 +16,20 @@ const NavBar = () => {
         setIsLoggedIn(true);
         setUserType(type);
         navigate(type === 'owner' ? '/public' : '/requests');
+        // Persistir en localStorage
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userType', type);
+        navigate(type === 'owner' ? '/public' : '/requests');
     };
 
     const handleLogout = () => {
         setIsLoggedIn(false);
         setUserType(null);
         setProfileMenuOpen(false);
+        // Limpiar localStorage
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userType');
+        navigate('/');
         navigate('/');
     };
 
