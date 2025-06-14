@@ -292,7 +292,16 @@ export default function PublicRequestsFeed() {
     setIsLoading(true);
     setError(null);
 
-    fetch('http://localhost:8000/api/v1/user/solicitudes/activas')
+    // Construir query params según los filtros
+    const params = new URLSearchParams();
+    filters.species.forEach(species => params.append('especie', species));
+    filters.bloodType.forEach(bloodType => params.append('tipo_sangre', bloodType));
+    filters.urgency.forEach(urgency => params.append('urgencia', urgency));
+    filters.locality.forEach(locality => params.append('localidad', locality));
+
+    const url = `http://localhost:8000/api/v1/user/solicitudes/activas/filtrar?${params.toString()}`;
+
+    fetch(url)
       .then(async (res) => {
         if (!res.ok) throw new Error('Error al obtener las solicitudes');
         const data = await res.json();
@@ -303,7 +312,7 @@ export default function PublicRequestsFeed() {
         setError('Error al cargar las solicitudes');
         setIsLoading(false);
       });
-  }, []);
+  }, [filters]);
 
   // Actualizar URL con filtros
   const updateURLWithFilters = useCallback((filters, searchTerm) => {
@@ -358,16 +367,12 @@ export default function PublicRequestsFeed() {
     setSearchParams(new URLSearchParams(), { replace: true });
   }, [setSearchParams]);
 
-  // Filtrar solicitudes (memoizado)
+ // Solo búsqueda por texto en frontend
   const filteredRequests = useMemo(() => {
+    if (!debouncedSearchTerm) return requests;
     return requests.filter(req => {
-      // Normaliza los campos para búsqueda y filtrado
-      const especie = req.especie;
-      const urgencia = req.urgencia;
       const localidad = req.localidad?.toLowerCase?.() || '';
-      const status = req.estado;
-
-      const matchesSearch = !debouncedSearchTerm || [
+      return [
         req.especie,
         req.tipo_sangre,
         req.direccion,
@@ -377,18 +382,8 @@ export default function PublicRequestsFeed() {
       ].some(field =>
         field?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
-
-      const matchesFilters = (
-        (filters.species.length === 0 || filters.species.includes(especie)) &&
-        (filters.bloodType.length === 0 || filters.bloodType.includes(req.tipo_sangre)) &&
-        (filters.urgency.length === 0 || filters.urgency.includes(urgencia)) &&
-        (filters.locality.length === 0 || filters.locality.includes(localidad)) &&
-        (!filters.location || req.direccion?.toLowerCase().includes(filters.location.toLowerCase()))
-      );
-
-      return status === 'Activa' && matchesSearch && matchesFilters;
     });
-  }, [requests, debouncedSearchTerm, filters]);
+  }, [requests, debouncedSearchTerm]);
 
   // Loading state
   if (isLoading) {

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,23 +21,13 @@ import { toast } from 'sonner';
 export default function RequestDetailPage() {
   const { id } = useParams();
   const [isEditing, setIsEditing] = useState(false);
-  const [request, setRequest] = useState({
-    id: 'REQ-001',
-    species: 'canine',
-    bloodType: 'DEA 1.1+',
-    urgency: 'high',
-    date: '2023-11-15',
-    status: 'active',
-    description: 'Perro pastor alemán con anemia severa post-accidente',
-    location: 'Clínica VetCentral, Av. Principal 123',
-    contact: 'Dr. Martínez - 555-1234',
-    minWeight: 25,
-    donorMatches: [
-      { id: 'DON-001', name: 'Max (Labrador)', contact: 'Juan Pérez - 555-5678' }
-    ]
-  });
+  const [request, setRequest] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [editForm, setEditForm] = useState({});
+  const navigate = useNavigate();
+  
 
   const speciesOptions = [
     { value: 'canine', label: 'Perro' },
@@ -53,10 +44,107 @@ export default function RequestDetailPage() {
     feline: ['A', 'B', 'AB']
   };
 
-  const handleStatusChange = (newStatus) => {
-    setRequest({...request, status: newStatus});
-    console.log(`Estado actualizado a: ${newStatus}`);
+  // --- AQUÍ va el useEffect, fuera de cualquier función ---
+  useEffect(() => {
+    setIsLoading(true);
+    setError(null);
+
+    fetch(`http://localhost:8000/api/v1/vet/solicitudes/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error('No se pudo cargar la solicitud');
+        return res.json();
+      })
+      .then(data => {
+        setRequest({
+          id: data.id,
+          species: data.especie === 'Perro' ? 'canine' : data.especie === 'Gato' ? 'feline' : data.especie,
+          bloodType: data.tipo_sangre,
+          urgency: data.urgencia === 'Alta' ? 'high' : 'medium',
+          date: data.fecha_creacion,
+          status: (() => {
+            switch ((data.estado || '').toLowerCase()) {
+              case 'activa': return 'active';
+              case 'revision':
+              case 'en revisión': return 'pending';
+              case 'completada': return 'completed';
+              case 'cancelada': return 'cancelled';
+              default: return 'active';
+            }
+          })(),
+          description: data.descripcion_solicitud,
+          location: data.direccion,
+          contact: data.contacto,
+          minWeight: data.peso_minimo,
+          clinicName: data.nombre_veterinaria,
+          photo: data.foto_mascota,
+          locality: data.localidad?.toLowerCase() || '',
+        });
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setIsLoading(false));
+  }, [id]);
+  // --- FIN DEL useEffect ---
+
+const handleDelete = async () => {
+    if (!confirm('¿Estás seguro de eliminar esta solicitud? Esta acción no se puede deshacer.')) return;
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/vet/solicitudes/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.status === 204) {
+        toast.success('Solicitud eliminada correctamente');
+        navigate('/requests');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Error al eliminar la solicitud');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Error al eliminar la solicitud');
+    }
   };
+
+
+  const handleStatusChange = async (newStatus) => {
+    // Mapea el estado interno al valor que espera la API
+  const statusMap = {
+    active: 'Activa',
+    pending: 'Revision',
+    completed: 'Completada',
+    cancelled: 'Cancelada'
+  };
+
+  try {
+    const response = await fetch(`http://localhost:8000/api/v1/vet/solicitudes/${id}/estado`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ estado: statusMap[newStatus] })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Error al actualizar el estado');
+    }
+
+    const updated = await response.json();
+
+    setRequest(prev => ({
+      ...prev,
+      status: newStatus,
+      // Actualiza otros campos si lo deseas, por ejemplo:
+      // ...otros campos del objeto updated si quieres mantenerlos sincronizados
+    }));
+
+    toast.success('Estado actualizado correctamente');
+  } catch (err) {
+    toast.error(err.message || 'Error al actualizar el estado');
+  }
+};
+    
+  
 
   const handleEditStart = () => {
     setEditForm({
@@ -76,7 +164,7 @@ export default function RequestDetailPage() {
     setIsEditing(false);
   };
 
-  const handleEditSave = () => {
+  const handleEditSave =  async () => {
     // Validaciones básicas
     if (!editForm.species || !editForm.bloodType || !editForm.urgency || !editForm.description) {
       toast.error('Por favor, completa todos los campos obligatorios');
@@ -88,14 +176,67 @@ export default function RequestDetailPage() {
       return;
     }
 
-    // Actualizar la solicitud
-    setRequest({
-      ...request,
-      ...editForm
+    // Mapeo de valores para la API
+    const speciesMap = { canine: 'Perro', feline: 'Gato' };
+    const urgencyMap = { high: 'Alta', medium: 'Media' };
+
+    const body = {
+    descripcion_solicitud: editForm.description,
+    direccion: editForm.location,
+    especie: editForm.species === 'canine' ? 'Perro' : 'Gato',
+    estado: editForm.status || 'Activa', // O el estado actual si no editas el estado
+    peso_minimo: Number(editForm.minWeight),
+    tipo_sangre: editForm.bloodType,
+    urgencia: editForm.urgency === 'high' ? 'Alta' : 'Media'
+};
+    try {
+    const response = await fetch(`http://localhost:8000/api/v1/vet/solicitudes/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Error al actualizar la solicitud');
+    }
+
+    const updated = await response.json();
+
+    setRequest({
+      id: updated.id,
+      species: updated.especie === 'Perro' ? 'canine' : updated.especie === 'Gato' ? 'feline' : updated.especie,
+      bloodType: updated.tipo_sangre,
+      urgency: updated.urgencia === 'Alta' ? 'high' : 'medium',
+      date: updated.fecha_creacion,
+      status: (() => {
+        switch ((updated.estado || '').toLowerCase()) {
+          case 'activa': return 'active';
+          case 'revision':
+          case 'en revisión': return 'pending';
+          case 'completada': return 'completed';
+          case 'cancelada': return 'cancelled';
+          default: return 'active';
+        }
+      })(),
+      description: updated.descripcion_solicitud,
+      location: updated.direccion,
+      contact: updated.contacto,
+      minWeight: updated.peso_minimo,
+      clinicName: updated.nombre_veterinaria,
+      photo: updated.foto_mascota,
+      locality: updated.localidad?.toLowerCase() || '',
+    });
+
     setIsEditing(false);
     toast.success('Solicitud actualizada correctamente');
-  };
+  } catch (err) {
+    toast.error(err.message || 'Error al actualizar la solicitud');
+  }
+};
+
 
   const handleFormChange = (field, value) => {
     setEditForm(prev => ({
@@ -119,7 +260,7 @@ export default function RequestDetailPage() {
         color: 'bg-blue-100 text-blue-800',
         icon: <ActivityIcon className="h-4 w-4" />
       },
-      review: {
+      pending: {
         label: 'En revisión',
         color: 'bg-yellow-100 text-yellow-800',
         icon: <ClockIcon className="h-4 w-4" />
@@ -145,6 +286,27 @@ export default function RequestDetailPage() {
       </span>
     );
   };
+
+  
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <span>Cargando solicitud...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4 text-center text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  if (!request) {
+    return null;
+  }
 
   return (
       <div className="container mx-auto p-3 sm:p-4 lg:p-6 max-w-7xl">
@@ -387,7 +549,7 @@ export default function RequestDetailPage() {
                     <>
                       <Button
                           className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-xs sm:text-sm"
-                          onClick={() => handleStatusChange('review')}
+                          onClick={() => handleStatusChange('pending')}
                       >
                         <ClockIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                         <span className="truncate">Poner en revisión</span>
@@ -402,7 +564,7 @@ export default function RequestDetailPage() {
                     </>
                 )}
 
-                {request.status === 'review' && (
+                {request.status === 'pending' && (
                     <>
                       <Button
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm"
@@ -421,7 +583,7 @@ export default function RequestDetailPage() {
                     </>
                 )}
 
-                {(request.status === 'active' || request.status === 'review') && (
+                {(request.status === 'active' || request.status === 'pending') && (
                     <Button
                         variant="outline"
                         className="w-full text-red-600 text-xs sm:text-sm"
@@ -435,6 +597,14 @@ export default function RequestDetailPage() {
                       <span className="truncate">Cancelar solicitud</span>
                     </Button>
                 )}
+                <Button
+                variant="destructive"
+                className="w-full text-xs sm:text-sm"
+                onClick={handleDelete}
+              >
+                <XIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="truncate">Eliminar solicitud</span>
+              </Button>
               </CardContent>
             </Card>
           </div>

@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,6 +28,7 @@ import {
   LoaderIcon,
   PlusIcon,
   Building2Icon
+
 } from 'lucide-react';
 import BloodRequestForm from '@/components/BloodRequestForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -36,255 +37,90 @@ import { PhoneIcon } from '@heroicons/react/24/outline';
 import { BOGOTA_LOCALITIES, getLocalityLabel } from '@/constants/locations';
 import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
 
-// Constantes optimizadas
+// Mapeos para los valores que espera la API
+const MAP_SPECIES_TO_API = { canine: 'Perro', feline: 'Gato' };
+const MAP_URGENCY_TO_API = { high: 'Alta', medium: 'Media' };
+const MAP_STATUS_TO_API = {
+  active: 'Activa',
+  pending: 'Revision',
+  completed: 'Completada',
+  cancelled: 'Cancelada'
+};
+
 const SPECIES_LABELS = {
   canine: 'Perro',
   feline: 'Gato'
 };
 
-const URGENCY_LEVELS = [
-  { value: 'high', label: 'Alta urgencia' },
-  { value: 'medium', label: 'Urgencia media' }
-];
+const parseFiltersFromURL = (searchParams) => ({
+  species: searchParams.getAll('especie'),
+  bloodType: searchParams.getAll('tipo_sangre'),
+  urgency: searchParams.getAll('urgencia'),
+  locality: searchParams.getAll('localidad'),
+  location: searchParams.get('ubicacion') || ''
+});
 
-// Funciones optimizadas con memoización
-const getSpeciesEmoji = (() => {
-  const cache = {
-    canine: '🐶',
-    feline: '🐱'
-  };
-  return (species) => cache[species] || '';
-})();
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+};
 
-const getUrgencyBadge = (() => {
-  const cache = {
-    high: {
-      label: 'URGENCIA ALTA',
-      bgColor: 'bg-red-500',
-      textColor: 'text-white',
-      icon: AlertTriangleIcon
-    },
-    medium: {
+// Componente RequestCard
+function RequestCard({ request }) {
+  const urgencyBadge = useMemo(() => {
+    if (request.urgency === 'high') {
+      return {
+        label: 'URGENCIA ALTA',
+        bgColor: 'bg-red-500',
+        textColor: 'text-white',
+        icon: AlertCircleIcon
+      };
+    }
+    return {
       label: 'URGENCIA MEDIA',
       bgColor: 'bg-orange-500',
       textColor: 'text-white',
       icon: ClockIcon
-    }
-  };
-  return (urgency) => cache[urgency] || cache.medium;
-})();
+    };
+  }, [request.urgency]);
 
-// Datos mock mejorados con estado "pending"
-const generateMockRequests = () => {
-  const now = new Date();
-
-  return [
-    {
-      id: 'REQ-001',
-      petName: 'Rocky',
-      species: 'canine',
-      bloodType: 'DEA 1.1+',
-      urgency: 'high',
-      minWeight: 25,
-      description: 'Rocky es un pastor alemán de 5 años que ha sido diagnosticado con anemia severa después de una complicación durante una cirugía de emergencia. Su hemograma muestra valores críticos y necesita una transfusión de sangre urgente para estabilizar su condición.',
-      location: 'Clínica VetCentral, Av. Principal 123',
-      locality: 'suba',
-      status: 'active',
-      date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Veterinaria San Patricio',
-      vetContact: "+57 300 123 4567"
-    },
-    {
-      id: 'REQ-002',
-      petName: 'Luna',
-      species: 'feline',
-      bloodType: 'A',
-      urgency: 'medium',
-      minWeight: 4,
-      description: 'Luna es una hermosa gata siamés de 3 años que necesita una transfusión de sangre como preparación para una cirugía compleja programada para la próxima semana.',
-      location: 'Hospital Veterinario Felino, Calle Los Veterinarios 456',
-      locality: 'chapinero',
-      status: 'completed',
-      date: new Date(now.getTime() - 9 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Clínica Gatuna VIP',
-      vetContact: "+57 301 234 5678"
-    },
-    {
-      id: 'REQ-003',
-      petName: 'Max',
-      species: 'canine',
-      bloodType: 'DEA 1.1-',
-      urgency: 'high',
-      minWeight: 20,
-      description: 'Max es un golden retriever de 4 años que sufrió un grave accidente automovilístico esta madrugada mientras paseaba con su dueño.',
-      location: 'Hospital Veterinario de Emergencias 24/7, Av. Las Condes 789',
-      locality: 'kennedy',
-      status: 'active',
-      date: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Hospital Vet Central',
-      vetContact: "+57 302 345 6789"
-    },
-    {
-      id: 'REQ-004',
-      petName: 'Charlie',
-      species: 'canine',
-      bloodType: 'DEA 3+',
-      urgency: 'medium',
-      minWeight: 18,
-      description: 'Charlie es un beagle de 6 años que desarrolló una anemia hemolítica autoinmune. Su familia está muy preocupada y esperanzada en encontrar un donante compatible pronto.',
-      location: 'Clínica Veterinaria Central, Carrera 15 #85-20',
-      locality: 'fontibón',
-      status: 'cancelled',
-      date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Clínica Animales Felices',
-      vetContact: "+57 304 567 8901"
-    },
-    {
-      id: 'REQ-005',
-      petName: 'Mila',
-      species: 'feline',
-      bloodType: 'B',
-      urgency: 'high',
-      minWeight: 3.5,
-      description: 'Mila es una gata persa de 2 años que requiere una transfusión de sangre. Su solicitud está siendo revisada por el equipo médico para determinar la urgencia y los próximos pasos del tratamiento.',
-      location: 'Clínica Veterinaria Zona Norte, Calle 170 #45-32',
-      locality: 'usaquen',
-      status: 'pending',
-      date: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Vet Norte',
-      vetContact: "+57 303 456 7890"
-    },
-    {
-      id: 'REQ-006',
-      petName: 'Toby',
-      species: 'canine',
-      bloodType: 'DEA 4+',
-      urgency: 'medium',
-      minWeight: 15,
-      description: 'Toby es un cocker spaniel de 4 años que necesita una evaluación médica completa antes de proceder con la transfusión. Su caso está pendiente de aprobación.',
-      location: 'Hospital Veterinario Especializado, Av. Boyacá #90-15',
-      locality: 'engativá',
-      status: 'pending',
-      date: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
-      clinicName: 'Hospital Veterinario 24h',
-      vetContact: "+57 305 678 9012"
-    },
-    {
-      id: 'REQ-007',
-      petName: 'Simba',
-      species: 'feline',
-      bloodType: 'AB',
-      urgency: 'high',
-      minWeight: 4,
-      description: 'Simba es un gato maine coon de 5 años cuya solicitud de donación está siendo procesada. Se requiere documentación adicional antes de activar la solicitud.',
-      location: 'Clínica de Emergencias Veterinarias, Av. Caracas #50-20',
-      locality: 'chapinero',
-      status: 'pending',
-      date: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
-      clinicName: 'Clínica Gatuna VIP',
-      vetContact: "+57 309 012 3456"
-    }
-  ];
-};
-
-// Definición de estados actualizada
-const STATUSES = {
-  pending: {
-    label: 'En revisión',
-    color: 'bg-yellow-100 text-yellow-800',
-    icon: ClockIcon
-  },
-  active: {
-    label: 'Activa',
-    color: 'bg-blue-100 text-blue-800',
-    icon: ActivityIcon
-  },
-  completed: {
-    label: 'Completada',
-    color: 'bg-green-100 text-green-800',
-    icon: CheckCircle2Icon
-  },
-  cancelled: {
-    label: 'Cancelada',
-    color: 'bg-red-100 text-red-800',
-    icon: XCircleIcon
-  }
-};
-
-// Función de fecha optimizada con caché
-const formatDate = (() => {
-  const cache = new Map();
-
-  return (dateString) => {
-    if (cache.has(dateString)) {
-      return cache.get(dateString);
-    }
-
-    const date = new Date(dateString);
+  const UrgencyIcon = urgencyBadge.icon;
+  const speciesEmoji = request.species === 'canine' ? '🐶' : request.species === 'feline' ? '🐱' : '';
+  const formattedDate = useMemo(() => {
+    if (!request.date) return '';
+    const date = new Date(request.date);
     const today = new Date();
     const diffTime = today.getTime() - date.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
     const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-    let result;
-    if (diffTime < 0) {
-      result = 'Fecha futura';
-    } else if (diffMinutes < 60) {
-      result = diffMinutes < 1 ? 'Hace unos segundos' : `Hace ${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''}`;
-    } else if (diffHours < 24) {
-      result = `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
-    } else if (diffDays === 0) {
-      result = 'Hoy';
-    } else if (diffDays === 1) {
-      result = 'Hace 1 día';
-    } else if (diffDays < 30) {
-      result = `Hace ${diffDays} días`;
-    } else if (diffDays < 365) {
+    if (diffTime < 0) return 'Fecha futura';
+    if (diffMinutes < 60) return diffMinutes < 1 ? 'Hace unos segundos' : `Hace ${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''}`;
+    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
+    if (diffDays === 0) return 'Hoy';
+    if (diffDays === 1) return 'Hace 1 día';
+    if (diffDays < 30) return `Hace ${diffDays} días`;
+    if (diffDays < 365) {
       const diffMonths = Math.floor(diffDays / 30);
-      result = `Hace ${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
-    } else {
-      const diffYears = Math.floor(diffDays / 365);
-      result = `Hace ${diffYears} año${diffYears !== 1 ? 's' : ''}`;
+      return `Hace ${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
     }
+    const diffYears = Math.floor(diffDays / 365);
+    return `Hace ${diffYears} año${diffYears !== 1 ? 's' : ''}`;
+  }, [request.date]);
+  const localityLabel = getLocalityLabel(request.locality);
 
-    cache.set(dateString, result);
-    return result;
+  // Estado visual
+  const STATUS_CONFIG = {
+    active: { label: 'Activa', color: 'bg-blue-100 text-blue-800', icon: ActivityIcon },
+    pending: { label: 'En revisión', color: 'bg-yellow-100 text-yellow-800', icon: ClockIcon },
+    completed: { label: 'Completada', color: 'bg-green-100 text-green-800', icon: CheckCircle2Icon },
+    cancelled: { label: 'Cancelada', color: 'bg-red-100 text-red-800', icon: XCircleIcon }
   };
-})();
-
-// Hook de debounce optimizado
-const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  const timeoutRef = useRef();
-
-  useEffect(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    timeoutRef.current = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
-
-// Componente RequestCard memoizado sin imagen
-const RequestCard = memo(({ request }) => {
-  const urgencyBadge = useMemo(() => getUrgencyBadge(request.urgency), [request.urgency]);
-  const UrgencyIcon = urgencyBadge.icon;
-  const StatusIcon = STATUSES[request.status].icon;
-  const speciesEmoji = useMemo(() => getSpeciesEmoji(request.species), [request.species]);
-  const formattedDate = useMemo(() => formatDate(request.date), [request.date]);
-  const localityLabel = useMemo(() => getLocalityLabel(request.locality), [request.locality]);
+  const statusConf = STATUS_CONFIG[request.status];
 
   return (
     <article
@@ -321,11 +157,11 @@ const RequestCard = memo(({ request }) => {
             size="sm"
             aria-label={`Gestionar solicitud de ${request.petName}`}
           >
-            <Link to={`/requests/${request.id}`}>
+            <a href={`/requests/${request.id}`}>
               <EditIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Gestionar</span>
               <span className="sm:hidden">Gest.</span>
-            </Link>
+            </a>
           </Button>
         </div>
 
@@ -336,7 +172,7 @@ const RequestCard = memo(({ request }) => {
             dateTime={request.date}
             aria-label={`Creado ${formattedDate}`}
           >
-            <CalendarIcon className="h-4 w-4" aria-hidden="true" />
+            <ClockIcon className="h-4 w-4" aria-hidden="true" />
             <span>{formattedDate}</span>
           </time>
         </div>
@@ -435,12 +271,12 @@ const RequestCard = memo(({ request }) => {
             {/* Estado */}
             <div className="flex justify-start">
               <div
-                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${STATUSES[request.status].color} w-fit`}
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${statusConf.color} w-fit`}
                 role="status"
-                aria-label={`Estado: ${STATUSES[request.status].label}`}
+                aria-label={`Estado: ${statusConf.label}`}
               >
-                <StatusIcon className="h-3 w-3 mr-1" aria-hidden="true" />
-                <span>{STATUSES[request.status].label}</span>
+                <statusConf.icon className="h-3 w-3 mr-1" aria-hidden="true" />
+                <span>{statusConf.label}</span>
               </div>
             </div>
           </div>
@@ -448,12 +284,10 @@ const RequestCard = memo(({ request }) => {
       </div>
     </article>
   );
-});
+}
 
-RequestCard.displayName = 'RequestCard';
-
-// Componente RequestList memoizado
-const RequestList = memo(({ requests, status }) => {
+// Componente RequestList
+function RequestList({ requests, status }) {
   const getStatusLabel = (status) => {
     const labels = {
       pending: 'en revisión',
@@ -486,20 +320,8 @@ const RequestList = memo(({ requests, status }) => {
       ))}
     </div>
   );
-});
+}
 
-RequestList.displayName = 'RequestList';
-
-// Función para parsear filtros desde URL
-const parseFiltersFromURL = (searchParams) => ({
-  species: searchParams.getAll('especie'),
-  bloodType: searchParams.getAll('tipo_sangre'),
-  urgency: searchParams.getAll('urgencia'),
-  locality: searchParams.getAll('localidad'),
-  location: searchParams.get('ubicacion') || ''
-});
-
-// Componente principal
 export default function RequestsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -512,33 +334,110 @@ export default function RequestsPage() {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('busqueda') || '');
   const [activeTab, setActiveTab] = useState(searchParams.get('estado') || 'pending');
   const [filters, setFilters] = useState(() => parseFiltersFromURL(searchParams));
+  const [tabCounts, setTabCounts] = useState({
+    active: 0,
+    pending: 0,
+    completed: 0,
+    cancelled: 0
+  });
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Cargar datos
+  // Cargar solicitudes desde la API usando el endpoint de filtrar
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        // Simular carga de datos
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const mockData = generateMockRequests();
-        setRequests(mockData);
-      } catch (err) {
-        setError('Error al cargar las solicitudes');
-        console.error('Error loading data:', err);
-      } finally {
+    const params = new URLSearchParams();
+
+    // Estado/tab
+    if (activeTab) {
+      params.append('estado', MAP_STATUS_TO_API[activeTab]);
+    }
+    // Filtros
+    filters.species.forEach(s => params.append('especie', MAP_SPECIES_TO_API[s] || s));
+    filters.bloodType.forEach(b => params.append('tipo_sangre', b));
+    filters.urgency.forEach(u => params.append('urgencia', MAP_URGENCY_TO_API[u] || u));
+    filters.locality.forEach(l => params.append('localidad', l));
+
+    const url = `http://localhost:8000/api/v1/vet/solicitudes/filtrar?${params.toString()}`;
+
+    fetch(url)
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Error al cargar las solicitudes');
+        const data = await res.json();
+
+        // Mapea los campos de la API a los que espera tu frontend
+        const mapEstadoToStatus = (estado) => {
+          switch ((estado || '').toLowerCase()) {
+            case 'activa': return 'active';
+            case 'revision':
+            case 'en revisión': return 'pending';
+            case 'completada': return 'completed';
+            case 'cancelada': return 'cancelled';
+            default: return 'pending';
+          }
+        };
+
+        const mapped = data.map(item => ({
+          id: item.id,
+          petName: item.nombre_mascota,
+          species: item.especie === 'Perro' ? 'canine' : item.especie === 'Gato' ? 'feline' : item.especie,
+          bloodType: item.tipo_sangre,
+          urgency: item.urgencia === 'Alta' ? 'high' : 'medium',
+          minWeight: item.peso_minimo,
+          description: item.descripcion_solicitud,
+          location: item.direccion,
+          locality: item.localidad?.toLowerCase() || '',
+          status: mapEstadoToStatus(item.estado),
+          date: item.fecha_creacion,
+          clinicName: item.nombre_veterinaria,
+          vetContact: item.contacto,
+          photo: item.foto_mascota
+        }));
+
+        setRequests(mapped);
         setIsLoading(false);
-      }
+      })
+      .catch(() => {
+        setError('Error al cargar las solicitudes');
+        setIsLoading(false);
+      });
+  }, [filters, activeTab]);
+
+  // Cargar contadores de tabs (solo si no hay búsqueda por texto)
+  useEffect(() => {
+    if (debouncedSearchTerm) return;
+
+    const fetchCounts = async () => {
+      const states = ['active', 'pending', 'completed', 'cancelled'];
+      const promises = states.map(tab => {
+        const params = new URLSearchParams();
+        params.append('estado', MAP_STATUS_TO_API[tab]);
+        filters.species.forEach(s => params.append('especie', MAP_SPECIES_TO_API[s] || s));
+        filters.bloodType.forEach(b => params.append('tipo_sangre', b));
+        filters.urgency.forEach(u => params.append('urgencia', MAP_URGENCY_TO_API[u] || u));
+        filters.locality.forEach(l => params.append('localidad', l));
+        return fetch(`http://localhost:8000/api/v1/vet/solicitudes/filtrar?${params.toString()}`)
+          .then(res => res.ok ? res.json() : [])
+          .then(data => Array.isArray(data) ? data.length : 0)
+          .catch(() => 0);
+      });
+
+      const counts = await Promise.all(promises);
+      setTabCounts({
+        active: counts[0],
+        pending: counts[1],
+        completed: counts[2],
+        cancelled: counts[3]
+      });
     };
 
-    loadData();
-  }, []);
+    fetchCounts();
+  }, [filters, debouncedSearchTerm]);
 
-  // Actualizar URL con parámetros
-  const updateURLWithParams = useCallback((filters, searchTerm, activeTab) => {
+  // Actualizar URL con filtros y tab
+  const updateURLWithFilters = useCallback((filters, searchTerm, activeTab) => {
     const newParams = new URLSearchParams();
 
     if (searchTerm.trim()) {
@@ -561,27 +460,9 @@ export default function RequestsPage() {
     setSearchParams(newParams, { replace: true });
   }, [setSearchParams]);
 
-  // Sincronizar cambios con URL
   useEffect(() => {
-    updateURLWithParams(filters, debouncedSearchTerm, activeTab);
-  }, [filters, debouncedSearchTerm, activeTab, updateURLWithParams]);
-
-  // Manejar nueva solicitud
-  const handleRequestCreated = useCallback((newRequest) => {
-    const requestWithId = {
-      ...newRequest,
-      id: `REQ-${Date.now().toString(36)}${Math.random().toString(36).substr(2, 5)}`,
-      status: 'pending',
-      date: new Date().toISOString(),
-      petName: newRequest.petName || `Mascota ${Math.floor(Math.random() * 100)}`,
-      clinicName: newRequest.clinicName || 'Clínica Demo',
-      vetContact: newRequest.contact || '+57 300 000 0000',
-      locality: newRequest.locality || 'suba'
-    };
-
-    setRequests(prev => [requestWithId, ...prev]);
-    setIsModalOpen(false);
-  }, []);
+    updateURLWithFilters(filters, debouncedSearchTerm, activeTab);
+  }, [filters, debouncedSearchTerm, activeTab, updateURLWithFilters]);
 
   // Manejar cambios en filtros
   const handleFilterChange = useCallback((filterType, value) => {
@@ -613,36 +494,23 @@ export default function RequestsPage() {
     setSearchParams(new URLSearchParams(), { replace: true });
   }, [setSearchParams]);
 
-  // Filtrar solicitudes (memoizado)
+  // Solo búsqueda por texto en frontend
   const filteredRequests = useMemo(() => {
-    return (status) => {
-      return requests
-        .filter(req => req.status === status)
-        .filter(req => {
-          const matchesSearch = !debouncedSearchTerm || [
-            req.species,
-            req.bloodType,
-            req.petName,
-            req.location,
-            req.clinicName,
-            getLocalityLabel(req.locality),
-            SPECIES_LABELS[req.species]
-          ].some(field =>
-            field?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-          );
-
-          const matchesFilters = (
-            (filters.species.length === 0 || filters.species.includes(req.species)) &&
-            (filters.bloodType.length === 0 || filters.bloodType.includes(req.bloodType)) &&
-            (filters.urgency.length === 0 || filters.urgency.includes(req.urgency)) &&
-            (filters.locality.length === 0 || filters.locality.includes(req.locality)) &&
-            (!filters.location || req.location.toLowerCase().includes(filters.location.toLowerCase()))
-          );
-
-          return matchesSearch && matchesFilters;
-        });
-    };
-  }, [requests, debouncedSearchTerm, filters]);
+    if (!debouncedSearchTerm) return requests;
+    return requests.filter(req => {
+      return [
+        req.species,
+        req.bloodType,
+        req.petName,
+        req.location,
+        req.clinicName,
+        getLocalityLabel(req.locality),
+        SPECIES_LABELS[req.species]
+      ].some(field =>
+        field?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      );
+    });
+  }, [requests, debouncedSearchTerm]);
 
   if (isLoading) {
     return (
@@ -695,7 +563,7 @@ export default function RequestsPage() {
           <DialogHeader>
             <DialogTitle>Nueva Solicitud de Donación</DialogTitle>
           </DialogHeader>
-          <BloodRequestForm onRequestCreated={handleRequestCreated} />
+          <BloodRequestForm onRequestCreated={() => setIsModalOpen(false)} />
         </DialogContent>
       </Dialog>
 
@@ -763,54 +631,48 @@ export default function RequestsPage() {
 
         <ActiveFilters
           speciesLabels={SPECIES_LABELS}
-          urgencyLevels={URGENCY_LEVELS}
-          localityOptions={BOGOTA_LOCALITIES}
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={clearFilters}
         />
       </section>
 
-      {/* Tabs para estados con mejor responsive */}
+      {/* Tabs para estados */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-0 h-auto p-1">
-
           <TabsTrigger value="active" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
             <span className="hidden sm:inline">Activas</span>
             <span className="sm:hidden">Act.</span>
-            <span className="ml-1">({filteredRequests('active').length})</span>
+            <span className="ml-1">({debouncedSearchTerm ? filteredRequests.length : tabCounts.active})</span>
           </TabsTrigger>
-            <TabsTrigger value="pending" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-yellow-500 data-[state=active]:text-white">
+          <TabsTrigger value="pending" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-yellow-500 data-[state=active]:text-white">
             <span className="hidden sm:inline">En revisión</span>
             <span className="sm:hidden">Pend.</span>
-            <span className="ml-1">({filteredRequests('pending').length})</span>
+            <span className="ml-1">({debouncedSearchTerm ? filteredRequests.length : tabCounts.pending})</span>
           </TabsTrigger>
           <TabsTrigger value="completed" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-green-500 data-[state=active]:text-white">
             <span className="hidden sm:inline">Completadas</span>
             <span className="sm:hidden">Comp.</span>
-            <span className="ml-1">({filteredRequests('completed').length})</span>
+            <span className="ml-1">({debouncedSearchTerm ? filteredRequests.length : tabCounts.completed})</span>
           </TabsTrigger>
           <TabsTrigger value="cancelled" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-red-500 data-[state=active]:text-white">
             <span className="hidden sm:inline">Canceladas</span>
             <span className="sm:hidden">Canc.</span>
-            <span className="ml-1">({filteredRequests('cancelled').length})</span>
+            <span className="ml-1">({debouncedSearchTerm ? filteredRequests.length : tabCounts.cancelled})</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending">
-          <RequestList requests={filteredRequests('pending')} status="pending" />
-        </TabsContent>
-
         <TabsContent value="active">
-          <RequestList requests={filteredRequests('active')} status="active" />
+          <RequestList requests={filteredRequests} status="active" />
         </TabsContent>
-
+        <TabsContent value="pending">
+          <RequestList requests={filteredRequests} status="pending" />
+        </TabsContent>
         <TabsContent value="completed">
-          <RequestList requests={filteredRequests('completed')} status="completed" />
+          <RequestList requests={filteredRequests} status="completed" />
         </TabsContent>
-
         <TabsContent value="cancelled">
-          <RequestList requests={filteredRequests('cancelled')} status="cancelled" />
+          <RequestList requests={filteredRequests} status="cancelled" />
         </TabsContent>
       </Tabs>
     </main>
