@@ -12,8 +12,8 @@ import { BOGOTA_LOCALITIES } from '@/constants/locations';
 
 // Solo especies disponibles: perros y gatos
 const SPECIES_LABELS = {
-  canine: 'Perro',
-  feline: 'Gato'
+  Perro: 'Perro',
+  Gato: 'Gato'
 };
 
 // Tipos de sangre más comunes y relevantes
@@ -24,8 +24,8 @@ const BLOOD_TYPES = {
 
 // Solo urgencia alta y media
 const URGENCY_LEVELS = [
-  { value: 'high', label: 'Alta' },
-  { value: 'medium', label: 'Media' }
+  { value: 'Alta', label: 'Alta' },
+  { value: 'Media', label: 'Media' }
 ];
 
 export function FiltersPanel({ filters, onFilterChange, onClearFilters }) {
