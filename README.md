@@ -15,6 +15,7 @@ Pet Match es una aplicación que conecta a dueños de mascotas con veterinarias 
 ```bash
 git clone https://github.com/tu-usuario/pet-match.git
 cd pet-match
+cd frontend
 ```
 
 2. Instala las dependencias:
@@ -22,7 +23,7 @@ cd pet-match
 npm install
 ```
 
-3. Configura las variables de entorno:
+3. Configura las variables de entorno (NO necesario por el momento):
 ```bash
 cp .env.example .env
 ```
