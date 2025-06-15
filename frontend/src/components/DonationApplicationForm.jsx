@@ -83,6 +83,7 @@ export default function DonationApplicationForm() {
       ownerPhone: data.ownerPhone,
       ownerEmail: data.ownerEmail,
       ownerAddress: data.ownerAddress,
+      availability: data.availability, // <-- Faltaba este campo en el payload
       termsAccepted: data.termsAccepted
     };
 
@@ -97,8 +98,16 @@ export default function DonationApplicationForm() {
         return;
       }
       if (!res.ok) {
+        // Manejo mejorado de errores de validación
         const errorData = await res.json().catch(() => ({}));
-        toast.error(errorData.detail || 'No se pudo enviar la postulación');
+        // FastAPI suele devolver un array en errorData.detail
+        let errorMsg = 'No se pudo enviar la postulación';
+        if (Array.isArray(errorData.detail)) {
+          errorMsg = errorData.detail.map(e => e.msg).join(' | ');
+        } else if (typeof errorData.detail === 'string') {
+          errorMsg = errorData.detail;
+        }
+        toast.error(errorMsg);
         return;
       }
       toast.success('¡Gracias por tu voluntad de ayudar! Hemos recibido tu información.');
