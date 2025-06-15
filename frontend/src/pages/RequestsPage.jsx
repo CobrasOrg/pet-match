@@ -388,7 +388,7 @@ export default function RequestsPage() {
           minWeight: item.peso_minimo,
           description: item.descripcion_solicitud,
           location: item.direccion,
-          locality: item.localidad?.toLowerCase() || '',
+          locality: item.localidad || '',
           status: mapEstadoToStatus(item.estado),
           date: item.fecha_creacion,
           clinicName: item.nombre_veterinaria,

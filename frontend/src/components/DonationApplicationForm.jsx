@@ -30,6 +30,7 @@ import {
 //import { useParams } from 'react-router-dom'; desactivada por el momento, ya que no se usa el ID de la solicitud
 import Lottie from "lottie-react";
 import dog from "@/assets/dog.json";
+import { toast } from 'sonner';
 
 const speciesOptions = [
   { value: 'canine', label: 'Perro', icon: <DogIcon className="h-4 w-4 mr-2" /> },
@@ -91,11 +92,19 @@ export default function DonationApplicationForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error('No se pudo enviar la postulación');
-      alert('¡Gracias por tu voluntad de ayudar! Hemos recibido tu información.');
+      if (res.status === 409) {
+        toast.error('Ya existe una postulación con este correo electrónico.');
+        return;
+      }
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.detail || 'No se pudo enviar la postulación');
+        return;
+      }
+      toast.success('¡Gracias por tu voluntad de ayudar! Hemos recibido tu información.');
       form.reset();
     } catch (err) {
-      alert('Error al enviar la postulación: ' + err.message);
+      toast.error('Error al enviar la postulación: ' + (err.message || 'Error desconocido'));
     }
   };
 

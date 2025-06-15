@@ -133,8 +133,6 @@ export default function BloodRequestForm({ onRequestCreated }) {
             }
 
             const result = await response.json();
-            form.reset();
-            toast.success('Solicitud creada exitosamente');
 
             // Llama a la función callback
             if (onRequestCreated) {

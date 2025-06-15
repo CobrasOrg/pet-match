@@ -8,6 +8,7 @@ import DonationApplicationForm from '@/components/DonationApplicationForm'
 import RequestApplications from '@/pages/RequestApplicationsPage'
 import HomePage from '@/pages/HomePage'
 import Footer from '@/components/Footer'
+import { Toaster } from 'sonner'
 
 const App = () => {
   return (
@@ -24,6 +25,7 @@ const App = () => {
         </Routes>
       </div>
       <Footer /> 
+      <Toaster />
     </div>
   )
 }

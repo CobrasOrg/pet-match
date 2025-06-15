@@ -100,7 +100,8 @@ const RequestCard = memo(({ request }) => {
   const UrgencyIcon = urgencyBadge.icon;
   const speciesEmoji = SPECIES_EMOJIS[request.especie] || '';
   const formattedDate = formatDate(request.fecha_creacion);
-  const localityLabel = getLocalityLabel(request.localidad?.toLowerCase?.() || '');
+  // Muestra la localidad tal cual viene de la API
+  const localityLabel = request.localidad || '';
 
   return (
     <article

@@ -47,9 +47,10 @@ export default function RequestDetailPage() {
   // Estado para mostrar postulaciones
   const [showApplications, setShowApplications] = useState(false);
   const [applications, setApplications] = useState([]);
+  const [applicationsCount, setApplicationsCount] = useState(0); // Nuevo estado para el conteo
   const [loadingApplications, setLoadingApplications] = useState(false);
   const [applicationsError, setApplicationsError] = useState(null);
-  const [setSelectedApplication] = useState(null);
+  const [selectedApplication, setSelectedApplication] = useState(null);
   const [selectedApplicationDetails, setSelectedApplicationDetails] = useState(null);
 
   const speciesOptions = [
@@ -304,6 +305,54 @@ const handleDelete = async () => {
   };
 
   
+  // Función para cargar postulaciones del ID simulado
+  const fetchApplications = async () => {
+    setLoadingApplications(true);
+    setApplicationsError(null);
+    try {
+      const res = await fetch('http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones');
+      if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
+      const data = await res.json();
+      setApplications(data);
+      setApplicationsCount(Array.isArray(data) ? data.length : 0); // Actualiza el conteo aquí también
+    } catch (err) {
+      setApplicationsError(err.message || 'Error al cargar postulaciones');
+      setApplicationsCount(0);
+    } finally {
+      setLoadingApplications(false);
+    }
+  };
+
+  // Nueva función para obtener solo el número de postulaciones
+  const fetchApplicationsCount = async () => {
+    try {
+      const res = await fetch('http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones');
+      if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
+      const data = await res.json();
+      setApplicationsCount(Array.isArray(data) ? data.length : 0);
+    } catch {
+      setApplicationsCount(0);
+    }
+  };
+
+  // Función para cargar detalles de una postulación
+  const fetchApplicationDetails = async (postulacionId) => {
+    try {
+      const res = await fetch(`http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones/${postulacionId}`);
+      if (!res.ok) throw new Error('No se pudo cargar la postulación');
+      const data = await res.json();
+      setSelectedApplicationDetails(data);
+    } catch (err) {
+      setSelectedApplicationDetails(null);
+      alert('Error al cargar detalles: ' + err.message);
+    }
+  };
+
+  // Llama a fetchApplicationsCount al cargar la página y cuando se cierra el modal
+  useEffect(() => {
+    fetchApplicationsCount();
+  }, []);
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 text-center">
@@ -323,35 +372,6 @@ const handleDelete = async () => {
   if (!request) {
     return null;
   }
-
-  // Función para cargar postulaciones del ID simulado
-  const fetchApplications = async () => {
-    setLoadingApplications(true);
-    setApplicationsError(null);
-    try {
-      const res = await fetch('http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones');
-      if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
-      const data = await res.json();
-      setApplications(data);
-    } catch (err) {
-      setApplicationsError(err.message || 'Error al cargar postulaciones');
-    } finally {
-      setLoadingApplications(false);
-    }
-  };
-
-  // Función para cargar detalles de una postulación
-  const fetchApplicationDetails = async (postulacionId) => {
-    try {
-      const res = await fetch(`http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones/${postulacionId}`);
-      if (!res.ok) throw new Error('No se pudo cargar la postulación');
-      const data = await res.json();
-      setSelectedApplicationDetails(data);
-    } catch (err) {
-      setSelectedApplicationDetails(null);
-      alert('Error al cargar detalles: ' + err.message);
-    }
-  };
 
   return (
       <div className="container mx-auto p-3 sm:p-4 lg:p-6 max-w-7xl">
@@ -589,7 +609,7 @@ const handleDelete = async () => {
                   }}
                 >
                   <span className="truncate">
-                    Ver mascotas postuladas ({applications.length})
+                    Ver mascotas postuladas ({applicationsCount})
                   </span>
                 </Button>
 
@@ -668,7 +688,7 @@ const handleDelete = async () => {
                   setShowApplications(false);
                   setSelectedApplication(null);
                   setSelectedApplicationDetails(null);
-                  fetchApplications(); // Actualiza el número al cerrar el modal
+                  fetchApplicationsCount(); // Actualiza el número al cerrar el modal
                 }}
               >
                 <XIcon className="h-5 w-5" />
