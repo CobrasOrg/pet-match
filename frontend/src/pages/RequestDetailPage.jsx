@@ -310,7 +310,7 @@ const handleDelete = async () => {
     setLoadingApplications(true);
     setApplicationsError(null);
     try {
-      const res = await fetch('http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones');
+      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones`);
       if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
       const data = await res.json();
       setApplications(data);
@@ -326,7 +326,7 @@ const handleDelete = async () => {
   // Nueva función para obtener solo el número de postulaciones
   const fetchApplicationsCount = async () => {
     try {
-      const res = await fetch('http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones');
+      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones`);
       if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
       const data = await res.json();
       setApplicationsCount(Array.isArray(data) ? data.length : 0);
@@ -338,7 +338,7 @@ const handleDelete = async () => {
   // Función para cargar detalles de una postulación
   const fetchApplicationDetails = async (postulacionId) => {
     try {
-      const res = await fetch(`http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones/${postulacionId}`);
+      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${postulacionId}`);
       if (!res.ok) throw new Error('No se pudo cargar la postulación');
       const data = await res.json();
       setSelectedApplicationDetails(data);
@@ -693,7 +693,7 @@ const handleDelete = async () => {
               >
                 <XIcon className="h-5 w-5" />
               </button>
-              <h2 className="text-lg font-bold mb-4">Mascotas postuladas (REQ-001)</h2>
+              <h2 className="text-lg font-bold mb-4">Mascotas postuladas ({id})</h2>
               {loadingApplications ? (
                 <div className="text-center py-4">Cargando postulaciones...</div>
               ) : applicationsError ? (
@@ -798,7 +798,7 @@ const handleDelete = async () => {
                                 size="sm"
                                 className="h-8 text-green-600 border-green-200 hover:bg-green-50"
                                 onClick={async () => {
-                                  await fetch(`http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones/${app.id}/status`, {
+                                  await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${app.id}/status`, {
                                     method: 'PATCH',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ status: 'approved' })
@@ -816,7 +816,7 @@ const handleDelete = async () => {
                                 size="sm"
                                 className="h-8 text-red-600 border-red-200 hover:bg-red-50"
                                 onClick={async () => {
-                                  await fetch(`http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones/${app.id}/status`, {
+                                  await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${app.id}/status`, {
                                     method: 'PATCH',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ status: 'rejected' })

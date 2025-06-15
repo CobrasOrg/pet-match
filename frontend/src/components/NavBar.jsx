@@ -4,11 +4,19 @@ import { NavLink, useNavigate } from 'react-router-dom';
 
 const NavBar = () => {
     const [open, setOpen] = React.useState(false);
-    // Inicializar desde localStorage
-    const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
-        return localStorage.getItem('isLoggedIn') === 'true';
-    });
-    const [userType, setUserType] = React.useState(null); // 'owner' o 'clinic'
+    const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+    const [userType, setUserType] = React.useState(null);
+
+
+//     const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
+//     const logged = localStorage.getItem('isLoggedIn') === 'true';
+//     const type = localStorage.getItem('userType');
+//     return logged && (type === 'owner' || type === 'clinic');
+// });
+// const [userType, setUserType] = React.useState(() => {
+//     const type = localStorage.getItem('userType');
+//     return type === 'owner' || type === 'clinic' ? type : null;
+// });
     const [profileMenuOpen, setProfileMenuOpen] = React.useState(false);
     const navigate = useNavigate();
 

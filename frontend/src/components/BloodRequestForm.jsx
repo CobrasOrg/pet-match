@@ -138,6 +138,8 @@ export default function BloodRequestForm({ onRequestCreated }) {
             if (onRequestCreated) {
                 onRequestCreated(result);
             }
+            toast.success('Solicitud de donación creada exitosamente');
+            form.reset(); // Resetea el formulario después de enviar
 
         } catch (error) {
             console.error('Error en el formulario:', error);

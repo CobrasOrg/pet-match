@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { useParams } from 'react-router-dom';
 import {
   Form,
   FormControl,
@@ -43,7 +44,8 @@ const bloodTypeOptions = {
 };
 
 export default function DonationApplicationForm() {
-  //const { id: requestId } = useParams(); // ID de la solicitud a la que se está aplicando
+  const { id: requestId } = useParams(); // ID de la solicitud a la que se está aplicando
+  console.log("ID de solicitud:", requestId); // Para depuración, puedes eliminarlo más tarde
 
   const form = useForm({
     defaultValues: {
@@ -88,7 +90,7 @@ export default function DonationApplicationForm() {
     };
 
     try {
-      const res = await fetch('http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones', {
+      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${requestId}/postulaciones`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
