@@ -45,85 +45,28 @@ const SPECIES_LABELS = {
   feline: 'Gato'
 };
 
+// Mapeo de estados a iconos, etiquetas y colores
+const STATUSES = {
+  pending: {
+    icon: <ClockIcon className="h-4 w-4 mr-1 text-yellow-500" />,
+    label: 'Pendiente',
+    color: 'bg-yellow-50 text-yellow-700 border-yellow-200'
+  },
+  approved: {
+    icon: <CheckCircle2Icon className="h-4 w-4 mr-1 text-green-600" />,
+    label: 'Aprobado',
+    color: 'bg-green-50 text-green-700 border-green-200'
+  },
+  rejected: {
+    icon: <XCircleIcon className="h-4 w-4 mr-1 text-red-600" />,
+    label: 'Rechazado',
+    color: 'bg-red-50 text-red-700 border-red-200'
+  }
+};
+
 // Función para obtener emoji de especie
 const getSpeciesEmoji = (species) => {
   return species === 'canine' ? '🐶' : '🐱';
-};
-
-// Datos de ejemplo actualizados sin fotos
-const MOCK_APPLICATIONS = [
-  {
-    id: 'APP-001',
-    requestId: 'REQ-001',
-    petName: 'Max',
-    species: 'canine',
-    breed: 'Labrador Retriever',
-    age: 3,
-    weight: 28,
-    bloodType: 'DEA 1.1+',
-    lastVaccination: '2023-10-15',
-    healthStatus: 'Excelente estado de salud. Todas las vacunas al día. Sin historial de enfermedades graves.',
-    ownerName: 'Juan Pérez',
-    ownerPhone: '+57 310 123 4567',
-    ownerEmail: 'juan.perez@example.com',
-    ownerAddress: 'Calle 100 #15-20, Chapinero, Bogotá',
-    status: 'pending',
-    applicationDate: '2023-11-20T14:30:00Z',
-    donationHistory: [
-      { date: '2023-08-15', clinic: 'Clínica Veterinaria Central' },
-      { date: '2023-05-10', clinic: 'Hospital Animal Norte' }
-    ]
-  },
-  {
-    id: 'APP-002',
-    requestId: 'REQ-001',
-    petName: 'Bella',
-    species: 'canine',
-    breed: 'Pastor Alemán',
-    age: 4,
-    weight: 30,
-    bloodType: 'DEA 1.1+',
-    lastVaccination: '2023-09-20',
-    healthStatus: 'Buen estado general. Presenta alergias leves a ciertos alimentos, pero controladas. Historial de donaciones exitosas.',
-    ownerName: 'María Gómez',
-    ownerPhone: '+57 320 987 6543',
-    ownerEmail: 'maria.gomez@example.com',
-    ownerAddress: 'Carrera 7 #85-32, Zona Rosa, Bogotá',
-    status: 'approved',
-    applicationDate: '2023-11-21T10:15:00Z',
-    donationHistory: [
-      { date: '2023-07-20', clinic: 'Veterinaria Animales Felices' }
-    ]
-  },
-  {
-    id: 'APP-003',
-    requestId: 'REQ-001',
-    petName: 'Rocky',
-    species: 'canine',
-    breed: 'Golden Retriever',
-    age: 5,
-    weight: 32,
-    bloodType: 'DEA 1.1+',
-    lastVaccination: '2023-11-01',
-    healthStatus: 'Excelente condición física. Donante experimentado con múltiples donaciones exitosas.',
-    ownerName: 'Carlos Rodríguez',
-    ownerPhone: '+57 315 456 7890',
-    ownerEmail: 'carlos.rodriguez@example.com',
-    ownerAddress: 'Avenida 68 #45-12, Engativá, Bogotá',
-    status: 'rejected',
-    applicationDate: '2023-11-19T16:45:00Z',
-    donationHistory: [
-      { date: '2023-09-10', clinic: 'Clínica Veterinaria del Norte' },
-      { date: '2023-06-15', clinic: 'Hospital Animal Central' },
-      { date: '2023-03-20', clinic: 'Veterinaria San José' }
-    ]
-  }
-];
-
-const STATUSES = {
-  pending: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: <ClockIcon className="h-4 w-4" /> },
-  approved: { label: 'Aprobado', color: 'bg-green-100 text-green-800', icon: <CheckCircle2Icon className="h-4 w-4" /> },
-  rejected: { label: 'Rechazado', color: 'bg-red-100 text-red-800', icon: <XCircleIcon className="h-4 w-4" /> }
 };
 
 export default function RequestApplications() {
@@ -135,46 +78,65 @@ export default function RequestApplications() {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchApplications = async () => {
-      setIsLoading(true);
-      try {
-        const filtered = MOCK_APPLICATIONS.filter(app => app.requestId === id);
-        setApplications(filtered);
-      } catch (error) {
-        console.error("Error fetching applications:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Cargar postulaciones reales
+  const fetchApplications = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones`);
+      if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
+      const data = await res.json();
+      setApplications(data);
+    } catch (error) {
+      setApplications([]);
+      console.error("Error fetching applications:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchApplications();
+    // eslint-disable-next-line
   }, [id]);
 
   const filteredApplications = applications.filter(app => {
     if (searchTerm &&
-        !app.petName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !app.ownerName.toLowerCase().includes(searchTerm.toLowerCase())) {
+        !app.petName?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !app.ownerName?.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-
     if (statusFilter !== 'all' && app.status !== statusFilter) {
       return false;
     }
-
     return true;
   });
 
-  const handleStatusChange = (applicationId, newStatus) => {
-    setApplications(prev => prev.map(app =>
-        app.id === applicationId ? { ...app, status: newStatus } : app
-    ));
-    console.log(`Cambiando aplicación ${applicationId} a estado ${newStatus}`);
+  // Obtener detalles de una postulación
+  const handleViewProfile = async (application) => {
+    try {
+      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${application.id}`);
+      if (!res.ok) throw new Error('No se pudo cargar la postulación');
+      const data = await res.json();
+      setSelectedApplication(data);
+      setIsProfileDialogOpen(true);
+    } catch (err) {
+      alert('Error al cargar detalles: ' + err.message);
+    }
   };
 
-  const handleViewProfile = (application) => {
-    setSelectedApplication(application);
-    setIsProfileDialogOpen(true);
+  // Cambiar estado usando PATCH
+  const handleStatusChange = async (applicationId, newStatus) => {
+    try {
+      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${applicationId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (!res.ok) throw new Error('No se pudo actualizar el estado');
+      await fetchApplications();
+    } catch (err) {
+      alert('Error al actualizar estado: ' + err.message);
+    }
   };
 
   if (isLoading) {

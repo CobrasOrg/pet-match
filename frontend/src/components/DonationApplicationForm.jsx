@@ -27,9 +27,10 @@ import {
   AlertCircleIcon,
   ClipboardListIcon
 } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+//import { useParams } from 'react-router-dom'; desactivada por el momento, ya que no se usa el ID de la solicitud
 import Lottie from "lottie-react";
 import dog from "@/assets/dog.json";
+import { toast } from 'sonner';
 
 const speciesOptions = [
   { value: 'canine', label: 'Perro', icon: <DogIcon className="h-4 w-4 mr-2" /> },
@@ -37,12 +38,12 @@ const speciesOptions = [
 ];
 
 const bloodTypeOptions = {
-  canine: ['DEA 1.1', 'DEA 1.2', 'DEA 3', 'DEA 4', 'DEA 5', 'DEA 7', 'DEA 8'],
+  canine: ['DEA 1.1+', 'DEA 1.1-'],
   feline: ['A', 'B', 'AB']
 };
 
 export default function DonationApplicationForm() {
-  const { id: requestId } = useParams(); // ID de la solicitud a la que se está aplicando
+  //const { id: requestId } = useParams(); // ID de la solicitud a la que se está aplicando
 
   const form = useForm({
     defaultValues: {
@@ -53,11 +54,12 @@ export default function DonationApplicationForm() {
       weight: '',
       bloodType: '',
       lastVaccination: '',
-      healthConditions: '',
+      healthStatus: '', // Cambiado de healthConditions
       medications: '',
       ownerName: '',
       ownerPhone: '',
       ownerEmail: '',
+      ownerAddress: '', // Nuevo campo
       availability: '',
       termsAccepted: false
     }
@@ -65,10 +67,45 @@ export default function DonationApplicationForm() {
 
   const selectedSpecies = form.watch('species');
 
-  const onSubmit = (data) => {
-    console.log('Datos de la aplicación:', { ...data, requestId });
-    // lógica para enviar al backend
-    alert('¡Gracias por tu voluntad de ayudar! Hemos recibido tu información.');
+  const onSubmit = async (data) => {
+    // Adaptar los datos al esquema de la API
+    const payload = {
+      petName: data.petName,
+      species: data.species,
+      breed: data.breed,
+      age: Number(data.age),
+      weight: Number(data.weight),
+      bloodType: data.bloodType,
+      lastVaccination: data.lastVaccination,
+      healthStatus: data.healthStatus,
+      medications: data.medications,
+      ownerName: data.ownerName,
+      ownerPhone: data.ownerPhone,
+      ownerEmail: data.ownerEmail,
+      ownerAddress: data.ownerAddress,
+      termsAccepted: data.termsAccepted
+    };
+
+    try {
+      const res = await fetch('http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.status === 409) {
+        toast.error('Ya existe una postulación con este correo electrónico.');
+        return;
+      }
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.detail || 'No se pudo enviar la postulación');
+        return;
+      }
+      toast.success('¡Gracias por tu voluntad de ayudar! Hemos recibido tu información.');
+      form.reset();
+    } catch (err) {
+      toast.error('Error al enviar la postulación: ' + (err.message || 'Error desconocido'));
+    }
   };
 
   return (
@@ -230,7 +267,7 @@ export default function DonationApplicationForm() {
 
             <FormField
               control={form.control}
-              name="healthConditions"
+              name="healthStatus"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Condiciones médicas conocidas</FormLabel>
@@ -324,6 +361,20 @@ export default function DonationApplicationForm() {
                     <FormLabel>Correo electrónico *</FormLabel>
                     <FormControl>
                       <Input type="email" placeholder="tu@email.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ownerAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dirección del dueño</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Calle 100 #15-20, Bogotá" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
