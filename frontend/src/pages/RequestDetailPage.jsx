@@ -14,9 +14,25 @@ import {
   EditIcon,
   SaveIcon,
   XIcon,
-  ClockIcon
+  ClockIcon,
+  DogIcon,
+  CatIcon,
+  ScaleIcon,
+  PhoneIcon,
+  MailIcon,
+  EyeIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
+import CardMascotaPostulada from "@/components/CardMascotaPostulada";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 export default function RequestDetailPage() {
   const { id } = useParams();
@@ -28,6 +44,13 @@ export default function RequestDetailPage() {
   const [editForm, setEditForm] = useState({});
   const navigate = useNavigate();
   
+  // Estado para mostrar postulaciones
+  const [showApplications, setShowApplications] = useState(false);
+  const [applications, setApplications] = useState([]);
+  const [loadingApplications, setLoadingApplications] = useState(false);
+  const [applicationsError, setApplicationsError] = useState(null);
+  const [setSelectedApplication] = useState(null);
+  const [selectedApplicationDetails, setSelectedApplicationDetails] = useState(null);
 
   const speciesOptions = [
     { value: 'canine', label: 'Perro' },
@@ -40,7 +63,7 @@ export default function RequestDetailPage() {
   ];
 
   const bloodTypeOptions = {
-    canine: ['DEA 1.1+', 'DEA 1.1-', 'DEA 3+', 'DEA 3-', 'DEA 4+', 'DEA 4-', 'DEA 5+', 'DEA 5-'],
+    canine: ['DEA 1.1+', 'DEA 1.1-'],
     feline: ['A', 'B', 'AB']
   };
 
@@ -129,8 +152,6 @@ const handleDelete = async () => {
       throw new Error(errorData.detail || 'Error al actualizar el estado');
     }
 
-    const updated = await response.json();
-
     setRequest(prev => ({
       ...prev,
       status: newStatus,
@@ -143,8 +164,6 @@ const handleDelete = async () => {
     toast.error(err.message || 'Error al actualizar el estado');
   }
 };
-    
-  
 
   const handleEditStart = () => {
     setEditForm({
@@ -176,9 +195,6 @@ const handleDelete = async () => {
       return;
     }
 
-    // Mapeo de valores para la API
-    const speciesMap = { canine: 'Perro', feline: 'Gato' };
-    const urgencyMap = { high: 'Alta', medium: 'Media' };
 
     const body = {
     descripcion_solicitud: editForm.description,
@@ -308,6 +324,35 @@ const handleDelete = async () => {
     return null;
   }
 
+  // Función para cargar postulaciones del ID simulado
+  const fetchApplications = async () => {
+    setLoadingApplications(true);
+    setApplicationsError(null);
+    try {
+      const res = await fetch('http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones');
+      if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
+      const data = await res.json();
+      setApplications(data);
+    } catch (err) {
+      setApplicationsError(err.message || 'Error al cargar postulaciones');
+    } finally {
+      setLoadingApplications(false);
+    }
+  };
+
+  // Función para cargar detalles de una postulación
+  const fetchApplicationDetails = async (postulacionId) => {
+    try {
+      const res = await fetch(`http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones/${postulacionId}`);
+      if (!res.ok) throw new Error('No se pudo cargar la postulación');
+      const data = await res.json();
+      setSelectedApplicationDetails(data);
+    } catch (err) {
+      setSelectedApplicationDetails(null);
+      alert('Error al cargar detalles: ' + err.message);
+    }
+  };
+
   return (
       <div className="container mx-auto p-3 sm:p-4 lg:p-6 max-w-7xl">
         {/* Cabecera responsiva */}
@@ -322,7 +367,7 @@ const handleDelete = async () => {
           </div>
         </div>
 
-        {/* Contenido principal responsivo */}
+        {/* Contenido principal responsiva */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Columna izquierda */}
           <div className="lg:col-span-2 space-y-4 lg:space-y-6">
@@ -536,13 +581,16 @@ const handleDelete = async () => {
               </CardHeader>
               <CardContent className="space-y-2 sm:space-y-3">
                 <Button
-                    asChild
-                    variant="outline"
-                    className="bg-blue-100 text-blue-800 hover:bg-blue-200 w-full text-xs sm:text-sm"
+                  variant="outline"
+                  className="bg-blue-100 text-blue-800 hover:bg-blue-200 w-full text-xs sm:text-sm"
+                  onClick={() => {
+                    setShowApplications(true);
+                    fetchApplications();
+                  }}
                 >
-                  <Link to={`/requests/${request.id}/applications`}>
-                    <span className="truncate">Ver mascotas postuladas ({request.donorMatches?.length || 0})</span>
-                  </Link>
+                  <span className="truncate">
+                    Ver mascotas postuladas ({applications.length})
+                  </span>
                 </Button>
 
                 {request.status === 'active' && (
@@ -609,6 +657,175 @@ const handleDelete = async () => {
             </Card>
           </div>
         </div>
+
+        {/* Modal/Postulaciones */}
+        {showApplications && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 relative">
+              <button
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                onClick={() => {
+                  setShowApplications(false);
+                  setSelectedApplication(null);
+                  setSelectedApplicationDetails(null);
+                  fetchApplications(); // Actualiza el número al cerrar el modal
+                }}
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+              <h2 className="text-lg font-bold mb-4">Mascotas postuladas (REQ-001)</h2>
+              {loadingApplications ? (
+                <div className="text-center py-4">Cargando postulaciones...</div>
+              ) : applicationsError ? (
+                <div className="text-red-500">{applicationsError}</div>
+              ) : applications.length === 0 ? (
+                <div className="text-gray-500">No hay postulaciones registradas.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Mascota</TableHead>
+                        <TableHead>Dueño</TableHead>
+                        <TableHead className="text-center">Tipo Sangre</TableHead>
+                        <TableHead className="text-center">Peso</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {applications.map((app) => (
+                        <TableRow key={app.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-100 to-pink-200 border-2 border-pink-300 flex items-center justify-center flex-shrink-0">
+                                <span className="text-xl" role="img" aria-label={app.species === 'canine' ? 'Perro' : 'Gato'}>
+                                  {app.species === 'canine' ? '🐶' : '🐱'}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="font-medium text-blue-600">{app.petName}</div>
+                                <div className="text-sm text-gray-500">
+                                  {app.species === 'canine' ? (
+                                    <span className="flex items-center">
+                                      <DogIcon className="h-4 w-4 mr-1" />
+                                      Perro - {app.breed}
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center">
+                                      <CatIcon className="h-4 w-4 mr-1" />
+                                      Gato - {app.breed}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{app.ownerName}</div>
+                            <div className="text-sm text-gray-500 flex items-center mt-1">
+                              <PhoneIcon className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">{app.ownerPhone}</span>
+                            </div>
+                            <div className="text-sm text-gray-500 flex items-center mt-1">
+                              <MailIcon className="h-3 w-3 mr-1 flex-shrink-0" />
+                              <span className="truncate">{app.ownerEmail}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                              {app.bloodType || 'Desconocido'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="flex items-center justify-center font-medium">
+                              <ScaleIcon className="h-4 w-4 mr-1 text-blue-500" />
+                              {app.weight} kg
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={
+                              app.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : app.status === 'approved'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }>
+                              {app.status === 'pending'
+                                ? 'Pendiente'
+                                : app.status === 'approved'
+                                ? 'Aprobado'
+                                : 'Rechazado'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8"
+                                onClick={async () => {
+                                  setSelectedApplication(app);
+                                  await fetchApplicationDetails(app.id);
+                                }}
+                              >
+                                <EyeIcon className="h-4 w-4 mr-1" />
+                                <span className="hidden sm:inline">Ver Detalles</span>
+                                <span className="sm:hidden">Ver</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-green-600 border-green-200 hover:bg-green-50"
+                                onClick={async () => {
+                                  await fetch(`http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones/${app.id}/status`, {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status: 'approved' })
+                                  });
+                                  fetchApplications();
+                                }}
+                                disabled={app.status === 'approved'}
+                              >
+                                <CheckCircle2Icon className="h-4 w-4 mr-1" />
+                                <span className="hidden sm:inline">Aprobar</span>
+                                <span className="sm:hidden">✓</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                                onClick={async () => {
+                                  await fetch(`http://localhost:8001/base/api/solicitudes/REQ-001/postulaciones/${app.id}/status`, {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status: 'rejected' })
+                                  });
+                                  fetchApplications();
+                                }}
+                                disabled={app.status === 'rejected'}
+                              >
+                                <XCircleIcon className="h-4 w-4 mr-1" />
+                                <span className="hidden sm:inline">Rechazar</span>
+                                <span className="sm:hidden">✗</span>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+            {/* Diálogo de detalles */}
+            <CardMascotaPostulada
+              application={selectedApplicationDetails}
+              isOpen={!!selectedApplicationDetails}
+              onClose={() => setSelectedApplicationDetails(null)}
+            />
+          </div>
+        )}
       </div>
   );
 }

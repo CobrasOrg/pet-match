@@ -34,6 +34,7 @@ export default function DonorProfileDialog({ application, isOpen, onClose }) {
   if (!application) return null;
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('es-CO', {
       year: 'numeric',
       month: 'long',
@@ -69,34 +70,36 @@ export default function DonorProfileDialog({ application, isOpen, onClose }) {
                 )}
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-semibold">{application.petName}</h3>
+                <h3 className="text-xl font-semibold">{application.petName || 'Sin nombre'}</h3>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   {application.species === 'canine' ? 
                     <DogIcon className="h-4 w-4" /> : 
                     <CatIcon className="h-4 w-4" />
                   }
-                  <span>{SPECIES_LABELS[application.species]} - {application.breed}</span>
+                  <span>{SPECIES_LABELS[application.species] || application.species} - {application.breed || 'N/A'}</span>
                 </div>
-                <Badge className={STATUSES[application.status].color}>
-                  {STATUSES[application.status].label}
-                </Badge>
+                {application.status && STATUSES[application.status] && (
+                  <Badge className={STATUSES[application.status].color}>
+                    {STATUSES[application.status].label}
+                  </Badge>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <CalendarIcon className="h-5 w-5 mx-auto mb-1 text-gray-500" />
-                <div className="text-sm font-medium">{application.age} años</div>
+                <div className="text-sm font-medium">{application.age ?? 'N/A'} años</div>
                 <div className="text-xs text-gray-500">Edad</div>
               </div>
               <div className="text-center p-3 bg-gray-50 rounded-lg">
                 <ScaleIcon className="h-5 w-5 mx-auto mb-1 text-gray-500" />
-                <div className="text-sm font-medium">{application.weight} kg</div>
+                <div className="text-sm font-medium">{application.weight ?? 'N/A'} kg</div>
                 <div className="text-xs text-gray-500">Peso</div>
               </div>
               <div className="text-center p-3 bg-red-50 rounded-lg">
                 <HeartIcon className="h-5 w-5 mx-auto mb-1 text-red-500" />
-                <div className="text-sm font-medium">{application.bloodType}</div>
+                <div className="text-sm font-medium">{application.bloodType || 'N/A'}</div>
                 <div className="text-xs text-gray-500">Tipo de Sangre</div>
               </div>
               <div className="text-center p-3 bg-green-50 rounded-lg">
@@ -118,7 +121,7 @@ export default function DonorProfileDialog({ application, isOpen, onClose }) {
               Estado de Salud
             </h4>
             <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-              {application.healthStatus}
+              {application.healthStatus || 'N/A'}
             </p>
           </div>
 
@@ -136,7 +139,7 @@ export default function DonorProfileDialog({ application, isOpen, onClose }) {
                   <UserIcon className="h-5 w-5 text-gray-500" />
                 </div>
                 <div>
-                  <div className="font-medium">{application.ownerName}</div>
+                  <div className="font-medium">{application.ownerName || 'N/A'}</div>
                   <div className="text-sm text-gray-500">Propietario</div>
                 </div>
               </div>
@@ -144,11 +147,11 @@ export default function DonorProfileDialog({ application, isOpen, onClose }) {
               <div className="grid gap-2">
                 <div className="flex items-center gap-2 text-sm">
                   <PhoneIcon className="h-4 w-4 text-gray-400" />
-                  <span>{application.ownerPhone}</span>
+                  <span>{application.ownerPhone || 'N/A'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <MailIcon className="h-4 w-4 text-gray-400" />
-                  <span>{application.ownerEmail}</span>
+                  <span>{application.ownerEmail || 'N/A'}</span>
                 </div>
                 {application.ownerAddress && (
                   <div className="flex items-center gap-2 text-sm">

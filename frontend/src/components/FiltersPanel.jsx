@@ -18,7 +18,7 @@ const SPECIES_LABELS = {
 
 // Tipos de sangre más comunes y relevantes
 const BLOOD_TYPES = {
-  canine: ['DEA 1.1+', 'DEA 1.1-', 'DEA 4+', 'DEA 4-', 'DEA 7+', 'DEA 7-'],
+  canine: ['DEA 1.1+', 'DEA 1.1-'],
   feline: ['A', 'B', 'AB']
 };
 
