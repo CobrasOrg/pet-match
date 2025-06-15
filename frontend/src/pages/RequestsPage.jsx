@@ -350,8 +350,8 @@ export default function RequestsPage() {
 
     const params = new URLSearchParams();
 
-    // Estado/tab
-    if (activeTab) {
+    // Solo agregar el estado si NO hay búsqueda por texto
+    if (!debouncedSearchTerm && activeTab) {
       params.append('estado', MAP_STATUS_TO_API[activeTab]);
     }
     // Filtros
@@ -403,7 +403,7 @@ export default function RequestsPage() {
         setError('Error al cargar las solicitudes');
         setIsLoading(false);
       });
-  }, [filters, activeTab]);
+  }, [filters, activeTab, debouncedSearchTerm]); // <-- agregar debouncedSearchTerm a las dependencias
 
   // Cargar contadores de tabs (solo si no hay búsqueda por texto)
   useEffect(() => {
@@ -494,22 +494,29 @@ export default function RequestsPage() {
     setSearchParams(new URLSearchParams(), { replace: true });
   }, [setSearchParams]);
 
-  // Solo búsqueda por texto en frontend
-  const filteredRequests = useMemo(() => {
-    if (!debouncedSearchTerm) return requests;
-    return requests.filter(req => {
-      return [
-        req.species,
-        req.bloodType,
-        req.petName,
-        req.location,
-        req.clinicName,
-        getLocalityLabel(req.locality),
-        SPECIES_LABELS[req.species]
-      ].some(field =>
-        field?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+  // Solo búsqueda por texto en frontend, ahora filtrando por estado
+  const filteredRequestsByTab = useMemo(() => {
+    // Si no hay búsqueda, simplemente retorna los requests por estado
+    if (!debouncedSearchTerm) {
+      return {
+        active: requests.filter(req => req.status === 'active'),
+        pending: requests.filter(req => req.status === 'pending'),
+        completed: requests.filter(req => req.status === 'completed'),
+        cancelled: requests.filter(req => req.status === 'cancelled'),
+      };
+    }
+    // Si hay búsqueda, filtra por texto y luego separa por estado
+    const filtered = requests.filter(req => {
+      return (
+        req.petName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     });
+    return {
+      active: filtered.filter(req => req.status === 'active'),
+      pending: filtered.filter(req => req.status === 'pending'),
+      completed: filtered.filter(req => req.status === 'completed'),
+      cancelled: filtered.filter(req => req.status === 'cancelled'),
+    };
   }, [requests, debouncedSearchTerm]);
 
   if (isLoading) {
@@ -575,19 +582,19 @@ export default function RequestsPage() {
               <div className="flex flex-col md:flex-row gap-3 md:gap-4">
                 <div className="relative flex-1">
                   <label htmlFor="search-input" className="sr-only">
-                    Buscar solicitudes por nombre, especie, tipo de sangre, localidad o clínica
+                    Buscar por nombre de mascota
                   </label>
                   <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden="true" />
                   <Input
                     id="search-input"
-                    placeholder="Buscar por mascota, clínica, tipo de sangre, localidad..."
+                    placeholder="Buscar por nombre de mascota"
                     className="pl-10 text-sm sm:text-base"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     aria-describedby="search-help"
                   />
                   <div id="search-help" className="sr-only">
-                    Utiliza este campo para buscar solicitudes por cualquier criterio relevante
+                    Utiliza este campo para buscar solicitudes por nombre de mascota
                   </div>
                 </div>
                 <Button
@@ -643,36 +650,44 @@ export default function RequestsPage() {
           <TabsTrigger value="active" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
             <span className="hidden sm:inline">Activas</span>
             <span className="sm:hidden">Act.</span>
-            <span className="ml-1">({debouncedSearchTerm ? filteredRequests.length : tabCounts.active})</span>
+            <span className="ml-1">
+              ({debouncedSearchTerm ? filteredRequestsByTab.active.length : tabCounts.active})
+            </span>
           </TabsTrigger>
           <TabsTrigger value="pending" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-yellow-500 data-[state=active]:text-white">
             <span className="hidden sm:inline">En revisión</span>
             <span className="sm:hidden">Pend.</span>
-            <span className="ml-1">({debouncedSearchTerm ? filteredRequests.length : tabCounts.pending})</span>
+            <span className="ml-1">
+              ({debouncedSearchTerm ? filteredRequestsByTab.pending.length : tabCounts.pending})
+            </span>
           </TabsTrigger>
           <TabsTrigger value="completed" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-green-500 data-[state=active]:text-white">
             <span className="hidden sm:inline">Completadas</span>
             <span className="sm:hidden">Comp.</span>
-            <span className="ml-1">({debouncedSearchTerm ? filteredRequests.length : tabCounts.completed})</span>
+            <span className="ml-1">
+              ({debouncedSearchTerm ? filteredRequestsByTab.completed.length : tabCounts.completed})
+            </span>
           </TabsTrigger>
           <TabsTrigger value="cancelled" className="text-xs sm:text-sm py-2 px-1 sm:px-3 data-[state=active]:bg-red-500 data-[state=active]:text-white">
             <span className="hidden sm:inline">Canceladas</span>
             <span className="sm:hidden">Canc.</span>
-            <span className="ml-1">({debouncedSearchTerm ? filteredRequests.length : tabCounts.cancelled})</span>
+            <span className="ml-1">
+              ({debouncedSearchTerm ? filteredRequestsByTab.cancelled.length : tabCounts.cancelled})
+            </span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="active">
-          <RequestList requests={filteredRequests} status="active" />
+          <RequestList requests={filteredRequestsByTab.active} status="active" />
         </TabsContent>
         <TabsContent value="pending">
-          <RequestList requests={filteredRequests} status="pending" />
+          <RequestList requests={filteredRequestsByTab.pending} status="pending" />
         </TabsContent>
         <TabsContent value="completed">
-          <RequestList requests={filteredRequests} status="completed" />
+          <RequestList requests={filteredRequestsByTab.completed} status="completed" />
         </TabsContent>
         <TabsContent value="cancelled">
-          <RequestList requests={filteredRequests} status="cancelled" />
+          <RequestList requests={filteredRequestsByTab.cancelled} status="cancelled" />
         </TabsContent>
       </Tabs>
     </main>
