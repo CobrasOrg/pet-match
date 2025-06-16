@@ -197,6 +197,11 @@ export function ActiveFilters({ speciesLabels, urgencyLevels, filters, onFilterC
     return locality ? locality.label : localityValue;
   };
 
+  // Nueva función para limpiar un filtro individual (deja el filtro vacío)
+  const handleRemove = (filterType) => {
+    onFilterChange(filterType, '');
+  };
+
   return (
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <div className="flex flex-wrap items-center gap-2">
@@ -206,7 +211,7 @@ export function ActiveFilters({ speciesLabels, urgencyLevels, filters, onFilterC
               <FilterBadge
                   key={species}
                   label={speciesLabels[species] || SPECIES_LABELS[species]}
-                  onRemove={() => onFilterChange('species', species)}
+                  onRemove={() => handleRemove('species')}
               />
           ))}
 
@@ -214,7 +219,7 @@ export function ActiveFilters({ speciesLabels, urgencyLevels, filters, onFilterC
               <FilterBadge
                   key={type}
                   label={`Tipo: ${type}`}
-                  onRemove={() => onFilterChange('bloodType', type)}
+                  onRemove={() => handleRemove('bloodType')}
               />
           ))}
 
@@ -222,7 +227,7 @@ export function ActiveFilters({ speciesLabels, urgencyLevels, filters, onFilterC
               <FilterBadge
                   key={urgency}
                   label={urgencyLevels?.find(u => u.value === urgency)?.label || URGENCY_LEVELS.find(u => u.value === urgency)?.label || urgency}
-                  onRemove={() => onFilterChange('urgency', urgency)}
+                  onRemove={() => handleRemove('urgency')}
               />
           ))}
 
@@ -231,19 +236,9 @@ export function ActiveFilters({ speciesLabels, urgencyLevels, filters, onFilterC
               <FilterBadge
                   key={locality}
                   label={getLocalityLabel(locality)}
-                  onRemove={() => onFilterChange('locality', locality)}
+                  onRemove={() => handleRemove('locality')}
               />
           ))}
-
-          <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearFilters}
-              className="ml-auto text-pink-600 hover:text-pink-700"
-          >
-            Limpiar todos
-            <XIcon className="ml-1 h-4 w-4" />
-          </Button>
         </div>
       </div>
   );
