@@ -1,9 +1,10 @@
-import { XIcon, ChevronDownIcon, CheckIcon } from 'lucide-react';
+import { XIcon, ChevronDownIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuCheckboxItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator
@@ -18,8 +19,8 @@ const SPECIES_LABELS = {
 
 // Tipos de sangre más comunes y relevantes
 const BLOOD_TYPES = {
-  canine: ['DEA 1.1+', 'DEA 1.1-'],
-  feline: ['A', 'B', 'AB']
+  Perro: ['DEA 1.1+', 'DEA 1.1-'],
+  Gato: ['A', 'B', 'AB']
 };
 
 // Solo urgencia alta y media
@@ -29,136 +30,154 @@ const URGENCY_LEVELS = [
 ];
 
 export function FiltersPanel({ filters, onFilterChange, onClearFilters }) {
+  // Obtener tipos de sangre según especie seleccionada
+  const selectedSpecies = filters.species?.[0];
+  const bloodTypesToShow = selectedSpecies
+    ? (selectedSpecies === 'Perro' ? ['DEA 1.1+', 'DEA 1.1-'] : ['A', 'B', 'AB'])
+    : ['DEA 1.1+', 'DEA 1.1-', 'A', 'B', 'AB'];
+
   return (
-      <div className="border-t pt-4 mt-2">
-        <div className="flex flex-wrap gap-3">
-          {/* Dropdown para especie */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <span>Especie</span>
-                <ChevronDownIcon className="h-4 w-4" />
-                {filters.species.length > 0 && (
-                    <span className="ml-1 text-xs bg-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center">
-                  {filters.species.length}
+    <div className="border-t pt-4 mt-2">
+      <div className="flex flex-wrap gap-3">
+        {/* Dropdown para especie */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <span>Especie</span>
+              <ChevronDownIcon className="h-4 w-4" />
+              {filters.species?.[0] && (
+                <span className="ml-1 text-xs bg-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center">
+                  1
                 </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>Selecciona especies</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            <DropdownMenuLabel>Selecciona especie</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              value={filters.species?.[0] || ''}
+              onValueChange={val => onFilterChange('species', val)}
+            >
+              <DropdownMenuRadioItem value="">
+                Todos
+              </DropdownMenuRadioItem>
               {Object.entries(SPECIES_LABELS).map(([key, label]) => (
-                  <DropdownMenuCheckboxItem
-                      key={key}
-                      checked={filters.species.includes(key)}
-                      onCheckedChange={() => onFilterChange('species', key)}
-                  >
-                    {label}
-                  </DropdownMenuCheckboxItem>
+                <DropdownMenuRadioItem key={key} value={key}>
+                  {label}
+                </DropdownMenuRadioItem>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* Dropdown para tipo de sangre */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <span>Tipo de sangre</span>
-                <ChevronDownIcon className="h-4 w-4" />
-                {filters.bloodType.length > 0 && (
-                    <span className="ml-1 text-xs bg-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center">
-                  {filters.bloodType.length}
+        {/* Dropdown para tipo de sangre */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <span>Tipo de sangre</span>
+              <ChevronDownIcon className="h-4 w-4" />
+              {filters.bloodType?.[0] && (
+                <span className="ml-1 text-xs bg-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center">
+                  1
                 </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 max-h-60 overflow-y-auto">
-              <DropdownMenuLabel>Selecciona tipos</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {Object.entries(BLOOD_TYPES).flatMap(([species, types]) => (
-                  filters.species.includes(species) || filters.species.length === 0 ? (
-                      types.map(type => (
-                          <DropdownMenuCheckboxItem
-                              key={type}
-                              checked={filters.bloodType.includes(type)}
-                              onCheckedChange={() => onFilterChange('bloodType', type)}
-                          >
-                            {type}
-                          </DropdownMenuCheckboxItem>
-                      ))
-                  ) : null
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 max-h-60 overflow-y-auto">
+            <DropdownMenuLabel>Selecciona tipo</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              value={filters.bloodType?.[0] || ''}
+              onValueChange={val => onFilterChange('bloodType', val)}
+            >
+              <DropdownMenuRadioItem value="">
+                Todos
+              </DropdownMenuRadioItem>
+              {bloodTypesToShow.map(type => (
+                <DropdownMenuRadioItem key={type} value={type}>
+                  {type}
+                </DropdownMenuRadioItem>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* Dropdown para urgencia */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <span>Urgencia</span>
-                <ChevronDownIcon className="h-4 w-4" />
-                {filters.urgency.length > 0 && (
-                    <span className="ml-1 text-xs bg-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center">
-                  {filters.urgency.length}
+        {/* Dropdown para urgencia */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <span>Urgencia</span>
+              <ChevronDownIcon className="h-4 w-4" />
+              {filters.urgency?.[0] && (
+                <span className="ml-1 text-xs bg-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center">
+                  1
                 </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>Nivel de urgencia</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {URGENCY_LEVELS.map(({value, label}) => (
-                  <DropdownMenuCheckboxItem
-                      key={value}
-                      checked={filters.urgency.includes(value)}
-                      onCheckedChange={() => onFilterChange('urgency', value)}
-                  >
-                    {label}
-                  </DropdownMenuCheckboxItem>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            <DropdownMenuLabel>Nivel de urgencia</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              value={filters.urgency?.[0] || ''}
+              onValueChange={val => onFilterChange('urgency', val)}
+            >
+              <DropdownMenuRadioItem value="">
+                Todos
+              </DropdownMenuRadioItem>
+              {URGENCY_LEVELS.map(({ value, label }) => (
+                <DropdownMenuRadioItem key={value} value={value}>
+                  {label}
+                </DropdownMenuRadioItem>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* Dropdown para localidad */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <span>Localidad</span>
-                <ChevronDownIcon className="h-4 w-4" />
-                {(filters.locality && filters.locality.length > 0) && (
-                    <span className="ml-1 text-xs bg-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center">
-                      {filters.locality.length}
-                    </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 max-h-60 overflow-y-auto">
-              <DropdownMenuLabel>Localidades de Bogotá</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+        {/* Dropdown para localidad */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <span>Localidad</span>
+              <ChevronDownIcon className="h-4 w-4" />
+              {filters.locality?.[0] && (
+                <span className="ml-1 text-xs bg-pink-500 text-white rounded-full h-5 w-5 flex items-center justify-center">
+                  1
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 max-h-60 overflow-y-auto">
+            <DropdownMenuLabel>Localidades de Bogotá</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              value={filters.locality?.[0] || ''}
+              onValueChange={val => onFilterChange('locality', val)}
+            >
+              <DropdownMenuRadioItem value="">
+                Todas
+              </DropdownMenuRadioItem>
               {BOGOTA_LOCALITIES.map((locality) => (
-                  <DropdownMenuCheckboxItem
-                      key={locality.value}
-                      checked={filters.locality?.includes(locality.value) || false}
-                      onCheckedChange={() => onFilterChange('locality', locality.value)}
-                  >
-                    {locality.label}
-                  </DropdownMenuCheckboxItem>
+                <DropdownMenuRadioItem key={locality.value} value={locality.value}>
+                  {locality.label}
+                </DropdownMenuRadioItem>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* Botón para limpiar filtros */}
-          <Button
-              variant="ghost"
-              onClick={onClearFilters}
-              className="text-pink-600 hover:text-pink-700"
-          >
-            Limpiar todos
-            <XIcon className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
+        {/* Botón para limpiar filtros */}
+        <Button
+          variant="ghost"
+          onClick={onClearFilters}
+          className="text-pink-600 hover:text-pink-700"
+        >
+          Limpiar todos
+          <XIcon className="ml-1 h-4 w-4" />
+        </Button>
       </div>
+    </div>
   );
 }
 

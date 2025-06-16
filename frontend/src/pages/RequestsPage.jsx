@@ -32,7 +32,6 @@ import {
 } from 'lucide-react';
 import BloodRequestForm from '@/components/BloodRequestForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Toaster } from "@/components/ui/sonner";
 import { PhoneIcon } from '@heroicons/react/24/outline';
 import { BOGOTA_LOCALITIES, getLocalityLabel } from '@/constants/locations';
 import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
@@ -542,7 +541,6 @@ export default function RequestsPage() {
 
   return (
     <main className="container mx-auto p-3 sm:p-4 lg:p-6 bg-soft-green rounded-lg shadow-md max-w-7xl">
-      <Toaster position="top-center" />
 
       {/* Header semántico */}
       <header className="mb-6 lg:mb-8 text-center sm:text-left">
