@@ -469,11 +469,10 @@ export default function RequestsPage() {
       if (filterType === 'location') {
         return { ...prev, location: value };
       }
+      // Solo un valor por filtro (como array de máximo un elemento)
       return {
         ...prev,
-        [filterType]: prev[filterType].includes(value)
-          ? prev[filterType].filter(item => item !== value)
-          : [...prev[filterType], value]
+        [filterType]: value ? [value] : []
       };
     });
   }, []);
