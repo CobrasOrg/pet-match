@@ -267,10 +267,10 @@ RequestCard.displayName = 'RequestCard';
 
 // Función para parsear filtros desde URL
 const parseFiltersFromURL = (searchParams) => ({
-  species: searchParams.getAll('especie'),
-  bloodType: searchParams.getAll('tipo_sangre'),
-  urgency: searchParams.getAll('urgencia'),
-  locality: searchParams.getAll('localidad'),
+  species: searchParams.getAll('especie').filter(Boolean).slice(0, 1) || [],
+  bloodType: searchParams.getAll('tipo_sangre').filter(Boolean).slice(0, 1) || [],
+  urgency: searchParams.getAll('urgencia').filter(Boolean).slice(0, 1) || [],
+  locality: searchParams.getAll('localidad').filter(Boolean).slice(0, 1) || [],
   location: searchParams.get('ubicacion') || ''
 });
 
@@ -284,7 +284,16 @@ export default function PublicRequestsFeed() {
 
   // Estado de filtros
   const [searchTerm, setSearchTerm] = useState(searchParams.get('busqueda') || '');
-  const [filters, setFilters] = useState(() => parseFiltersFromURL(searchParams));
+  const [filters, setFilters] = useState(() => {
+    const parsed = parseFiltersFromURL(searchParams);
+    return {
+      species: parsed.species || [],
+      bloodType: parsed.bloodType || [],
+      urgency: parsed.urgencia || [],
+      locality: parsed.localidad || [],
+      location: parsed.location || ''
+    };
+  });
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -295,10 +304,10 @@ export default function PublicRequestsFeed() {
 
     // Construir query params según los filtros
     const params = new URLSearchParams();
-    filters.species.forEach(species => params.append('especie', species));
-    filters.bloodType.forEach(bloodType => params.append('tipo_sangre', bloodType));
-    filters.urgency.forEach(urgency => params.append('urgencia', urgency));
-    filters.locality.forEach(locality => params.append('localidad', locality));
+    (filters.species || []).forEach(species => params.append('especie', species));
+    (filters.bloodType || []).forEach(bloodType => params.append('tipo_sangre', bloodType));
+    (filters.urgency || []).forEach(urgency => params.append('urgencia', urgency));
+    (filters.locality || []).forEach(locality => params.append('localidad', locality));
 
     const url = `http://localhost:8000/api/v1/user/solicitudes/activas/filtrar?${params.toString()}`;
 
@@ -323,10 +332,10 @@ export default function PublicRequestsFeed() {
       newParams.set('busqueda', searchTerm.trim());
     }
 
-    filters.species.forEach(species => newParams.append('especie', species));
-    filters.bloodType.forEach(bloodType => newParams.append('tipo_sangre', bloodType));
-    filters.urgency.forEach(urgency => newParams.append('urgencia', urgency));
-    filters.locality.forEach(locality => newParams.append('localidad', locality));
+    (filters.species || []).forEach(species => newParams.append('especie', species));
+    (filters.bloodType || []).forEach(bloodType => newParams.append('tipo_sangre', bloodType));
+    (filters.urgency || []).forEach(urgency => newParams.append('urgencia', urgency));
+    (filters.locality || []).forEach(locality => newParams.append('localidad', locality));
 
     if (filters.location.trim()) {
       newParams.set('ubicacion', filters.location.trim());
@@ -342,15 +351,17 @@ export default function PublicRequestsFeed() {
   // Manejar cambios en filtros
   const handleFilterChange = useCallback((filterType, value) => {
     setFilters(prev => {
+      if (['species', 'bloodType', 'urgency', 'locality'].includes(filterType)) {
+        // Si value es vacío, limpiar filtro
+        return {
+          ...prev,
+          [filterType]: value ? [value] : []
+        };
+      }
       if (filterType === 'location') {
         return { ...prev, location: value };
       }
-      return {
-        ...prev,
-        [filterType]: prev[filterType].includes(value)
-          ? prev[filterType].filter(item => item !== value)
-          : [...prev[filterType], value]
-      };
+      return prev;
     });
   }, []);
 
