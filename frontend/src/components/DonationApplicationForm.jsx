@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import ImageUploader from "@/components/ui/ImageUploader";
 import {
   DogIcon,
   CatIcon,
@@ -26,7 +27,8 @@ import {
   ScaleIcon,
   HeartPulseIcon,
   AlertCircleIcon,
-  ClipboardListIcon
+  ClipboardListIcon,
+  CameraIcon
 } from 'lucide-react';
 //import { useParams } from 'react-router-dom'; desactivada por el momento, ya que no se usa el ID de la solicitud
 import Lottie from "lottie-react";
@@ -58,6 +60,7 @@ export default function DonationApplicationForm() {
       lastVaccination: '',
       healthStatus: '', // Cambiado de healthConditions
       medications: '',
+      petPhoto: null, // Nuevo campo para la foto
       ownerName: '',
       ownerPhone: '',
       ownerEmail: '',
@@ -81,11 +84,12 @@ export default function DonationApplicationForm() {
       lastVaccination: data.lastVaccination,
       healthStatus: data.healthStatus,
       medications: data.medications,
+      petPhoto: data.petPhoto ? URL.createObjectURL(data.petPhoto) : null, // Simular URL de imagen
       ownerName: data.ownerName,
       ownerPhone: data.ownerPhone,
       ownerEmail: data.ownerEmail,
       ownerAddress: data.ownerAddress,
-      availability: data.availability, // <-- Faltaba este campo en el payload
+      availability: data.availability, // <-- Este campo faltaba en la versión original
       termsAccepted: data.termsAccepted
     };
 
@@ -253,6 +257,36 @@ export default function DonationApplicationForm() {
                 )}
               />
             )}
+          </div>
+
+          {/* Foto de la mascota */}
+          <div className="space-y-6">
+            <h3 className="font-medium flex items-center">
+              <CameraIcon className="h-5 w-5 mr-2" />
+              Foto de tu mascota
+            </h3>
+            
+            <FormField
+              control={form.control}
+              name="petPhoto"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Foto de tu mascota (opcional)</FormLabel>
+                  <FormControl>
+                    <ImageUploader
+                      value={field.value}
+                      onChange={field.onChange}
+                      accept=".jpg,.jpeg,.png"
+                      maxSize={2 * 1024 * 1024} // 2MB
+                    />
+                  </FormControl>
+                  <p className="text-sm text-gray-500">
+                    Una foto reciente ayudará a identificar mejor a tu mascota durante el proceso de donación.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           {/* Historial de salud */}

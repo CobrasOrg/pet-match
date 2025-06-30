@@ -1,44 +1,32 @@
-
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 const NavBar = () => {
     const [open, setOpen] = React.useState(false);
-    const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-    const [userType, setUserType] = React.useState(null);
-
-
-//     const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
-//     const logged = localStorage.getItem('isLoggedIn') === 'true';
-//     const type = localStorage.getItem('userType');
-//     return logged && (type === 'owner' || type === 'clinic');
-// });
-// const [userType, setUserType] = React.useState(() => {
-//     const type = localStorage.getItem('userType');
-//     return type === 'owner' || type === 'clinic' ? type : null;
-// });
     const [profileMenuOpen, setProfileMenuOpen] = React.useState(false);
+    const { isLoggedIn, userType, login, logout } = useAuth();
+    const location = useLocation();
     const navigate = useNavigate();
+    
+    // Detectar en qué página estamos
+    const isOnRegisterPage = location.pathname === '/register';
+    const isOnLoginPage = location.pathname === '/login';
+    const isOnHomePage = location.pathname === '/';
+
+    // Forzar actualización del estado cuando cambie la ruta
+    React.useEffect(() => {
+        // Este efecto se ejecuta cada vez que cambia la ruta
+        // Ayuda a sincronizar el estado después de navegaciones programáticas
+    }, [location.pathname]);
 
     const handleLogin = (type) => {
-        setIsLoggedIn(true);
-        setUserType(type);
-        navigate(type === 'owner' ? '/public' : '/requests');
-        // Persistir en localStorage
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userType', type);
-        navigate(type === 'owner' ? '/public' : '/requests');
+        login(type);
     };
 
     const handleLogout = () => {
-        setIsLoggedIn(false);
-        setUserType(null);
         setProfileMenuOpen(false);
-        // Limpiar localStorage
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('userType');
-        navigate('/');
-        navigate('/');
+        logout();
     };
 
     // Cerrar el menú de perfil cuando se hace clic fuera
@@ -111,18 +99,32 @@ const NavBar = () => {
                                     </div>
                                 </NavLink>
                                 {userType === 'owner' && (
-                                    <NavLink
-                                        to="/my-pets"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-                                        onClick={() => setProfileMenuOpen(false)}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                            </svg>
-                                            Mis Mascotas
-                                        </div>
-                                    </NavLink>
+                                    <>
+                                        <NavLink
+                                            to="/my-pets"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                                            onClick={() => setProfileMenuOpen(false)}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                </svg>
+                                                Mis Mascotas
+                                            </div>
+                                        </NavLink>
+                                        <NavLink
+                                            to="/public"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                                            onClick={() => setProfileMenuOpen(false)}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                Ver Solicitudes
+                                            </div>
+                                        </NavLink>
+                                    </>
                                 )}
                                 {userType === 'clinic' && (
                                     <NavLink
@@ -152,21 +154,45 @@ const NavBar = () => {
                                 </button>
                             </div>
                         )}
-                    </div>
-                ) : (
+                    </div>                ) : (
                     <div className="flex gap-2">
-                        <button
-                            onClick={() => handleLogin('owner')}
-                            className="px-4 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-full text-sm transition-colors"
-                        >
-                            Dueño
-                        </button>
-                        <button
-                            onClick={() => handleLogin('clinic')}
-                            className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-full text-sm transition-colors"
-                        >
-                            Veterinaria
-                        </button>
+                        {/* Botones de rol (solo en HomePage) */}
+                        {isOnHomePage && (
+                            <>
+                                <button
+                                    onClick={() => handleLogin('owner')}
+                                    className="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-full text-sm transition-colors"
+                                >
+                                    Dueño de Mascota
+                                </button>
+                                <button
+                                    onClick={() => handleLogin('clinic')}
+                                    className="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full text-sm transition-colors"
+                                >
+                                    Veterinaria
+                                </button>
+                            </>
+                        )}
+                        
+                        {/* Botón de Iniciar sesión (oculto en la página de login) */}
+                        {!isOnLoginPage && (
+                            <button
+                                onClick={() => navigate('/login')}
+                                className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full text-sm transition-colors"
+                            >
+                                Iniciar sesión
+                            </button>
+                        )}
+                        
+                        {/* Botón de Registrarse (oculto en la página de registro) */}
+                        {!isOnRegisterPage && (
+                            <button
+                                onClick={() => navigate('/register')}
+                                className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-full text-sm transition-colors"
+                            >
+                                Registrarme
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
@@ -190,7 +216,10 @@ const NavBar = () => {
                         <NavLink to="/profile" className="block w-full py-2" onClick={() => setOpen(false)}>Perfil</NavLink>
 
                         {userType === 'owner' && (
-                            <NavLink to="/my-pets" className="block w-full py-2" onClick={() => setOpen(false)}>Mis Mascotas</NavLink>
+                            <>
+                                <NavLink to="/my-pets" className="block w-full py-2" onClick={() => setOpen(false)}>Mis Mascotas</NavLink>
+                                <NavLink to="/public" className="block w-full py-2" onClick={() => setOpen(false)}>Ver Solicitudes</NavLink>
+                            </>
                         )}
 
                         {userType === 'clinic' && (
@@ -206,27 +235,57 @@ const NavBar = () => {
                         >
                             Cerrar sesión
                         </button>
-                    </div>
-                ) : (
+                    </div>                ) : (
                     <div className="w-full border-t border-gray-200 pt-3 mt-2 flex flex-col gap-2">
-                        <button
-                            onClick={() => {
-                                handleLogin('owner');
-                                setOpen(false);
-                            }}
-                            className="w-full text-left py-2 px-4 bg-indigo-100 rounded"
-                        >
-                            Entrar como Dueño
-                        </button>
-                        <button
-                            onClick={() => {
-                                handleLogin('clinic');
-                                setOpen(false);
-                            }}
-                            className="w-full text-left py-2 px-4 bg-green-100 rounded"
-                        >
-                            Entrar como Veterinaria
-                        </button>
+                        {/* Botones de rol (solo en HomePage) */}
+                        {isOnHomePage && (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        handleLogin('owner');
+                                        setOpen(false);
+                                    }}
+                                    className="w-full text-left py-2 px-4 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded transition-colors"
+                                >
+                                    Dueño de Mascota
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        handleLogin('clinic');
+                                        setOpen(false);
+                                    }}
+                                    className="w-full text-left py-2 px-4 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded transition-colors"
+                                >
+                                    Veterinaria
+                                </button>
+                            </>
+                        )}
+                        
+                        {/* Botón de Iniciar sesión (oculto en la página de login) */}
+                        {!isOnLoginPage && (
+                            <button
+                                onClick={() => {
+                                    navigate('/login');
+                                    setOpen(false);
+                                }}
+                                className="w-full text-left py-2 px-4 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
+                            >
+                                Iniciar sesión
+                            </button>
+                        )}
+                        
+                        {/* Botón de Registrarse (oculto en la página de registro) */}
+                        {!isOnRegisterPage && (
+                            <button
+                                onClick={() => {
+                                    navigate('/register');
+                                    setOpen(false);
+                                }}
+                                className="w-full text-left py-2 px-4 bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors"
+                            >
+                                Registrarme
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

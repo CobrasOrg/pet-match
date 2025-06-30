@@ -1,0 +1,272 @@
+import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+
+export default function RegisterClinicForm({ onSuccess }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid }
+  } = useForm({
+    mode: 'onChange', // Validación en tiempo real
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      license: '',
+      services: '',
+      password: '',
+      confirmPassword: ''
+    }
+  });
+
+  const password = watch('password');
+
+  // Validaciones específicas para clínicas veterinarias
+  const validations = {
+    name: {
+      required: 'El nombre de la clínica es obligatorio',
+      minLength: {
+        value: 2,
+        message: 'El nombre debe tener al menos 2 caracteres'
+      }
+    },
+    email: {
+      required: 'El correo electrónico corporativo es obligatorio',
+      pattern: {
+        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+        message: 'Formato de correo electrónico inválido'
+      }
+    },
+    phone: {
+      required: 'El teléfono es obligatorio',
+      pattern: {
+        value: /^[+]?[(]?[0-9]{10,}$/,
+        message: 'Formato de teléfono inválido (mínimo 10 dígitos)'
+      }
+    },
+    address: {
+      required: 'La dirección es obligatoria',
+      minLength: {
+        value: 5,
+        message: 'La dirección debe tener al menos 5 caracteres'
+      }
+    },
+    license: {
+      required: 'El número de licencia es obligatorio',
+      minLength: {
+        value: 5,
+        message: 'El número de licencia debe tener al menos 5 caracteres'
+      }
+    },
+    services: {
+      required: 'Describe los servicios que ofreces',
+      minLength: {
+        value: 10,
+        message: 'La descripción debe tener al menos 10 caracteres'
+      }
+    },
+    password: {
+      required: 'La contraseña es obligatoria',
+      pattern: {
+        value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/,
+        message: 'La contraseña debe tener al menos 8 caracteres, 1 mayúscula y 1 número'
+      }
+    },
+    confirmPassword: {
+      required: 'Confirma tu contraseña',
+      validate: value => value === password || 'Las contraseñas no coinciden'
+    }
+  };
+
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    
+    try {
+      // Simular llamada a API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const { confirmPassword: _confirmPassword, ...registrationData } = data;
+      console.log('Datos enviados (clínica):', registrationData);
+      
+      const userData = {
+        name: registrationData.name,
+        email: registrationData.email,
+        phone: registrationData.phone,
+        license: registrationData.license,
+        userType: 'clinic'
+      };
+      
+      // Registrar usuario usando el hook de autenticación
+      login('clinic', userData);
+      
+      alert('Registro de clínica veterinaria exitoso. Serás redirigido a la gestión de solicitudes.');
+      
+      // Llamar onSuccess si se proporciona
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+      // Navegar a la página correspondiente
+      navigate('/requests');
+      
+    } catch {
+      alert('Error en el registro. Intenta nuevamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Nombre de la clínica */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Nombre de la clínica *
+        </label>
+        <Input
+          {...register('name', validations.name)}
+          placeholder="Veterinaria San Patricio"
+          className={errors.name ? 'border-red-500' : ''}
+        />
+        {errors.name && (
+          <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+        )}
+      </div>
+
+      {/* Email corporativo */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Email corporativo *
+        </label>
+        <Input
+          type="email"
+          {...register('email', validations.email)}
+          placeholder="info@veterinaria.com"
+          className={errors.email ? 'border-red-500' : ''}
+        />
+        {errors.email && (
+          <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+        )}
+      </div>
+
+      {/* Teléfono */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Teléfono *
+        </label>
+        <Input
+          {...register('phone', validations.phone)}
+          placeholder="+57 300 123 4567"
+          className={errors.phone ? 'border-red-500' : ''}
+        />
+        {errors.phone && (
+          <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+        )}
+      </div>
+
+      {/* Dirección */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Dirección *
+        </label>
+        <Input
+          {...register('address', validations.address)}
+          placeholder="Av. Principal 123"
+          className={errors.address ? 'border-red-500' : ''}
+        />
+        {errors.address && (
+          <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
+        )}
+      </div>
+
+      {/* Número de licencia */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Número de licencia *
+        </label>
+        <Input
+          {...register('license', validations.license)}
+          placeholder="LIC-VET-2024-001"
+          className={errors.license ? 'border-red-500' : ''}
+        />
+        {errors.license && (
+          <p className="text-red-500 text-xs mt-1">{errors.license.message}</p>
+        )}
+      </div>
+
+      {/* Servicios ofrecidos */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Servicios ofrecidos *
+        </label>
+        <textarea
+          {...register('services', validations.services)}
+          placeholder="Emergencias 24/7, Banco de Sangre, Cirugía..."
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[80px] ${
+            errors.services ? 'border-red-500' : 'border-gray-300'
+          }`}
+        />
+        {errors.services && (
+          <p className="text-red-500 text-xs mt-1">{errors.services.message}</p>
+        )}
+      </div>
+
+      {/* Contraseña */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Contraseña *
+        </label>
+        <Input
+          type="password"
+          {...register('password', validations.password)}
+          className={errors.password ? 'border-red-500' : ''}
+        />
+        {errors.password && (
+          <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+        )}
+        <p className="text-xs text-gray-500 mt-1">
+          Mínimo 8 caracteres, 1 mayúscula y 1 número
+        </p>
+      </div>
+
+      {/* Confirmar contraseña */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Confirmar contraseña *
+        </label>
+        <Input
+          type="password"
+          {...register('confirmPassword', validations.confirmPassword)}
+          className={errors.confirmPassword ? 'border-red-500' : ''}
+        />
+        {errors.confirmPassword && (
+          <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>
+        )}
+      </div>
+
+      {/* Botón de envío */}
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={!isValid || isLoading}
+      >
+        {isLoading ? 'Registrando...' : 'Registrar clínica'}
+      </Button>
+
+      {/* Indicador de campos obligatorios */}
+      <p className="text-xs text-gray-500 text-center mt-2">
+        Los campos marcados con * son obligatorios
+      </p>
+    </form>
+  );
+}
