@@ -1,50 +1,75 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Lottie from 'lottie-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import cat from '../assets/cat.json';
+import { FaPaw, FaUserMd } from 'react-icons/fa';
+import petImg from '../assets/pet-hero.png';
+import { UserPlus, Search, HeartHandshake, Hospital, MapPin, ShieldCheck, Zap } from "lucide-react";
+import { Quote } from "lucide-react";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8 } }
+};
 
 const HomePage = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white font-[Inter]">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-green-50 to-blue-50 py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            {/* Content */}
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
-                Salvando Vidas
-                <span className="text-green-600 block">Una Donación a la Vez</span>
-              </h1>
-              <p className="text-xl text-gray-600 leading-relaxed">
-                Conectamos mascotas que necesitan transfusiones de sangre con donantes dispuestos a ayudar. 
-                Únete a nuestra comunidad y ayuda a salvar vidas peludas.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/register">
-                  <Button size="lg" className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
-                    Únete como Donante
-                  </Button>
-                </Link>
-              </div>
-            </div>
-            
-            {/* Animation */}
-            <div className="flex justify-center">
-              <Lottie 
-                animationData={cat} 
-                loop={true} 
-                className="w-80 h-80 md:w-96 md:h-96"
-              />
+      <motion.section
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+        className="py-20 px-4 bg-soft-green w-screen relative left-1/2 right-1/2 mx-[-50vw] rounded-b-lg"
+      >
+      
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 pl-8 md:pl-16 lg:pl-24 ">
+          {/* Content */}
+          <div className="flex-1 space-y-6 ">
+            <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight">
+              <span className="block text-soft-green mb-2">Pet Match</span>
+              <span className="block text-3xl md:text-4xl font-medium text-gray-700">
+                Salvando vidas, conectando corazones
+              </span>
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+              Conectamos mascotas que necesitan transfusiones de sangre con donantes dispuestos a ayudar.
+              Únete a nuestra comunidad y ayuda a salvar vidas peludas.
+            </p>
+            <div className="flex gap-4">
+              <Link to="/register">
+                <Button size="lg" className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-8 py-3 text-lg font-semibold">
+                  <FaPaw className="inline mr-2" /> Únete como Donante
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button size="lg" variant="outline" className="border-blue-500 text-blue-600 rounded-xl px-8 py-3 text-lg font-semibold">
+                  <FaUserMd className="inline mr-2" /> Soy Veterinario
+                </Button>
+              </Link>
             </div>
           </div>
+          {/* Imagen de mascota */}
+          <div className="flex-1 flex justify-center">
+            <img
+              src={petImg}
+              alt="Mascota feliz"
+              className="w-100 h-120 max-w-md object-contain rounded-3xl"
+            />
+          </div>
         </div>
-      </section>
+      </motion.section>
+   
 
       {/* Statistics Section */}
-      <section className="py-16 bg-white">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={fadeInUp}
+        className="py-16 bg-white"
+      >
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -57,26 +82,32 @@ const HomePage = () => {
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">500+</div>
+              <div className="text-5xl font-bold text-green-600 mb-2">500+</div>
               <p className="text-gray-600">Vidas Salvadas</p>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">200+</div>
+              <div className="text-5xl font-bold text-blue-600 mb-2">200+</div>
               <p className="text-gray-600">Donantes Registrados</p>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-purple-600 mb-2">50+</div>
+              <div className="text-5xl font-bold text-purple-600 mb-2">50+</div>
               <p className="text-gray-600">Clínicas Veterinarias</p>
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* How It Works Section */}
-      <section className="py-16 bg-gray-50">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={fadeInUp}
+        className="py-16 bg-gradient-to-br from-emerald-100 via-white to-emerald-100 w-screen relative left-1/2 right-1/2 mx-[-50vw]"
+      >
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-raleway">
               ¿Cómo Funciona?
             </h2>
             <p className="text-xl text-gray-600">
@@ -84,54 +115,65 @@ const HomePage = () => {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card>
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🐾</span>
-                </div>
-                <CardTitle>1. Regístrate</CardTitle>
+              <div className="grid md:grid-cols-3 gap-8">
+              <Card className="group max-w-xs mx-auto rounded-xl transition-all duration-300 hover:bg-blue-400 shadow-md">
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-green-100 group-hover:bg-white rounded-full flex items-center justify-center mx-auto mb-4 transition-colors duration-300">
+                    <UserPlus className="w-7 h-7 text-emerald-600 group-hover:text-emerald-700 transition-colors duration-300" />
+                  </div>
+                 <CardTitle className="text-neutral-800 group-hover:text-white transition-colors duration-300">
+                   1. Regístrate
+                  </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 text-center">
+                <p className="text-slate-600 group-hover:text-white text-center transition-colors duration-300">
                   Crea tu perfil como dueño de mascota o clínica veterinaria en minutos.
                 </p>
               </CardContent>
             </Card>
+
             
-            <Card>
+            <Card className="group max-w-xs mx-auto rounded-xl transition-all duration-300 hover:bg-blue-400 shadow-md">
               <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🔍</span>
+                <div className="w-16 h-16 bg-blue-100 group-hover:bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-7 h-7 text-sky-600 transition-colors duration-300 " />
                 </div>
-                <CardTitle>2. Encuentra Coincidencias</CardTitle>
+                <CardTitle className="text-neutral-800 group-hover:text-white transition-colors duration-300">
+                  2. Encuentra Coincidencias</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 text-center">
+                <p className="text-slate-600 group-hover:text-white text-center transition-colors duration-300">
                   Conectamos mascotas compatibles según tipo sanguíneo y ubicación.
                 </p>
               </CardContent>
             </Card>
-            
-            <Card>
+
+            <Card className="group max-w-xs mx-auto rounded-xl transition-all duration-300 hover:bg-blue-400 shadow-md">
               <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">❤️</span>
+                <div className="w-16 h-16 bg-blue-100 group-hover:bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                <HeartHandshake className="w-7 h-7 text-rose-600" />
                 </div>
-                <CardTitle>3. Salva Vidas</CardTitle>
+                <CardTitle className="text-neutral-800 group-hover:text-white transition-colors duration-300">
+                  3. Salva Vidas</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 text-center">
+                <p className="text-gray-600 group-hover:text-white text-center transition-colors duration-300">
                   Coordina la donación con profesionales veterinarios de forma segura.
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Features Section */}
-      <section className="py-16 bg-white">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={fadeInUp}
+        className="py-16 bg-white"
+      >
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -142,7 +184,7 @@ const HomePage = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl">🏥</span>
+                <Hospital className="w-7 h-7 text-emerald-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Clínicas Verificadas</h3>
               <p className="text-gray-600 text-sm">
@@ -152,7 +194,7 @@ const HomePage = () => {
             
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl">📍</span>
+                <MapPin className="w-7 h-7 text-sky-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Cobertura Local</h3>
               <p className="text-gray-600 text-sm">
@@ -162,7 +204,7 @@ const HomePage = () => {
             
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl">🔒</span>
+                <ShieldCheck className="w-7 h-7 text-rose-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Seguro y Confiable</h3>
               <p className="text-gray-600 text-sm">
@@ -172,7 +214,7 @@ const HomePage = () => {
             
             <div className="text-center">
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl">⚡</span>
+                <Zap className="w-7 h-7 text-amber-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Respuesta Rápida</h3>
               <p className="text-gray-600 text-sm">
@@ -181,10 +223,10 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-green-600 to-blue-600">
+      <section className="py-16 bg-gradient-to-r from-green-300 to-blue-600 w-screen relative left-1/2 right-1/2 mx-[-50vw]">
         <div className="max-w-4xl mx-auto text-center px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             ¿Listo para Hacer la Diferencia?
@@ -208,7 +250,14 @@ const HomePage = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 bg-gray-50">
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={fadeInUp}
+        className="py-16 bg-white"
+      >
+      
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -217,8 +266,9 @@ const HomePage = () => {
           </div>
           
           <div className="grid md:grid-cols-2 gap-8">
-            <Card>
+            <Card className="transition-shadow hover:shadow-lg">
               <CardContent className="p-6">
+                <Quote className="w-6 h-6 text-emerald-500 mb-4" />
                 <p className="text-gray-600 mb-4 italic">
                   "Gracias a Pet Match, pudimos encontrar un donante para Luna en menos de 2 horas. 
                   Los veterinarios fueron increíbles y todo el proceso fue muy profesional."
@@ -234,9 +284,10 @@ const HomePage = () => {
                 </div>
               </CardContent>
             </Card>
-            
-            <Card>
+
+            <Card className="transition-shadow hover:shadow-lg">
               <CardContent className="p-6">
+                <Quote className="w-6 h-6 text-sky-500 mb-4" />
                 <p className="text-gray-600 mb-4 italic">
                   "Como veterinario, Pet Match me ha permitido conectar rápidamente con donantes 
                   cuando tengo casos de emergencia. Es una herramienta invaluable."
@@ -254,7 +305,7 @@ const HomePage = () => {
             </Card>
           </div>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 };

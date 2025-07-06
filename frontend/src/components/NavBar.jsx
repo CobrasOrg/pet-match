@@ -40,7 +40,7 @@ const NavBar = () => {
     }, [profileMenuOpen]);
 
     return (
-        <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all z-10">
+        <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all ">
             <NavLink to="/" className="flex items-center gap-3">
                 <img className="h-12 w-auto" src="/logo_petmatch.png" alt="PetMatch logo" />
                 <div className="flex flex-col">
@@ -155,7 +155,7 @@ const NavBar = () => {
                         {!isOnLoginPage && (
                             <button
                                 onClick={() => navigate('/login')}
-                                className="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full text-sm transition-colors"
+                                className="px-4 py-2 bg-white border border-blue-500 hover:bg-blue-50 text-blue-700 rounded-full text-sm transition-colors"
                             >
                                 Iniciar sesión
                             </button>
@@ -165,7 +165,7 @@ const NavBar = () => {
                         {!isOnRegisterPage && (
                             <button
                                 onClick={() => navigate('/register')}
-                                className="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-full text-sm transition-colors"
+                                className="px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded-full text-sm transition-colors"
                             >
                                 Registrarme
                             </button>
