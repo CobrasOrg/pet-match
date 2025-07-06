@@ -5,24 +5,19 @@ import { useAuth } from '@/context/AuthContext';
 const NavBar = () => {
     const [open, setOpen] = React.useState(false);
     const [profileMenuOpen, setProfileMenuOpen] = React.useState(false);
-    const { isLoggedIn, userType, login, logout } = useAuth();
+    const { isLoggedIn, userType, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     
     // Detectar en qué página estamos
     const isOnRegisterPage = location.pathname === '/register';
     const isOnLoginPage = location.pathname === '/login';
-    const isOnHomePage = location.pathname === '/';
 
     // Forzar actualización del estado cuando cambie la ruta
     React.useEffect(() => {
         // Este efecto se ejecuta cada vez que cambia la ruta
         // Ayuda a sincronizar el estado después de navegaciones programáticas
     }, [location.pathname]);
-
-    const handleLogin = (type) => {
-        login(type);
-    };
 
     const handleLogout = () => {
         setProfileMenuOpen(false);
@@ -156,24 +151,6 @@ const NavBar = () => {
                         )}
                     </div>                ) : (
                     <div className="flex gap-2">
-                        {/* Botones de rol (solo en HomePage) */}
-                        {isOnHomePage && (
-                            <>
-                                <button
-                                    onClick={() => handleLogin('owner')}
-                                    className="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-full text-sm transition-colors"
-                                >
-                                    Dueño de Mascota
-                                </button>
-                                <button
-                                    onClick={() => handleLogin('clinic')}
-                                    className="px-4 py-2 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded-full text-sm transition-colors"
-                                >
-                                    Veterinaria
-                                </button>
-                            </>
-                        )}
-                        
                         {/* Botón de Iniciar sesión (oculto en la página de login) */}
                         {!isOnLoginPage && (
                             <button
@@ -237,30 +214,6 @@ const NavBar = () => {
                         </button>
                     </div>                ) : (
                     <div className="w-full border-t border-gray-200 pt-3 mt-2 flex flex-col gap-2">
-                        {/* Botones de rol (solo en HomePage) */}
-                        {isOnHomePage && (
-                            <>
-                                <button
-                                    onClick={() => {
-                                        handleLogin('owner');
-                                        setOpen(false);
-                                    }}
-                                    className="w-full text-left py-2 px-4 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded transition-colors"
-                                >
-                                    Dueño de Mascota
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        handleLogin('clinic');
-                                        setOpen(false);
-                                    }}
-                                    className="w-full text-left py-2 px-4 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded transition-colors"
-                                >
-                                    Veterinaria
-                                </button>
-                            </>
-                        )}
-                        
                         {/* Botón de Iniciar sesión (oculto en la página de login) */}
                         {!isOnLoginPage && (
                             <button

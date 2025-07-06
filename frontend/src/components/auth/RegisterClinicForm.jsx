@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BOGOTA_LOCALITIES } from '@/constants/locations';
 
 export default function RegisterClinicForm({ onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +16,7 @@ export default function RegisterClinicForm({ onSuccess }) {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isValid }
   } = useForm({
     mode: 'onChange', // Validación en tiempo real
@@ -22,8 +25,7 @@ export default function RegisterClinicForm({ onSuccess }) {
       email: '',
       phone: '',
       address: '',
-      license: '',
-      services: '',
+      locality: '',
       password: '',
       confirmPassword: ''
     }
@@ -61,19 +63,8 @@ export default function RegisterClinicForm({ onSuccess }) {
         message: 'La dirección debe tener al menos 5 caracteres'
       }
     },
-    license: {
-      required: 'El número de licencia es obligatorio',
-      minLength: {
-        value: 5,
-        message: 'El número de licencia debe tener al menos 5 caracteres'
-      }
-    },
-    services: {
-      required: 'Describe los servicios que ofreces',
-      minLength: {
-        value: 10,
-        message: 'La descripción debe tener al menos 10 caracteres'
-      }
+    locality: {
+      required: 'La localidad es obligatoria'
     },
     password: {
       required: 'La contraseña es obligatoria',
@@ -102,7 +93,8 @@ export default function RegisterClinicForm({ onSuccess }) {
         name: registrationData.name,
         email: registrationData.email,
         phone: registrationData.phone,
-        license: registrationData.license,
+        address: registrationData.address,
+        locality: registrationData.locality,
         userType: 'clinic'
       };
       
@@ -174,6 +166,32 @@ export default function RegisterClinicForm({ onSuccess }) {
         )}
       </div>
 
+      {/* Localidad */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Localidad de Bogotá *
+        </label>
+        <Select onValueChange={(value) => setValue('locality', value)}>
+          <SelectTrigger className={`w-full ${errors.locality ? 'border-red-500' : ''}`}>
+            <SelectValue placeholder="Selecciona una localidad" />
+          </SelectTrigger>
+          <SelectContent>
+            {BOGOTA_LOCALITIES.map((locality) => (
+              <SelectItem key={locality.value} value={locality.value}>
+                {locality.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <input
+          type="hidden"
+          {...register('locality', validations.locality)}
+        />
+        {errors.locality && (
+          <p className="text-red-500 text-xs mt-1">{errors.locality.message}</p>
+        )}
+      </div>
+
       {/* Dirección */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -186,38 +204,6 @@ export default function RegisterClinicForm({ onSuccess }) {
         />
         {errors.address && (
           <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
-        )}
-      </div>
-
-      {/* Número de licencia */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Número de licencia *
-        </label>
-        <Input
-          {...register('license', validations.license)}
-          placeholder="LIC-VET-2024-001"
-          className={errors.license ? 'border-red-500' : ''}
-        />
-        {errors.license && (
-          <p className="text-red-500 text-xs mt-1">{errors.license.message}</p>
-        )}
-      </div>
-
-      {/* Servicios ofrecidos */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Servicios ofrecidos *
-        </label>
-        <textarea
-          {...register('services', validations.services)}
-          placeholder="Emergencias 24/7, Banco de Sangre, Cirugía..."
-          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[80px] ${
-            errors.services ? 'border-red-500' : 'border-gray-300'
-          }`}
-        />
-        {errors.services && (
-          <p className="text-red-500 text-xs mt-1">{errors.services.message}</p>
         )}
       </div>
 

@@ -147,25 +147,17 @@ export default function ProfilePage() {
               {/* Información específica por tipo */}
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3">
-                  {userType === 'clinic' ? 'Información Profesional' : 'Información Adicional'}
+                  {userType === 'clinic' ? 'Información de Ubicación' : 'Información Adicional'}
                 </h3>
                 <div className="space-y-3">
                   {userType === 'clinic' && (
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Licencia Veterinaria</label>
-                      <p className={`${userData.license ? 'text-gray-900' : 'text-gray-400 italic'}`}>
-                        {userData.license || 'No especificado - Agregar en editar perfil'}
+                      <label className="text-sm font-medium text-gray-500">Localidad</label>
+                      <p className={`${userData.locality ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                        {userData.locality || 'No especificado - Agregar en editar perfil'}
                       </p>
                     </div>
                   )}
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      {userType === 'clinic' ? 'Servicios' : 'Descripción'}
-                    </label>
-                    <p className={`${userData.services ? 'text-gray-900' : 'text-gray-400 italic'}`}>
-                      {userData.services || 'No especificado - Agregar en editar perfil'}
-                    </p>
-                  </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Tipo de Usuario</label>
                     <p className="text-gray-900">{getRoleDisplay()}</p>
@@ -189,7 +181,7 @@ export default function ProfilePage() {
                   <h4 className="font-medium text-gray-900">Cambiar Contraseña</h4>
                   <p className="text-sm text-gray-600">Actualiza tu contraseña por seguridad</p>
                 </div>
-                <Button variant="outline" onClick={() => navigate('/forgot-password')}>
+                <Button variant="outline" onClick={() => navigate('/change-password')}>
                   Cambiar
                 </Button>
               </div>

@@ -42,14 +42,6 @@ export default function LoginPage() {
                 Registrarse
               </Link>
             </p>
-            <p className="text-sm text-gray-600">
-              <Link 
-                to="/public" 
-                className="text-gray-500 hover:text-gray-700 hover:underline"
-              >
-                Ver solicitudes públicas
-              </Link>
-            </p>
           </div>
         </CardContent>
       </Card>

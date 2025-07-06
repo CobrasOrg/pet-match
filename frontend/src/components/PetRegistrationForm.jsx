@@ -7,6 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ImageUploader from '@/components/ui/ImageUploader';
 
+// NOTA: Este componente está configurado en MODO SIMULADO
+// Las llamadas al backend están deshabilitadas para desarrollo
+// Cuando integres el backend, reemplaza la función onSubmit con las llamadas reales a la API
+
 // Constantes para el formulario
 const SPECIES_OPTIONS = [
   { value: 'canine', label: 'Perro' },
@@ -63,9 +67,33 @@ const COMMON_BREEDS = {
   ]
 };
 
-export default function PetRegistrationForm({ onSuccess, onCancel }) {
+export default function PetRegistrationForm({ onSuccess, onCancel, initialData = null, mode = 'create' }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(initialData?.petPhoto || null);
+
+  const isEditMode = mode === 'edit' && initialData;
+
+  // Función para formatear fecha para campos de tipo date
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    
+    // Si ya está en formato YYYY-MM-DD, devolverlo tal como está
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return dateString;
+    }
+    
+    // Si es un objeto Date o string que puede ser parseado
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      
+      // Formatear a YYYY-MM-DD
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Error formateando fecha:', error);
+      return '';
+    }
+  };
 
   const {
     register,
@@ -75,7 +103,18 @@ export default function PetRegistrationForm({ onSuccess, onCancel }) {
     formState: { errors, isValid }
   } = useForm({
     mode: 'onChange',
-    defaultValues: {
+    defaultValues: isEditMode ? {
+      petName: initialData.petName,
+      species: initialData.species,
+      breed: initialData.breed,
+      customBreed: '',
+      age: initialData.age,
+      weight: initialData.weight,
+      bloodType: initialData.bloodType || '',
+      lastVaccination: formatDateForInput(initialData.lastVaccination),
+      healthStatus: initialData.healthStatus || '',
+      petPhoto: initialData.petPhoto || null
+    } : {
       petName: '',
       species: '',
       breed: '',
@@ -174,19 +213,26 @@ export default function PetRegistrationForm({ onSuccess, onCancel }) {
     setIsLoading(true);
     
     try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simular delay de red
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Simular subida de imagen si existe
+      // Simular procesamiento de imagen
       let imageUrl = null;
       if (selectedImage) {
-        // En un entorno real, aquí subirías la imagen a un servicio de almacenamiento
-        // Por ahora, simulamos creando una URL local
-        imageUrl = URL.createObjectURL(selectedImage);
-        console.log('Imagen simulada subida:', imageUrl);
+        if (typeof selectedImage === 'string') {
+          // Si es una URL existente (modo edición)
+          imageUrl = selectedImage;
+        } else {
+          // Si es un archivo nuevo, simular subida
+          imageUrl = URL.createObjectURL(selectedImage);
+          console.log('Imagen simulada subida:', imageUrl);
+        }
       }
       
+      // Preparar datos para el callback (simulando respuesta del backend)
       const petData = {
+        ...(isEditMode && { id: initialData.id }),
+        id: isEditMode ? initialData.id : Date.now(), // ID simulado para nuevas mascotas
         petName: data.petName,
         species: data.species,
         breed: data.breed === 'Otro' ? data.customBreed : data.breed,
@@ -195,22 +241,25 @@ export default function PetRegistrationForm({ onSuccess, onCancel }) {
         bloodType: data.bloodType,
         lastVaccination: data.lastVaccination,
         healthStatus: data.healthStatus,
-        petPhoto: imageUrl, // URL de la imagen
-        registeredAt: new Date().toISOString(),
-        isActive: true
+        petPhoto: imageUrl,
+        ...(isEditMode ? 
+          { updatedAt: new Date().toISOString() } : 
+          { registeredAt: new Date().toISOString() }
+        )
       };
       
-      console.log('Datos de la mascota:', petData);
+      console.log(`${isEditMode ? 'Editando' : 'Registrando'} mascota (SIMULADO):`, petData);
       
-      alert('¡Mascota registrada exitosamente! Ya puede ser considerada para donaciones compatibles.');
+      // Simular éxito
+      alert(`¡Mascota ${isEditMode ? 'actualizada' : 'registrada'} exitosamente! (Modo simulado)`);
       
       if (onSuccess) {
         onSuccess(petData);
       }
       
     } catch (error) {
-      console.error('Error registrando mascota:', error);
-      alert('Error al registrar la mascota. Intenta nuevamente.');
+      console.error(`Error ${isEditMode ? 'actualizando' : 'registrando'} mascota:`, error);
+      alert(`Error al ${isEditMode ? 'actualizar' : 'registrar'} la mascota. Intenta nuevamente.`);
     } finally {
       setIsLoading(false);
     }
@@ -252,8 +301,9 @@ export default function PetRegistrationForm({ onSuccess, onCancel }) {
                   setValue('breed', ''); // Reset breed when species changes
                   setValue('bloodType', ''); // Reset blood type when species changes
                 }}
+                disabled={isEditMode} // Deshabilitar en modo edición
               >
-                <SelectTrigger className={errors.species ? 'border-red-500' : ''}>
+                <SelectTrigger className={`${errors.species ? 'border-red-500' : ''} ${isEditMode ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`}>
                   <SelectValue placeholder="Selecciona la especie" />
                 </SelectTrigger>
                 <SelectContent>
@@ -266,6 +316,11 @@ export default function PetRegistrationForm({ onSuccess, onCancel }) {
               </Select>
               {errors.species && (
                 <p className="text-red-500 text-xs mt-1">{errors.species.message}</p>
+              )}
+              {isEditMode && (
+                <p className="text-gray-500 text-xs mt-1">
+                  La especie no puede modificarse una vez registrada
+                </p>
               )}
             </div>
 
@@ -400,6 +455,7 @@ export default function PetRegistrationForm({ onSuccess, onCancel }) {
                 type="date"
                 {...register('lastVaccination', validations.lastVaccination)}
                 className={errors.lastVaccination ? 'border-red-500' : ''}
+                defaultValue={formatDateForInput(initialData?.lastVaccination)}
               />
               {errors.lastVaccination && (
                 <p className="text-red-500 text-xs mt-1">{errors.lastVaccination.message}</p>
@@ -455,7 +511,10 @@ export default function PetRegistrationForm({ onSuccess, onCancel }) {
           disabled={!isValid || isLoading}
           className="flex-1"
         >
-          {isLoading ? 'Registrando...' : 'Registrar Mascota'}
+          {isLoading ? 
+            (isEditMode ? 'Actualizando...' : 'Registrando...') : 
+            (isEditMode ? 'Actualizar Mascota' : 'Registrar Mascota')
+          }
         </Button>
         <Button 
           type="button" 

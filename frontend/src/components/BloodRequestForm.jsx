@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useAuth } from '@/context/AuthContext';
 import {
     Form,
     FormControl,
@@ -23,39 +24,33 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useRef } from 'react';
 import { toast } from 'sonner';
-import { BOGOTA_LOCALITIES } from '@/constants/locations';
 
 // Esquema de validación con Zod usando los nombres EXACTOS que espera la API
 const formSchema = z.object({
-    contacto: z.string().regex(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/, "Ingrese un número de teléfono válido"),
     descripcion_solicitud: z.string().min(10, "La descripción debe tener al menos 10 caracteres"),
-    direccion: z.string().min(1, "Ingresa la dirección completa"),
     especie: z.string().min(1, "Selecciona una especie"),
     foto_mascota: z.any().optional(),
-    localidad: z.string().min(1, "Selecciona una localidad"),
     nombre_mascota: z.string().min(1, "Ingresa el nombre de la mascota"),
-    nombre_veterinaria: z.string().min(1, "Ingresa el nombre de la clínica"),
     peso_minimo: z.number().min(0.1, "El peso debe ser mayor a 0"),
     tipo_sangre: z.string().min(1, "Selecciona un tipo de sangre"),
-    ubicacion: z.string().min(1, "Ingresa la ubicación"),
     urgencia: z.string().min(1, "Selecciona un nivel de urgencia"),
 });
 
 export default function BloodRequestForm({ onRequestCreated }) {
+    const { userData } = useAuth();
+
+    // Verificar que los datos del perfil estén completos
+    const isProfileComplete = userData?.name && userData?.phone && userData?.address && userData?.locality;
+
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            contacto: "",
             descripcion_solicitud: "",
-            direccion: "",
             especie: "",
             foto_mascota: null,
-            localidad: "",
             nombre_mascota: "",
-            nombre_veterinaria: "",
             peso_minimo: 0,
             tipo_sangre: "",
-            ubicacion: "",
             urgencia: ""
         }
     });
@@ -95,12 +90,6 @@ export default function BloodRequestForm({ onRequestCreated }) {
         });
     };
 
-    // Autocompletar ubicación al seleccionar localidad
-    const handleLocalidadChange = (value) => {
-        form.setValue("localidad", value);
-        form.setValue("ubicacion", `${value}, Bogotá`);
-    };
-
     // Función para manejar el envío del formulario
     const handleSubmit = async (data) => {
         try {
@@ -112,6 +101,13 @@ export default function BloodRequestForm({ onRequestCreated }) {
             const payload = {
                 ...data,
                 foto_mascota,
+                // Agregar automáticamente datos del perfil de la veterinaria
+                contacto: userData?.phone || "",
+                nombre_veterinaria: userData?.name || "",
+                direccion: userData?.address || "",
+                // Usar la localidad del perfil de la veterinaria
+                localidad: userData?.locality || "Bogotá",
+                ubicacion: userData?.locality ? `${userData.locality}, Bogotá, Colombia` : userData?.address || "Bogotá, Colombia",
             };
 
             // Mostrar en consola el payload que se enviará a la API
@@ -155,145 +151,166 @@ export default function BloodRequestForm({ onRequestCreated }) {
     };
 
     return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Campo Especie */}
-                    <FormField
-                        control={form.control}
-                        name="especie"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Especie *</FormLabel>
-                                <Select onValueChange={handleSpeciesChange} value={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar especie" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="Perro">🐶 Perro</SelectItem>
-                                        <SelectItem value="Gato">🐱 Gato</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+        <div>
+            {/* Mensaje de advertencia si faltan datos del perfil */}
+            {!isProfileComplete && (
+                <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
+                    <div className="flex items-center">
+                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                            <p className="font-medium">Perfil incompleto</p>
+                            <p className="text-sm">
+                                Para crear solicitudes necesitas completar tu perfil con: nombre de la clínica, teléfono, dirección y localidad.
+                                <a href="/profile" className="underline ml-1 hover:text-yellow-800">
+                                    Completar perfil →
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-                    {/* Campo Tipo de Sangre */}
-                    <FormField
-                        control={form.control}
-                        name="tipo_sangre"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Tipo de Sangre *</FormLabel>
-                                <Select
-                                    onValueChange={field.onChange}
-                                    value={field.value}
-                                    disabled={!selectedSpecies}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger className={!selectedSpecies ? "opacity-50 cursor-not-allowed" : ""}>
-                                            <SelectValue
-                                                placeholder={
-                                                    !selectedSpecies
-                                                        ? "Primero selecciona una especie"
-                                                        : `Seleccionar tipo de sangre para ${selectedSpecies}`
-                                                }
-                                            />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {getBloodTypeOptions(selectedSpecies).map((option) => (
-                                            <SelectItem key={option.value} value={option.value}>
-                                                {option.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormDescription>
-                                    {!selectedSpecies
-                                        ? "Selecciona primero la especie para ver los tipos de sangre disponibles"
-                                        : "Especifica el sistema de grupo sanguíneo"
-                                    }
-                                </FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Campo Especie */}
+                        <FormField
+                            control={form.control}
+                            name="especie"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Especie *</FormLabel>
+                                    <Select onValueChange={handleSpeciesChange} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Seleccionar especie" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="Perro">🐶 Perro</SelectItem>
+                                            <SelectItem value="Gato">🐱 Gato</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-                    {/* Campo Urgencia */}
-                    <FormField
-                        control={form.control}
-                        name="urgencia"
-                        render={({ field }) => (
-                            <FormItem className="space-y-3">
-                                <FormLabel>Nivel de Urgencia *</FormLabel>
-                                <FormControl>
-                                    <RadioGroup
+                        {/* Campo Tipo de Sangre */}
+                        <FormField
+                            control={form.control}
+                            name="tipo_sangre"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Tipo de Sangre *</FormLabel>
+                                    <Select
                                         onValueChange={field.onChange}
                                         value={field.value}
-                                        className="flex flex-col space-y-1"
+                                        disabled={!selectedSpecies}
                                     >
-                                        <FormItem className="flex items-center space-x-3 space-y-0">
-                                            <FormControl>
-                                                <RadioGroupItem value="Alta" />
-                                            </FormControl>
-                                            <FormLabel className="font-normal text-red-600">
-                                                Urgencia Alta (necesidad inmediata)
-                                            </FormLabel>
-                                        </FormItem>
-                                        <FormItem className="flex items-center space-x-3 space-y-0">
-                                            <FormControl>
-                                                <RadioGroupItem value="Media" />
-                                            </FormControl>
-                                            <FormLabel className="font-normal text-yellow-600">
-                                                Urgencia Media (en las próximas 72h)
-                                            </FormLabel>
-                                        </FormItem>
-                                    </RadioGroup>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                                        <FormControl>
+                                            <SelectTrigger className={!selectedSpecies ? "opacity-50 cursor-not-allowed" : ""}>
+                                                <SelectValue
+                                                    placeholder={
+                                                        !selectedSpecies
+                                                            ? "Primero selecciona una especie"
+                                                            : `Seleccionar tipo de sangre para ${selectedSpecies}`
+                                                    }
+                                                />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {getBloodTypeOptions(selectedSpecies).map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormDescription>
+                                        {!selectedSpecies
+                                            ? "Selecciona primero la especie para ver los tipos de sangre disponibles"
+                                            : "Especifica el sistema de grupo sanguíneo"
+                                        }
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-                    {/* Campo Peso Mínimo */}
-                    <FormField
-                        control={form.control}
-                        name="peso_minimo"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Peso Mínimo Requerido (kg) *</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        type="number"
-                                        placeholder="Ej: 25"
-                                        min={0}
-                                        {...field}
-                                        value={field.value === 0 ? "" : field.value}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            if (value === "") {
-                                                field.onChange("");
-                                            } else {
-                                                const num = parseFloat(value);
-                                                if (!isNaN(num) && num >= 0) {
-                                                    field.onChange(num);
+                        {/* Campo Urgencia */}
+                        <FormField
+                            control={form.control}
+                            name="urgencia"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                    <FormLabel>Nivel de Urgencia *</FormLabel>
+                                    <FormControl>
+                                        <RadioGroup
+                                            onValueChange={field.onChange}
+                                            value={field.value}
+                                            className="flex flex-col space-y-1"
+                                        >
+                                            <FormItem className="flex items-center space-x-3 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="Alta" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal text-red-600">
+                                                    Urgencia Alta (necesidad inmediata)
+                                                </FormLabel>
+                                            </FormItem>
+                                            <FormItem className="flex items-center space-x-3 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="Media" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal text-yellow-600">
+                                                    Urgencia Media (en las próximas 72h)
+                                                </FormLabel>
+                                            </FormItem>
+                                        </RadioGroup>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        {/* Campo Peso Mínimo */}
+                        <FormField
+                            control={form.control}
+                            name="peso_minimo"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Peso Mínimo Requerido (kg) *</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="number"
+                                            placeholder="Ej: 25"
+                                            min={0}
+                                            {...field}
+                                            value={field.value === 0 ? "" : field.value}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (value === "") {
+                                                    field.onChange("");
+                                                } else {
+                                                    const num = parseFloat(value);
+                                                    if (!isNaN(num) && num >= 0) {
+                                                        field.onChange(num);
+                                                    }
                                                 }
-                                            }
-                                        }}
-                                    />
-                                </FormControl>
-                                <FormDescription>
-                                    Peso mínimo del donante para seguridad del paciente
-                                </FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
+                                            }}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>
+                                        Peso mínimo del donante para seguridad del paciente
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
                 {/* Campo Descripción */}
                 <FormField
@@ -324,120 +341,6 @@ export default function BloodRequestForm({ onRequestCreated }) {
                             <FormControl>
                                 <Input
                                     placeholder="Ej: Canela"
-                                    {...field}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                {/* Sección de Ubicación */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Campo Localidad */}
-                    <FormField
-                        control={form.control}
-                        name="localidad"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Localidad de Bogotá *</FormLabel>
-                                <Select onValueChange={handleLocalidadChange} value={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar localidad" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {BOGOTA_LOCALITIES.map((locality) => (
-                                            <SelectItem key={locality.value} value={locality.label}>
-                                                {locality.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormDescription>
-                                    Localidad donde se encuentra la clínica
-                                </FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    {/* Campo Nombre de Clínica */}
-                    <FormField
-                        control={form.control}
-                        name="nombre_veterinaria"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Nombre de la Clínica *</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder="Ej: Veterinaria San Patricio"
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormDescription>
-                                    Nombre oficial de la clínica veterinaria
-                                </FormDescription>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-
-                {/* Campo Dirección */}
-                <FormField
-                    control={form.control}
-                    name="direccion"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Dirección Completa de la Clínica *</FormLabel>
-                            <FormControl>
-                                <Input
-                                    placeholder="Ej: Calle 123 #45-67, Edificio Veterinario"
-                                    {...field}
-                                />
-                            </FormControl>
-                            <FormDescription>
-                                Dirección específica dentro de la localidad seleccionada
-                            </FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                {/* Campo Ubicación */}
-                <FormField
-                    control={form.control}
-                    name="ubicacion"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Ubicación *</FormLabel>
-                            <FormControl>
-                                <Input
-                                    placeholder="Ej: Usaquén, Bogotá"
-                                    {...field}
-                                    disabled // <-- Esto bloquea el campo para que no se pueda modificar
-                                />
-                            </FormControl>
-                            <FormDescription>
-                                Ejemplo: Usaquén, Bogotá
-                            </FormDescription>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                {/* Campo Contacto */}
-                <FormField
-                    control={form.control}
-                    name="contacto"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Contacto de Emergencia *</FormLabel>
-                            <FormControl>
-                                <Input
-                                    placeholder="Ej: +57 300 123 4567"
                                     {...field}
                                 />
                             </FormControl>
@@ -493,5 +396,6 @@ export default function BloodRequestForm({ onRequestCreated }) {
                 </Button>
             </form>
         </Form>
+        </div>
     );
 }

@@ -1,41 +1,27 @@
 
-import { generateMockId } from './utils';
+// DEPRECADO: Este archivo está siendo reemplazado por mockData.js
+// Mantener por compatibilidad temporal
 
+import { MOCK_REQUESTS } from './mockData';
+
+// Función mantenida por compatibilidad
 export const generateMockRequests = () => {
-    const now = new Date();
-
-    return [
-        {
-            id: generateMockId('REQ'),
-            petName: 'Rocky',
-            species: 'canine',
-            bloodType: 'DEA 1.1+',
-            urgency: 'high',
-            minWeight: 25,
-            description: 'Rocky es un pastor alemán de 5 años que ha sido diagnosticado con anemia severa después de una complicación durante una cirugía de emergencia. Su hemograma muestra valores críticos y necesita una transfusión de sangre urgente para estabilizar su condición.',
-            location: 'Clínica VetCentral, Av. Principal 123',
-            locality: 'suba',
-            status: 'active',
-            date: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            clinicName: 'Veterinaria San Patricio',
-            image: 'https://images.unsplash.com/photo-1551717743-49959800b1f6',
-            vetContact: '+57 300 123 4567'
-        },
-        {
-            id: generateMockId('REQ'),
-            petName: 'Luna',
-            species: 'feline',
-            bloodType: 'A',
-            urgency: 'medium',
-            minWeight: 4,
-            description: 'Luna es una gata siamés de 3 años que necesita una transfusión de sangre como preparación para una cirugía compleja programada para la próxima semana.',
-            location: 'Hospital Felino, Calle Secundaria 456',
-            locality: 'chapinero',
-            status: 'active',
-            date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-            clinicName: 'Clínica Gatuna VIP',
-            image: 'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e',
-            vetContact: '+57 301 234 5678'
-        }
-    ];
+    console.warn('generateMockRequests está deprecado. Usa MOCK_REQUESTS de mockData.js');
+    return MOCK_REQUESTS.map(req => ({
+        ...req,
+        // Mapear campos si es necesario para compatibilidad
+        petName: req.nombre_mascota,
+        species: req.especie,
+        bloodType: req.tipo_sangre,
+        urgency: req.urgencia,
+        minWeight: req.peso_minimo,
+        description: req.descripcion_solicitud,
+        location: req.direccion,
+        locality: req.localidad,
+        status: req.estado,
+        date: req.fecha_creacion,
+        clinicName: req.nombre_veterinaria,
+        image: req.imagen || 'https://images.unsplash.com/photo-1551717743-49959800b1f6',
+        vetContact: req.contacto
+    }));
 };

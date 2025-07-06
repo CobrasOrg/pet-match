@@ -2,7 +2,9 @@ import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BOGOTA_LOCALITIES } from '@/constants/locations';
+import { generateMockClinics, generateMockPetOwners } from '@/constants/mockUsers';
 
 export default function EditProfileForm({ userData, userType, onSuccess, onCancel }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,6 +12,7 @@ export default function EditProfileForm({ userData, userType, onSuccess, onCance
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid, isDirty }
   } = useForm({
     mode: 'onChange',
@@ -18,8 +21,7 @@ export default function EditProfileForm({ userData, userType, onSuccess, onCance
       email: userData?.email || '',
       phone: userData?.phone || '',
       address: userData?.address || '',
-      license: userData?.license || '',
-      services: userData?.services || ''
+      locality: userData?.locality || ''
     }
   });
 
@@ -54,19 +56,8 @@ export default function EditProfileForm({ userData, userType, onSuccess, onCance
       }
     },
     ...(userType === 'clinic' && {
-      license: {
-        required: 'El número de licencia es obligatorio',
-        minLength: {
-          value: 5,
-          message: 'El número de licencia debe tener al menos 5 caracteres'
-        }
-      },
-      services: {
-        required: 'Describe los servicios que ofreces',
-        minLength: {
-          value: 10,
-          message: 'La descripción debe tener al menos 10 caracteres'
-        }
+      locality: {
+        required: 'La localidad es obligatoria'
       }
     })
   };
@@ -80,15 +71,15 @@ export default function EditProfileForm({ userData, userType, onSuccess, onCance
       
       console.log('Datos actualizados:', data);
       
-      // Simular verificación de email único si cambió
+      // Simular verificación de email único si cambió usando datos mock
       if (data.email !== userData.email) {
-        const existingEmails = [
-          'juan@example.com',
-          'veterinaria@sanpatricio.com',
-          'admin@petmatch.com'
-        ];
+        const owners = generateMockPetOwners();
+        const clinics = generateMockClinics();
         
-        if (existingEmails.includes(data.email)) {
+        const emailExists = owners.some(owner => owner.email === data.email && owner.id !== userData.id) || 
+                           clinics.some(clinic => clinic.email === data.email && clinic.id !== userData.id);
+        
+        if (emailExists) {
           alert('Este correo electrónico ya está en uso por otra cuenta.');
           return;
         }
@@ -173,46 +164,36 @@ export default function EditProfileForm({ userData, userType, onSuccess, onCance
               <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
             )}
           </div>
+
+          {/* Localidad - Solo para clínicas */}
+          {userType === 'clinic' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Localidad de Bogotá *
+              </label>
+              <Select onValueChange={(value) => setValue('locality', value)} defaultValue={userData?.locality || ''}>
+                <SelectTrigger className={`w-full ${errors.locality ? 'border-red-500' : ''}`}>
+                  <SelectValue placeholder="Selecciona una localidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BOGOTA_LOCALITIES.map((locality) => (
+                    <SelectItem key={locality.value} value={locality.value}>
+                      {locality.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input
+                type="hidden"
+                {...register('locality', validations.locality)}
+              />
+              {errors.locality && (
+                <p className="text-red-500 text-xs mt-1">{errors.locality.message}</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Información específica para clínicas */}
-      {userType === 'clinic' && (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Información Profesional</h3>
-          <div className="space-y-4">
-            {/* Número de licencia */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Número de licencia veterinaria *
-              </label>
-              <Input
-                {...register('license', validations.license)}
-                placeholder="LIC-VET-2024-001"
-                className={errors.license ? 'border-red-500' : ''}
-              />
-              {errors.license && (
-                <p className="text-red-500 text-xs mt-1">{errors.license.message}</p>
-              )}
-            </div>
-
-            {/* Servicios ofrecidos */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Servicios ofrecidos *
-              </label>
-              <Textarea
-                {...register('services', validations.services)}
-                placeholder="Emergencias 24/7, Banco de Sangre, Cirugía..."
-                className={`min-h-[100px] ${errors.services ? 'border-red-500' : ''}`}
-              />
-              {errors.services && (
-                <p className="text-red-500 text-xs mt-1">{errors.services.message}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Botones de acción */}
       <div className="flex gap-4 pt-6 border-t">

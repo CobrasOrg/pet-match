@@ -86,6 +86,7 @@ export default function RegisterOwnerForm({ onSuccess }) {
         name: registrationData.name,
         email: registrationData.email,
         phone: registrationData.phone,
+        address: registrationData.address,
         userType: 'owner'
       };
       

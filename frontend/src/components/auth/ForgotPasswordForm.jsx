@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
+import { generateMockClinics, generateMockPetOwners } from '@/constants/mockUsers';
 
 export default function ForgotPasswordForm({ onSuccess, prefilledEmail = null }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -51,14 +52,12 @@ export default function ForgotPasswordForm({ onSuccess, prefilledEmail = null })
       
       console.log('Solicitud de recuperación enviada para:', data.email);
       
-      // Simular verificación de email registrado
-      const testEmails = [
-        'juan@example.com',
-        'veterinaria@sanpatricio.com', 
-        'admin@petmatch.com'
-      ];
+      // Simular verificación de email registrado usando datos mock
+      const owners = generateMockPetOwners();
+      const clinics = generateMockClinics();
       
-      const emailExists = testEmails.includes(data.email);
+      const emailExists = owners.some(owner => owner.email === data.email) || 
+                          clinics.some(clinic => clinic.email === data.email);
       
       if (emailExists) {
         setEmailSent(true);
@@ -165,11 +164,10 @@ export default function ForgotPasswordForm({ onSuccess, prefilledEmail = null })
       {/* Información adicional - solo mostrar si no está logueado */}
       {!userData && (
         <div className="mt-6 p-3 bg-gray-50 rounded-md">
-          <p className="text-xs text-gray-600 font-medium mb-2">Correos de prueba:</p>
+          <p className="text-xs text-gray-600 font-medium mb-2">Correos de prueba (desde mockUsers.jsx):</p>
           <div className="text-xs text-gray-500 space-y-1">
-            <p>juan@example.com</p>
-            <p>veterinaria@sanpatricio.com</p>
-            <p>admin@petmatch.com</p>
+            <p>{generateMockPetOwners()[0].email}</p>
+            <p>{generateMockClinics()[0].email}</p>
           </div>
         </div>
       )}

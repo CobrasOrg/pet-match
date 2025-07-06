@@ -3,10 +3,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Plus, 
   Edit, 
+  Trash2,
   Heart, 
   Dog, 
   Cat,
@@ -15,13 +15,42 @@ import {
   Stethoscope
 } from 'lucide-react';
 import PetRegistrationForm from '@/components/PetRegistrationForm';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+
+// NOTA: Esta página está configurada en MODO SIMULADO
+// Las llamadas al backend están deshabilitadas para desarrollo
+// Cuando integres el backend, reemplaza las funciones con llamadas reales a la API
 
 export default function MyPetsPage() {
-  const { userData, userType } = useAuth();
+  const { userData, userType, updateUserData } = useAuth();
   const navigate = useNavigate();
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [editingPet, setEditingPet] = useState(null);
+  const [deletingPet, setDeletingPet] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Función para formatear fechas correctamente para visualización
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    
+    // Si es formato YYYY-MM-DD, parsear como fecha local
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-');
+      const date = new Date(year, month - 1, day);
+      return date.toLocaleDateString('es-CO');
+    }
+    
+    // Si es cualquier otro formato, usar Date normal
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-CO');
+    } catch (error) {
+      console.error('Error formateando fecha:', error);
+      return dateString;
+    }
+  };
 
   // Verificar autenticación y que sea un owner
   useEffect(() => {
@@ -30,52 +59,27 @@ export default function MyPetsPage() {
       return;
     }
     if (userType !== 'owner') {
-      navigate('/dashboard');
+      navigate('/requests');
       return;
     }
   }, [userData, userType, navigate]);
 
-  // Simular carga de mascotas del usuario
+  // Cargar mascotas del usuario desde datos del contexto
   useEffect(() => {
     const loadPets = async () => {
       setIsLoading(true);
       try {
-        // Simular llamada a API
+        // Simular delay de carga
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Mock data - en un futuro esto vendrá del backend
-        const mockPets = [
-          {
-            id: 1,
-            petName: 'Luna',
-            species: 'canine',
-            breed: 'Golden Retriever',
-            age: 3,
-            weight: 25.5,
-            bloodType: 'DEA 1.1+',
-            healthStatus: 'Excelente estado de salud, sin enfermedades conocidas',
-            lastVaccination: '2024-11-15',
-            petPhoto: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=400&h=400&fit=crop&crop=face',
-            isActive: true
-          },
-          {
-            id: 2,
-            petName: 'Max',
-            species: 'canine',
-            breed: 'Pastor Alemán',
-            age: 5,
-            weight: 30.0,
-            bloodType: 'DEA 1.1-',
-            healthStatus: 'Artritis leve en patas traseras, tratamiento con antiinflamatorios',
-            lastVaccination: '2024-10-20',
-            petPhoto: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=400&h=400&fit=crop&crop=face',
-            isActive: false
-          }
-        ];
+        // Obtener mascotas del usuario autenticado
+        const userPets = userData?.pets || [];
         
-        setPets(mockPets);
+        setPets(userPets);
+        
       } catch (error) {
         console.error('Error cargando mascotas:', error);
+        alert('Error cargando las mascotas.');
       } finally {
         setIsLoading(false);
       }
@@ -87,8 +91,92 @@ export default function MyPetsPage() {
   }, [userData, userType]);
 
   const handlePetRegistered = (newPet) => {
-    setPets(prevPets => [...prevPets, { ...newPet, id: Date.now() }]);
+    // Actualizar estado local
+    setPets(prevPets => [...prevPets, newPet]);
+    
+    // Actualizar datos del usuario en el contexto
+    const updatedUserData = {
+      ...userData,
+      pets: [...(userData.pets || []), newPet]
+    };
+    updateUserData(updatedUserData);
+    
     setShowRegistrationForm(false);
+  };
+
+  const handlePetUpdated = async (updatedPet) => {
+    try {
+      // Simular delay de actualización
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Actualizar la lista local
+      setPets(prevPets => 
+        prevPets.map(pet => 
+          pet.id === updatedPet.id ? updatedPet : pet
+        )
+      );
+      
+      // Actualizar datos del usuario en el contexto
+      const updatedUserData = {
+        ...userData,
+        pets: (userData.pets || []).map(pet => 
+          pet.id === updatedPet.id ? updatedPet : pet
+        )
+      };
+      updateUserData(updatedUserData);
+      
+      setEditingPet(null);
+      
+    } catch (error) {
+      console.error('Error actualizando mascota:', error);
+      alert('Error al actualizar la mascota. Intenta nuevamente.');
+    }
+  };
+
+  const handleEditPet = (pet) => {
+    setEditingPet(pet);
+    setShowRegistrationForm(false);
+  };
+
+  const handleDeletePet = (pet) => {
+    setDeletingPet(pet);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      // Simular delay de eliminación
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Remover mascota de la lista local
+      setPets(prevPets => prevPets.filter(pet => pet.id !== deletingPet.id));
+      
+      // Actualizar datos del usuario en el contexto
+      const updatedUserData = {
+        ...userData,
+        pets: (userData.pets || []).filter(pet => pet.id !== deletingPet.id)
+      };
+      updateUserData(updatedUserData);
+      
+      // Cerrar dialog y limpiar estado
+      setShowDeleteDialog(false);
+      setDeletingPet(null);
+      
+      alert('¡Mascota eliminada exitosamente!');
+      
+    } catch (error) {
+      console.error('Error eliminando mascota:', error);
+      alert('Error al eliminar la mascota. Intenta nuevamente.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPet(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setDeletingPet(null);
   };
 
   const getSpeciesIcon = (species) => {
@@ -187,9 +275,6 @@ export default function MyPetsPage() {
                           </p>
                         </div>
                       </div>
-                      <Badge variant={pet.isActive ? 'default' : 'secondary'}>
-                        {pet.isActive ? 'Activo' : 'Inactivo'}
-                      </Badge>
                     </div>
                   </CardHeader>
                   
@@ -214,18 +299,30 @@ export default function MyPetsPage() {
                     </div>
                     
                     <div className="text-xs text-gray-500">
-                      Última vacuna: {new Date(pet.lastVaccination).toLocaleDateString('es-CO')}
+                      Última vacuna: {formatDateForDisplay(pet.lastVaccination)}
                     </div>
                     
                     <div className="pt-2 border-t">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full flex items-center gap-2"
-                      >
-                        <Edit className="h-4 w-4" />
-                        Editar Perfil
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 flex items-center gap-2"
+                          onClick={() => handleEditPet(pet)}
+                        >
+                          <Edit className="h-4 w-4" />
+                          Editar
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDeletePet(pet)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Eliminar
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -260,6 +357,47 @@ export default function MyPetsPage() {
             </div>
           </div>
         )}
+
+        {/* Modal de edición de mascota */}
+        {editingPet && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Editar Perfil de {editingPet.petName}
+                  </h2>
+                  <Button 
+                    variant="ghost" 
+                    onClick={handleCancelEdit}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </Button>
+                </div>
+                
+                <PetRegistrationForm
+                  mode="edit"
+                  initialData={editingPet}
+                  onSuccess={handlePetUpdated}
+                  onCancel={handleCancelEdit}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Dialog de confirmación de eliminación */}
+        <ConfirmationDialog
+          isOpen={showDeleteDialog}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          title="¿Eliminar mascota?"
+          message={`¿Estás seguro de que deseas eliminar el perfil de ${deletingPet?.petName}? Esta acción no se puede deshacer y la mascota dejará de estar disponible como donante.`}
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          variant="destructive"
+        />
       </div>
     </div>
   );

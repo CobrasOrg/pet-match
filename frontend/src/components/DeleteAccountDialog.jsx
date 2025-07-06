@@ -8,24 +8,13 @@ import {
   DialogTitle
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 export default function DeleteAccountDialog({ isOpen, onClose, onConfirm, userData }) {
-  const [confirmText, setConfirmText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const expectedText = 'ELIMINAR MI CUENTA';
-  const isConfirmValid = confirmText === expectedText;
-
   const handleConfirm = async () => {
-    if (!isConfirmValid) {
-      setError('Debes escribir exactamente "ELIMINAR MI CUENTA" para continuar');
-      return;
-    }
-
     setIsLoading(true);
     setError('');
 
@@ -45,7 +34,6 @@ export default function DeleteAccountDialog({ isOpen, onClose, onConfirm, userDa
 
   const handleClose = () => {
     if (!isLoading) {
-      setConfirmText('');
       setError('');
       onClose();
     }
@@ -86,26 +74,17 @@ export default function DeleteAccountDialog({ isOpen, onClose, onConfirm, userDa
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirm-text" className="text-sm font-medium text-gray-900">
-              Para confirmar, escribe <strong>"{expectedText}"</strong> en el campo de abajo:
-            </Label>
-            <Input
-              id="confirm-text"
-              type="text"
-              value={confirmText}
-              onChange={(e) => {
-                setConfirmText(e.target.value);
-                setError('');
-              }}
-              placeholder="Escribe aquí para confirmar"
-              className={error ? 'border-red-500 focus-visible:ring-red-500' : ''}
-              disabled={isLoading}
-            />
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
-            )}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm text-yellow-800 font-medium">
+              ⚠️ Esta acción es irreversible. Una vez confirmada, no podrás recuperar tu cuenta ni tus datos.
+            </p>
           </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -120,7 +99,7 @@ export default function DeleteAccountDialog({ isOpen, onClose, onConfirm, userDa
           <Button
             variant="destructive"
             onClick={handleConfirm}
-            disabled={!isConfirmValid || isLoading}
+            disabled={isLoading}
             className="w-full sm:w-auto"
           >
             {isLoading ? (
@@ -129,7 +108,7 @@ export default function DeleteAccountDialog({ isOpen, onClose, onConfirm, userDa
                 Eliminando...
               </>
             ) : (
-              'Eliminar Cuenta Permanentemente'
+              'Sí, Eliminar Cuenta'
             )}
           </Button>
         </DialogFooter>
