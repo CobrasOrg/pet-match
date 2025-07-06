@@ -20,7 +20,6 @@ import {
   CalendarIcon,
   WeightIcon,
   DropletIcon,
-  MapPinIcon,
   EditIcon,
   ChevronDownIcon,
   ChevronUpIcon,
@@ -32,7 +31,7 @@ import {
 } from 'lucide-react';
 import BloodRequestForm from '@/components/BloodRequestForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BOGOTA_LOCALITIES, getLocalityLabel } from '@/constants/locations';
+import { BOGOTA_LOCALITIES } from '@/constants/locations';
 import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
 
 // Mapeos para los valores que espera la API
@@ -109,7 +108,6 @@ function RequestCard({ request }) {
     const diffYears = Math.floor(diffDays / 365);
     return `Hace ${diffYears} año${diffYears !== 1 ? 's' : ''}`;
   }, [request.date]);
-  const localityLabel = getLocalityLabel(request.locality);
 
   // Estado visual
   const STATUS_CONFIG = {
@@ -196,7 +194,7 @@ function RequestCard({ request }) {
                 {request.petName}
               </h2>
               <p className="text-sm text-gray-600 truncate">
-                {SPECIES_LABELS[request.species]} • {localityLabel}
+                {SPECIES_LABELS[request.species]}
               </p>
             </div>
           </header>
@@ -206,16 +204,6 @@ function RequestCard({ request }) {
             <p className="text-sm text-gray-600 leading-relaxed line-clamp-4">
               {request.description}
             </p>
-
-            {/* Ubicación */}
-            <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
-              <MapPinIcon className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-blue-600 font-medium uppercase tracking-wide mb-1">Ubicación</p>
-                <p className="text-sm text-gray-700 font-medium">{request.location}</p>
-                <p className="text-xs text-blue-600 font-medium mt-1">{localityLabel}, Bogotá</p>
-              </div>
-            </div>
 
             {/* Requisitos del donante */}
             <section

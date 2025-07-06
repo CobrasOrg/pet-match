@@ -1,25 +1,3 @@
-inc# Integración del Backend - Instrucciones
-
-Este archivo contiene las instrucciones para integrar el backend real con la funcionalidad de mascotas.
-
-## 🚀 Estado Actual: MODO SIMULADO
-
-Actualmente, la aplicación funciona en **modo simulado** para permitir el desarrollo del frontend sin necesidad del backend. Todas las operaciones (crear, editar, eliminar mascotas) funcionan localmente con datos temporales.
-
-## 📁 Archivos Afectados
-
-### 1. `src/components/PetRegistrationForm.jsx`
-
-- **Función `onSubmit`**: Configurada para simular llamadas al backend
-- **Estado**: Modo simulado ✅
-
-### 2. `src/pages/MyPetsPage.jsx`
-
-- **Función `loadPets`**: Carga datos mock en lugar de llamar al backend
-- **Función `handlePetUpdated`**: Simula actualización sin backend
-- **Función `handleConfirmDelete`**: Simula eliminación sin backend
-- **Estado**: Modo simulado ✅
-
 ## 🩸 PetMatch - Documentación Completa de Integración Backend
 
 ## 📋 Tabla de Contenidos
@@ -32,8 +10,6 @@ Actualmente, la aplicación funciona en **modo simulado** para permitir el desar
 - [APIs de Solicitudes](#apis-de-solicitudes)
 - [APIs de Postulaciones](#apis-de-postulaciones)
 - [Constantes y Enums](#constantes-y-enums)
-- [Configuración del Servidor](#configuración-del-servidor)
-- [Ejemplos de Integración](#ejemplos-de-integración)
 
 ---
 
@@ -141,9 +117,6 @@ Actualmente, la aplicación funciona en **modo simulado** para permitir el desar
   "bloodType": "string",
   "lastVaccination": "string (ISO date)",
   "healthStatus": "string",
-  "medications": "string",
-  "availability": "string",
-  "termsAccepted": "boolean",
   "createdAt": "string (ISO date)",
   "updatedAt": "string (ISO date)"
 }
@@ -305,6 +278,7 @@ Actualmente, la aplicación funciona en **modo simulado** para permitir el desar
 ```json
 {
   "token": "string",
+  "Password": "string", // Contraseña actual
   "newPassword": "string"
 }
 ```
@@ -378,6 +352,52 @@ Actualmente, la aplicación funciona en **modo simulado** para permitir el desar
   "userType": "owner|clinic",
   "locality": "string", // Solo para clinic
   "updatedAt": "string (ISO date)"
+}
+```
+
+### PUT `/auth/change-password`
+
+**Descripción:** Cambiar contraseña del usuario autenticado
+**Headers:** `Authorization: Bearer {token}`
+
+**Request Body:**
+
+```json
+{
+  "currentPassword": "string",
+  "newPassword": "string",
+  "confirmPassword": "string"
+}
+```
+
+**Response Success (200):**
+
+```json
+{
+  "success": true,
+  "message": "Contraseña actualizada exitosamente"
+}
+```
+
+**Response Error (400):**
+
+```json
+{
+  "success": false,
+  "message": "La contraseña actual es incorrecta"
+}
+```
+
+**Response Error (422):**
+
+```json
+{
+  "success": false,
+  "message": "Error de validación",
+  "errors": {
+    "newPassword": ["La contraseña debe tener al menos 8 caracteres"],
+    "confirmPassword": ["Las contraseñas no coinciden"]
+  }
 }
 ```
 
@@ -503,22 +523,12 @@ formData.append("petPhoto", File); // Archivo de imagen
       "tipo_sangre": "string",
       "urgencia": "Alta|Media",
       "descripcion_solicitud": "string",
-      "direccion": "string",
-      "contacto": "string",
       "peso_minimo": "number",
       "estado": "Activa|Revision|Completada|Cancelada",
       "fecha_creacion": "string (ISO date)",
-      "localidad": "string",
-      "nombre_veterinaria": "string",
       "foto_mascota": "string|null"
     }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
+  ]
 }
 ```
 
@@ -532,17 +542,14 @@ formData.append("petPhoto", File); // Archivo de imagen
 ```json
 {
   "id": "string|number",
+  "nombre": "Nombre_Mascota",
   "especie": "Perro|Gato",
   "tipo_sangre": "string",
   "urgencia": "Alta|Media",
   "descripcion_solicitud": "string",
-  "direccion": "string",
-  "contacto": "string",
   "peso_minimo": "number",
   "estado": "Activa|Revision|Completada|Cancelada",
   "fecha_creacion": "string (ISO date)",
-  "localidad": "string",
-  "nombre_veterinaria": "string",
   "foto_mascota": "string|null"
 }
 ```
@@ -556,6 +563,7 @@ formData.append("petPhoto", File); // Archivo de imagen
 
 ```json
 {
+  "nombre": "Nombre_Mascota",
   "especie": "Perro|Gato",
   "tipo_sangre": "string",
   "urgencia": "Alta|Media",
@@ -570,6 +578,7 @@ formData.append("petPhoto", File); // Archivo de imagen
 ```json
 {
   "id": "string|number",
+  "nombre": "Nombre_Mascota",
   "especie": "Perro|Gato",
   "tipo_sangre": "string",
   "urgencia": "Alta|Media",
@@ -594,6 +603,7 @@ formData.append("petPhoto", File); // Archivo de imagen
 
 ```json
 {
+  "nombre": "Nombre_Mascota",
   "tipo_sangre": "string",
   "urgencia": "Alta|Media",
   "descripcion_solicitud": "string",
@@ -653,21 +663,15 @@ formData.append("petPhoto", File); // Archivo de imagen
       "tipo_sangre": "string",
       "urgencia": "Alta|Media",
       "descripcion_solicitud": "string",
-      "direccion": "string",
-      "contacto": "string",
+      "direccion_veterinaria": "string",
+      "contacto_veterinaria": "string",
       "peso_minimo": "number",
       "fecha_creacion": "string (ISO date)",
-      "localidad": "string",
+      "localidad_veterinaria": "string",
       "nombre_veterinaria": "string",
       "foto_mascota": "string|null"
     }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
+  ]
 }
 ```
 
@@ -729,15 +733,6 @@ formData.append("petPhoto", File); // Archivo de imagen
   "bloodType": "string",
   "lastVaccination": "string (ISO date)",
   "healthStatus": "string",
-  "medications": "string",
-  "availability": "string",
-  "termsAccepted": "boolean",
-  "donationHistory": [
-    {
-      "date": "string (ISO date)",
-      "clinic": "string"
-    }
-  ],
   "applicationDate": "string (ISO date)",
   "createdAt": "string (ISO date)"
 }
@@ -785,14 +780,11 @@ formData.append("petPhoto", File); // Archivo de imagen
   "bloodType": "string",
   "lastVaccination": "string (ISO date)",
   "healthStatus": "string",
-  "medications": "string",
   "petPhoto": "string|null",
   "ownerName": "string",
   "ownerPhone": "string",
   "ownerEmail": "string",
-  "ownerAddress": "string",
-  "availability": "string",
-  "termsAccepted": "boolean"
+  "ownerAddress": "string"
 }
 ```
 
@@ -936,724 +928,3 @@ const SPECIES_MAPPING = {
   feline: "Gato",
 };
 ```
-
----
-
-## ⚙️ Configuración del Servidor
-
-### Variables de Entorno Esperadas
-
-```env
-# URLs del Backend
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-VITE_POSTULATIONS_API_URL=http://localhost:8001/base/api
-
-# Otras configuraciones
-VITE_APP_NAME=PetMatch
-VITE_ENVIRONMENT=development
-```
-
-### Headers Requeridos
-
-```javascript
-// Para requests autenticados
-{
-  "Authorization": "Bearer {token}",
-  "Content-Type": "application/json"
-}
-
-// Para uploads de archivos
-{
-  "Authorization": "Bearer {token}",
-  // Content-Type se establece automáticamente con FormData
-}
-
-// Para requests públicos
-{
-  "Content-Type": "application/json"
-}
-```
-
-### Códigos de Estado HTTP
-
-- **200**: Éxito
-- **201**: Creado exitosamente
-- **204**: Sin contenido (para DELETE)
-- **400**: Solicitud incorrecta
-- **401**: No autorizado
-- **403**: Prohibido
-- **404**: No encontrado
-- **409**: Conflicto (email duplicado, postulación duplicada, etc.)
-- **422**: Entidad no procesable (errores de validación)
-- **500**: Error interno del servidor
-
-### Manejo de Errores
-
-```javascript
-// Formato esperado de errores de validación
-{
-  "detail": [
-    {
-      "msg": "El correo electrónico es obligatorio",
-      "type": "value_error"
-    }
-  ]
-}
-
-// Formato esperado de errores simples
-{
-  "detail": "Ya existe una postulación con este correo electrónico."
-}
-```
-
----
-
-## �🔄 Ejemplos de Integración
-
-### Ejemplo 1: Registro de Mascota
-
-**Frontend (PetRegistrationForm.jsx):**
-
-```javascript
-const onSubmit = async (data) => {
-  const formData = new FormData();
-
-  formData.append("petName", data.petName);
-  formData.append("species", data.species);
-  formData.append(
-    "breed",
-    data.breed === "Otro" ? data.customBreed : data.breed
-  );
-  formData.append("age", parseFloat(data.age));
-  formData.append("weight", parseFloat(data.weight));
-  formData.append("bloodType", data.bloodType);
-  formData.append("lastVaccination", data.lastVaccination);
-  formData.append("healthStatus", data.healthStatus);
-
-  if (selectedImage && typeof selectedImage !== "string") {
-    formData.append("petPhoto", selectedImage);
-  }
-
-  const url = isEditMode ? `/owner/pets/${initialData.id}` : "/owner/pets";
-  const method = isEditMode ? "PUT" : "POST";
-
-  const response = await fetch(`${VITE_API_BASE_URL}${url}`, {
-    method: method,
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    throw new Error("Error al registrar la mascota");
-  }
-
-  const result = await response.json();
-  // Manejar respuesta exitosa
-};
-```
-
-### Ejemplo 2: Crear Solicitud de Donación
-
-**Frontend (BloodRequestForm.jsx):**
-
-```javascript
-const handleSubmit = async (data) => {
-  let foto_mascota = "";
-  if (data.foto_mascota) {
-    foto_mascota = await fileToBase64(data.foto_mascota);
-  }
-
-  const payload = {
-    especie: data.especie,
-    tipo_sangre: data.tipo_sangre,
-    urgencia: data.urgencia,
-    descripcion_solicitud: data.descripcion_solicitud,
-    peso_minimo: parseFloat(data.peso_minimo),
-    foto_mascota,
-  };
-
-  const response = await fetch(`${VITE_API_BASE_URL}/vet/solicitudes`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || "Error al crear la solicitud");
-  }
-
-  const result = await response.json();
-  // Manejar respuesta exitosa
-};
-```
-
-### Ejemplo 3: Postular Mascota
-
-**Frontend (DonationButton.jsx):**
-
-```javascript
-const handleSelectPet = async (selectedPet) => {
-  const payload = {
-    petName: selectedPet.petName || selectedPet.name,
-    species: selectedPet.species,
-    breed: selectedPet.breed,
-    age: selectedPet.age,
-    weight: selectedPet.weight,
-    bloodType: selectedPet.bloodType,
-    lastVaccination: selectedPet.lastVaccination,
-    healthStatus: selectedPet.healthStatus,
-    medications: selectedPet.medications || "",
-    petPhoto: selectedPet.petPhoto || null,
-    ownerName: userData?.name || "",
-    ownerPhone: userData?.phone || "",
-    ownerEmail: userData?.email || "",
-    ownerAddress: userData?.address || "",
-    availability: "Disponible según coordinación con la clínica",
-    termsAccepted: true,
-  };
-
-  const response = await fetch(
-    `${VITE_POSTULATIONS_API_URL}/solicitudes/${request.id}/postulaciones`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      },
-      body: JSON.stringify(payload),
-    }
-  );
-
-  if (response.status === 409) {
-    toast.error("Ya existe una postulación tuya para esta solicitud.");
-    return;
-  }
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    let errorMsg = "No se pudo enviar la postulación";
-    if (Array.isArray(errorData.detail)) {
-      errorMsg = errorData.detail.map((e) => e.msg).join(" | ");
-    } else if (typeof errorData.detail === "string") {
-      errorMsg = errorData.detail;
-    }
-    toast.error(errorMsg);
-    return;
-  }
-
-  toast.success(
-    `¡Perfecto! ${selectedPet.petName} ha sido postulado como donante.`
-  );
-};
-```
-
-### Ejemplo 4: Autenticación y Manejo de Token
-
-**Frontend (AuthContext.jsx):**
-
-```javascript
-const login = async (email, password) => {
-  const response = await fetch(`${VITE_API_BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Credenciales incorrectas");
-  }
-
-  const data = await response.json();
-
-  // Guardar token y datos de usuario
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("userData", JSON.stringify(data.user));
-  localStorage.setItem("isLoggedIn", "true");
-  localStorage.setItem("userType", data.user.userType);
-
-  return data;
-};
-```
-
----
-
-## 🚨 Consideraciones Importantes
-
-### 1. **Seguridad**
-
-- Todos los endpoints protegidos requieren token JWT válido
-- Validar permisos: owners solo pueden acceder a sus mascotas, clínicas solo a sus solicitudes
-- Sanitizar todos los inputs del usuario
-- Validar tipos de archivo para uploads de imágenes
-
-### 2. **Validaciones**
-
-- Validar formato de email en registro/login
-- Validar que las fechas de vacunación no sean futuras ni muy antiguas
-- Validar pesos y edades dentro de rangos lógicos
-- Validar tipos de sangre según la especie
-
-### 3. **Almacenamiento de Imágenes**
-
-- Implementar subida de archivos para fotos de mascotas
-- Considerar límites de tamaño (2MB en frontend)
-- Generar URLs accesibles para las imágenes
-- Manejar casos donde no hay imagen disponible
-
-### 4. **Rendimiento**
-
-- Implementar paginación para listas grandes
-- Considerar caché para datos que no cambian frecuentemente
-- Optimizar consultas de base de datos
-
-### 5. **Compatibilidad**
-
-- Mantener consistencia en formatos de fecha (ISO 8601)
-- Usar convenciones de naming consistentes
-- Manejar casos donde APIs no están disponibles (fallback a mock data)
-
----
-
-## 📞 Contacto y Soporte
-
-### Para implementar este backend:
-
-1. **Revisa cada endpoint cuidadosamente** - Los formatos de request/response deben coincidir exactamente
-2. **Implementa validaciones robustas** - El frontend espera mensajes de error específicos
-3. **Maneja la autenticación correctamente** - Los tokens deben persistir entre sesiones
-4. **Prueba con datos reales** - Usa los usuarios de prueba proporcionados
-5. **Considera la experiencia de usuario** - Respuestas rápidas y mensajes claros
-
-### Archivos Frontend clave para revisar:
-
-- `src/components/auth/LoginForm.jsx` - Lógica de autenticación
-- `src/components/PetRegistrationForm.jsx` - Registro de mascotas
-- `src/components/BloodRequestForm.jsx` - Creación de solicitudes
-- `src/components/DonationButton.jsx` - Postulaciones de mascotas
-- `src/pages/RequestDetailPage.jsx` - Gestión de solicitudes
-
-**¡Importante!** Todos los campos marcados como requeridos en los Request Body son obligatorios y deben validarse tanto en frontend como backend.
-
-### Paso 1: Actualizar `PetRegistrationForm.jsx`
-
-Reemplaza la función `onSubmit` con esta implementación:
-
-```jsx
-const onSubmit = async (data) => {
-  setIsLoading(true);
-
-  try {
-    // Preparar los datos para enviar
-    const formData = new FormData();
-
-    // Agregar datos básicos
-    formData.append("petName", data.petName);
-    formData.append("species", data.species);
-    formData.append(
-      "breed",
-      data.breed === "Otro" ? data.customBreed : data.breed
-    );
-    formData.append("age", parseFloat(data.age));
-    formData.append("weight", parseFloat(data.weight));
-    formData.append("bloodType", data.bloodType);
-    formData.append("lastVaccination", data.lastVaccination);
-    formData.append("healthStatus", data.healthStatus);
-
-    // Agregar imagen si existe y es nueva
-    if (selectedImage && typeof selectedImage !== "string") {
-      formData.append("petPhoto", selectedImage);
-    }
-
-    // Determinar URL y método basado en modo
-    const url = isEditMode
-      ? `/api/mascotas/${initialData.id}`
-      : "/api/mascotas";
-    const method = isEditMode ? "PUT" : "POST";
-
-    // Hacer la llamada al backend
-    const response = await fetch(url, {
-      method: method,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Error ${isEditMode ? "actualizando" : "registrando"} mascota`
-      );
-    }
-
-    const result = await response.json();
-
-    // Preparar datos para el callback
-    const petData = {
-      ...(isEditMode && { id: initialData.id }),
-      petName: data.petName,
-      species: data.species,
-      breed: data.breed === "Otro" ? data.customBreed : data.breed,
-      age: parseFloat(data.age),
-      weight: parseFloat(data.weight),
-      bloodType: data.bloodType,
-      lastVaccination: data.lastVaccination,
-      healthStatus: data.healthStatus,
-      petPhoto:
-        result.petPhoto ||
-        (typeof selectedImage === "string" ? selectedImage : null),
-      ...(isEditMode
-        ? { updatedAt: new Date().toISOString() }
-        : {
-            registeredAt: new Date().toISOString(),
-            id: result.id,
-          }),
-    };
-
-    if (onSuccess) {
-      onSuccess(petData);
-    }
-  } catch (error) {
-    console.error(
-      `Error ${isEditMode ? "actualizando" : "registrando"} mascota:`,
-      error
-    );
-    alert(
-      `Error al ${
-        isEditMode ? "actualizar" : "registrar"
-      } la mascota. Intenta nuevamente.`
-    );
-  } finally {
-    setIsLoading(false);
-  }
-};
-```
-
-### Paso 2: Actualizar `MyPetsPage.jsx`
-
-#### Función `loadPets`:
-
-```jsx
-const loadPets = async () => {
-  setIsLoading(true);
-  try {
-    const response = await fetch("/api/mascotas", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Error cargando mascotas");
-    }
-
-    const data = await response.json();
-    setPets(data);
-  } catch (error) {
-    console.error("Error cargando mascotas:", error);
-    alert("Error cargando las mascotas.");
-  } finally {
-    setIsLoading(false);
-  }
-};
-```
-
-#### Función `handlePetUpdated`:
-
-```jsx
-const handlePetUpdated = async (updatedPet) => {
-  try {
-    const response = await fetch(`/api/mascotas/${updatedPet.id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-      body: JSON.stringify(updatedPet),
-    });
-
-    if (!response.ok) {
-      throw new Error("Error al actualizar la mascota");
-    }
-
-    setPets((prevPets) =>
-      prevPets.map((pet) => (pet.id === updatedPet.id ? updatedPet : pet))
-    );
-
-    setEditingPet(null);
-    alert("¡Mascota actualizada exitosamente!");
-  } catch (error) {
-    console.error("Error actualizando mascota:", error);
-    alert("Error al actualizar la mascota. Intenta nuevamente.");
-  }
-};
-```
-
-#### Función `handleConfirmDelete`:
-
-```jsx
-const handleConfirmDelete = async () => {
-  try {
-    const response = await fetch(`/api/mascotas/${deletingPet.id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Error al eliminar la mascota");
-    }
-
-    setPets((prevPets) => prevPets.filter((pet) => pet.id !== deletingPet.id));
-    setShowDeleteDialog(false);
-    setDeletingPet(null);
-    alert("¡Mascota eliminada exitosamente!");
-  } catch (error) {
-    console.error("Error eliminando mascota:", error);
-    alert("Error al eliminar la mascota. Intenta nuevamente.");
-  }
-};
-```
-
-## 🚨 PROBLEMA IDENTIFICADO Y SOLUCIONADO
-
-### Issue: Inconsistencia en el formato de especies
-
-**Problema**: La API del backend devuelve las especies en español ("Perro", "Gato") pero el frontend espera códigos en inglés ("canine", "feline").
-
-**Ejemplo de datos del backend**:
-
-```json
-{
-  "especie": "Perro", // ❌ Frontend espera "canine"
-  "tipo_sangre": "DEA 1.1+"
-}
-```
-
-**Síntoma**: Rocky aparecía como "Gato" porque:
-
-1. Backend devuelve `"especie": "Perro"`
-2. Frontend hace `species === 'canine'` → `false`
-3. Aplica el else y muestra "Gato"
-
-**Solución implementada**:
-
-- Mapeo automático en `PublicRequestsPage.jsx` y `DonationSelectionPage.jsx`
-- Función `getSpeciesLabel()` actualizada para manejar ambos formatos
-- Filtrado de mascotas actualizado para normalizar especies
-
-```javascript
-// Mapeo automático de la API
-const mappedData = data.map((request) => ({
-  ...request,
-  especie:
-    request.especie === "Perro"
-      ? "canine"
-      : request.especie === "Gato"
-      ? "feline"
-      : request.especie,
-}));
-
-// Función de etiqueta mejorada
-const getSpeciesLabel = (species) => {
-  if (species === "canine" || species === "Perro") return "Perro";
-  if (species === "feline" || species === "Gato") return "Gato";
-  return species;
-};
-```
-
-### Estados solucionados:
-
-- ✅ **RESUELTO**: Rocky aparece correctamente como "Perro" en todas las páginas
-- ✅ **RESUELTO**: Filtrado de mascotas funciona con ambos formatos
-- ✅ **RESUELTO**: Compatibilidad con API en español y formato interno en inglés
-- ✅ **RESUELTO**: Modal de selección muestra mascotas compatibles correctamente
-- ✅ **RESUELTO**: Sincronización de fechas entre visualización y formulario de edición
-
-### Problemas de fechas solucionados:
-
-**Problema**: Las fechas de última vacuna no coincidían entre la visualización en "Mis Mascotas" y el formulario de edición.
-
-**Causa**: Error de zona horaria cuando se parsean fechas en formato `YYYY-MM-DD`:
-
-- JavaScript interpreta `'2024-11-15'` como UTC
-- `toLocaleDateString()` convierte a zona horaria local
-- Resultado: `'2024-11-15'` se mostraba como `14/11/2024` (un día menos)
-
-**Solución implementada**:
-
-1. **Formateo para visualización** (`MyPetsPage.jsx`):
-
-   - Función `formatDateForDisplay()` que parsea fechas `YYYY-MM-DD` como locales
-   - Evita el problema de zona horaria construyendo la fecha con `new Date(year, month-1, day)`
-
-2. **Formateo para formulario** (`PetRegistrationForm.jsx`):
-   - Función `formatDateForInput()` que convierte fechas a formato `YYYY-MM-DD`
-   - Garantiza compatibilidad con campos `input[type="date"]`
-
-```javascript
-// Visualización corregida
-const formatDateForDisplay = (dateString) => {
-  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    const [year, month, day] = dateString.split("-");
-    const date = new Date(year, month - 1, day);
-    return date.toLocaleDateString("es-CO");
-  }
-  // ... resto del código
-};
-
-// Formulario corregido
-const formatDateForInput = (dateString) => {
-  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    return dateString;
-  }
-  return new Date(dateString).toISOString().split("T")[0];
-};
-```
-
-**Resultado**: Ahora `'2024-11-15'` se muestra correctamente como `15/11/2024` y se precarga correctamente en el formulario.
-
-### Problema de fotos en postulaciones:
-
-**Problema**: Las fotos de las mascotas no se muestran cuando las veterinarias revisan las postulaciones.
-
-**Causa**: El endpoint `GET /api/solicitudes/{id}/postulaciones` no incluye el campo `petPhoto` en la respuesta.
-
-**Componente afectado**: `CardMascotaPostulada.jsx` - Está preparado para mostrar las fotos pero no las recibe del backend.
-
-**Solución pendiente**: El backend debe incluir la URL de la foto de la mascota en la respuesta de postulaciones.
-
-```jsx
-// El componente ya está preparado para mostrar fotos:
-{
-  application.petPhoto ? (
-    <img
-      src={application.petPhoto}
-      alt={application.petName}
-      className="w-full h-full object-cover"
-    />
-  ) : (
-    // Icono de respaldo si no hay foto
-    <DogIcon className="h-8 w-8 text-gray-400" />
-  );
-}
-```
-
-**Estado**: ⏳ **PENDIENTE** - Requiere actualización del backend para incluir `petPhoto` en las respuestas de postulaciones.
-
-## 🔌 Endpoints del Backend Necesarios
-
-### GET `/api/mascotas`
-
-- **Descripción**: Obtener todas las mascotas del usuario autenticado
-- **Headers**: `Authorization: Bearer <token>`
-- **Respuesta**: Array de objetos mascota
-
-### POST `/api/mascotas`
-
-- **Descripción**: Crear nueva mascota
-- **Headers**: `Authorization: Bearer <token>`
-- **Body**: FormData con datos de la mascota e imagen
-- **Respuesta**: Objeto mascota creada con ID
-
-### PUT `/api/mascotas/{id}`
-
-- **Descripción**: Actualizar mascota existente
-- **Headers**: `Authorization: Bearer <token>`
-- **Body**: FormData con datos actualizados
-- **Respuesta**: Objeto mascota actualizada
-
-### DELETE `/api/mascotas/{id}`
-
-- **Descripción**: Eliminar mascota
-- **Headers**: `Authorization: Bearer <token>`
-- **Respuesta**: Status 200/204
-
-### POST `/api/solicitudes/{id}/postulaciones`
-
-- **Descripción**: Crear una nueva postulación para una solicitud de donación
-- **Headers**: `Authorization: Bearer <token>`
-- **Body**: JSON con datos de la mascota y del dueño
-- **Respuesta**: Objeto postulación creada con ID
-
-### GET `/api/solicitudes/{id}/postulaciones`
-
-- **Descripción**: Obtener todas las postulaciones para una solicitud específica
-- **Headers**: `Authorization: Bearer <token>`
-- **Respuesta**: Array de objetos postulación con datos completos de mascotas
-
-**⚠️ IMPORTANTE**: Este endpoint debe incluir la foto de la mascota (`petPhoto`) en la respuesta para que las veterinarias puedan ver las imágenes de las mascotas postuladas.
-
-**Estructura de respuesta esperada**:
-
-```json
-[
-  {
-    "id": 1,
-    "petName": "Luna",
-    "species": "canine",
-    "breed": "Golden Retriever",
-    "age": 3,
-    "weight": 25.5,
-    "bloodType": "DEA 1.1+",
-    "lastVaccination": "2024-11-15",
-    "healthStatus": "Excelente estado",
-    "petPhoto": "https://example.com/photos/luna.jpg", // ← IMPORTANTE: Incluir la foto
-    "ownerName": "Juan Pérez",
-    "ownerPhone": "+57 300 123 4567",
-    "ownerEmail": "juan@email.com",
-    "ownerAddress": "Calle 123 #45-67",
-    "status": "pending",
-    "createdAt": "2024-12-01T10:30:00Z"
-  }
-]
-```
-
-## 📝 Estructura de Datos Esperada
-
-```typescript
-interface Pet {
-  id: number;
-  petName: string;
-  species: "canine" | "feline";
-  breed: string;
-  age: number;
-  weight: number;
-  bloodType: string;
-  lastVaccination: string; // ISO date string
-  healthStatus: string;
-  petPhoto?: string; // URL de la imagen
-  registeredAt: string; // ISO date string
-  updatedAt?: string; // ISO date string
-}
-```
-
-## ✅ Checklist de Integración
-
-- [ ] Backend endpoints implementados
-- [ ] Autenticación JWT configurada
-- [ ] Subida de archivos configurada
-- [ ] Actualizar `PetRegistrationForm.jsx`
-- [ ] Actualizar `MyPetsPage.jsx`
-- [ ] Probar registro de mascota
-- [ ] Probar edición de mascota
-- [ ] Probar eliminación de mascota
-- [ ] Probar subida de imágenes
-- [ ] **Incluir `petPhoto` en respuestas de postulaciones**
-- [ ] Probar visualización de fotos en postulaciones
-- [ ] Manejo de errores del backend
-- [ ] Remover comentarios de "MODO SIMULADO"
-
-## 🎉 Una vez integrado
-
-1. Remover todos los comentarios que indican "MODO SIMULADO"
-2. Remover este archivo de instrucciones
-3. Actualizar la documentación del proyecto

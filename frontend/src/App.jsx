@@ -48,6 +48,12 @@ const App = () => {
             </PublicOnlyRoute>
           } />
           
+          {/* Ruta para restablecer contraseña - accesible para todos */}
+          <Route 
+            path="/reset-password/:token" 
+            element={<ResetPasswordPage />} 
+          />
+          
           {/* Rutas para usuarios autenticados */}
           <Route path="/profile" element={
             <ProtectedRoute>
@@ -57,11 +63,6 @@ const App = () => {
           <Route path="/change-password" element={
             <ProtectedRoute>
               <ChangePasswordPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/reset-password/:token" element={
-            <ProtectedRoute>
-              <ResetPasswordPage />
             </ProtectedRoute>
           } />
 
