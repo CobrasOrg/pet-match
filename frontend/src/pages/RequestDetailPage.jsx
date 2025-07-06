@@ -83,6 +83,7 @@ export default function RequestDetailPage() {
       .then(data => {
         setRequest({
           id: data.id,
+          petName: data.nombre_mascota,
           species: data.especie === 'Perro' ? 'canine' : data.especie === 'Gato' ? 'feline' : data.especie,
           bloodType: data.tipo_sangre,
           urgency: data.urgencia === 'Alta' ? 'high' : 'medium',
@@ -435,6 +436,10 @@ const handleDelete = async () => {
                     // Vista de solo lectura responsiva
                     <>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div>
+                          <p className="text-xs sm:text-sm text-gray-500">Nombre de la mascota</p>
+                          <p className="font-medium text-sm sm:text-base">{request.petName}</p>
+                        </div>
                         <div>
                           <p className="text-xs sm:text-sm text-gray-500">Especie</p>
                           <p className="font-medium text-sm sm:text-base">{getSpeciesLabel(request.species)}</p>
