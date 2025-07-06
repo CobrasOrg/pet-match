@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import {
   Form,
   FormControl,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import ImageUploader from "@/components/ui/ImageUploader";
 import {
   DogIcon,
   CatIcon,
@@ -26,7 +27,9 @@ import {
   ScaleIcon,
   HeartPulseIcon,
   AlertCircleIcon,
-  ClipboardListIcon
+  ClipboardListIcon,
+  CameraIcon,
+  CheckCircle2Icon
 } from 'lucide-react';
 //import { useParams } from 'react-router-dom'; desactivada por el momento, ya que no se usa el ID de la solicitud
 import Lottie from "lottie-react";
@@ -45,23 +48,28 @@ const bloodTypeOptions = {
 
 export default function DonationApplicationForm() {
   const { id: requestId } = useParams(); // ID de la solicitud a la que se está aplicando
+  const location = useLocation();
+  const selectedPet = location.state?.selectedPet;
+  
   console.log("ID de solicitud:", requestId); // Para depuración, puedes eliminarlo más tarde
+  console.log("Mascota seleccionada:", selectedPet); // Para depuración
 
   const form = useForm({
     defaultValues: {
-      petName: '',
-      species: '',
-      breed: '',
-      age: '',
-      weight: '',
-      bloodType: '',
-      lastVaccination: '',
-      healthStatus: '', // Cambiado de healthConditions
+      petName: selectedPet?.petName || '',
+      species: selectedPet?.species || '',
+      breed: selectedPet?.breed || '',
+      age: selectedPet?.age?.toString() || '',
+      weight: selectedPet?.weight?.toString() || '',
+      bloodType: selectedPet?.bloodType || '',
+      lastVaccination: selectedPet?.lastVaccination || '',
+      healthStatus: selectedPet?.healthStatus || '',
       medications: '',
+      petPhoto: selectedPet?.petPhoto || null,
       ownerName: '',
       ownerPhone: '',
       ownerEmail: '',
-      ownerAddress: '', // Nuevo campo
+      ownerAddress: '',
       availability: '',
       termsAccepted: false
     }
@@ -81,11 +89,12 @@ export default function DonationApplicationForm() {
       lastVaccination: data.lastVaccination,
       healthStatus: data.healthStatus,
       medications: data.medications,
+      petPhoto: data.petPhoto ? URL.createObjectURL(data.petPhoto) : null, // Simular URL de imagen
       ownerName: data.ownerName,
       ownerPhone: data.ownerPhone,
       ownerEmail: data.ownerEmail,
       ownerAddress: data.ownerAddress,
-      availability: data.availability, // <-- Faltaba este campo en el payload
+      availability: data.availability, // <-- Este campo faltaba en la versión original
       termsAccepted: data.termsAccepted
     };
 
@@ -124,6 +133,21 @@ export default function DonationApplicationForm() {
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold mt-4">Formulario de Donación</h1>
         <p className="text-gray-600">Proporciona información sobre tu mascota para evaluar su aptitud como donante</p>
+        
+        {/* Indicador de mascota pre-seleccionada */}
+        {selectedPet && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-center gap-2">
+              <CheckCircle2Icon className="h-5 w-5 text-blue-600" />
+              <span className="text-blue-800 font-medium">
+                Usando información de {selectedPet.petName}
+              </span>
+            </div>
+            <p className="text-sm text-blue-600 mt-1">
+              Los datos de tu mascota han sido pre-cargados. Puedes revisarlos y editarlos si es necesario.
+            </p>
+          </div>
+        )}
       </div>
 
       <Form {...form}>
@@ -253,6 +277,36 @@ export default function DonationApplicationForm() {
                 )}
               />
             )}
+          </div>
+
+          {/* Foto de la mascota */}
+          <div className="space-y-6">
+            <h3 className="font-medium flex items-center">
+              <CameraIcon className="h-5 w-5 mr-2" />
+              Foto de tu mascota
+            </h3>
+            
+            <FormField
+              control={form.control}
+              name="petPhoto"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Foto de tu mascota (opcional)</FormLabel>
+                  <FormControl>
+                    <ImageUploader
+                      value={field.value}
+                      onChange={field.onChange}
+                      accept=".jpg,.jpeg,.png"
+                      maxSize={2 * 1024 * 1024} // 2MB
+                    />
+                  </FormControl>
+                  <p className="text-sm text-gray-500">
+                    Una foto reciente ayudará a identificar mejor a tu mascota durante el proceso de donación.
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
           {/* Historial de salud */}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,14 +22,22 @@ import {
 import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
 import { PhoneIcon } from '@heroicons/react/24/outline';
 import { BOGOTA_LOCALITIES, getLocalityLabel } from '@/constants/locations';
+import DonationButton from '@/components/DonationButton';
+import { getMockRequests } from '@/constants/mockData';
 
 // Constantes para mapeo de especie y urgencia
 const SPECIES_LABELS = {
+  canine: 'Perro',
+  feline: 'Gato',
+  // Compatibilidad con formato español de la API
   Perro: 'Perro',
   Gato: 'Gato'
 };
 
 const SPECIES_EMOJIS = {
+  canine: '🐶',
+  feline: '🐱',
+  // Compatibilidad con formato español de la API
   Perro: '🐶',
   Gato: '🐱'
 };
@@ -40,13 +48,26 @@ const URGENCY_LEVELS = [
 ];
 
 const URGENCY_BADGES = {
-  Alta: {
+  'Alta': {
     label: 'URGENCIA ALTA',
     bgColor: 'bg-red-500',
     textColor: 'text-white',
     icon: AlertTriangleIcon
   },
-  Media: {
+  'Media': {
+    label: 'URGENCIA MEDIA',
+    bgColor: 'bg-orange-500',
+    textColor: 'text-white',
+    icon: ClockIcon
+  },
+  // Compatibilidad con API que use minúsculas
+  'alta': {
+    label: 'URGENCIA ALTA',
+    bgColor: 'bg-red-500',
+    textColor: 'text-white',
+    icon: AlertTriangleIcon
+  },
+  'media': {
     label: 'URGENCIA MEDIA',
     bgColor: 'bg-orange-500',
     textColor: 'text-white',
@@ -132,18 +153,11 @@ const RequestCard = memo(({ request }) => {
 
         {/* Botón de acción */}
         <div className="absolute bottom-4 right-4 sm:bottom-5 sm:right-5 z-10">
-          <Button
-            asChild
-            className="bg-pink-600 hover:bg-pink-700 shadow-lg text-sm"
+          <DonationButton 
+            request={request}
+            className="text-sm"
             size="sm"
-            aria-label={`Ayudar a ${request.nombre_mascota} con donación de sangre`}
-          >
-            <Link to={`/apply/${request.id}`}>
-              <HeartIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Ayudar a {request.nombre_mascota}</span>
-              <span className="sm:hidden">Ayudar</span>
-            </Link>
-          </Button>
+          />
         </div>
 
         {/* Contenido principal */}
@@ -315,12 +329,37 @@ export default function PublicRequestsFeed() {
       .then(async (res) => {
         if (!res.ok) throw new Error('Error al obtener las solicitudes');
         const data = await res.json();
-        setRequests(Array.isArray(data) ? data : []);
+        
+        // Mapear los datos de la API al formato esperado por el frontend
+        const mappedData = Array.isArray(data) ? data.map(request => ({
+          ...request,
+          especie: request.especie === 'Perro' ? 'canine' : 
+                  request.especie === 'Gato' ? 'feline' : 
+                  request.especie, // Convertir español a inglés
+          urgencia: request.urgencia || 'Media', // Asegurar que tenga valor
+          direccion: request.direccion || request.ubicacion // Usar ubicacion si no hay direccion
+        })) : [];
+        
+        setRequests(mappedData);
         setIsLoading(false);
       })
-      .catch(() => {
-        setError('Error al cargar las solicitudes');
-        setIsLoading(false);
+      .catch(async () => {
+        // Fallback a datos mock si la API no está disponible
+        console.log('API no disponible, usando datos mock como fallback');
+        try {
+          const mockData = await getMockRequests({
+            especie: filters.species,
+            tipo_sangre: filters.bloodType,
+            urgencia: filters.urgency,
+            localidad: filters.locality
+          });
+          setRequests(mockData);
+        } catch (mockError) {
+          console.error('Error cargando datos mock:', mockError);
+          setError('Error al cargar las solicitudes');
+        } finally {
+          setIsLoading(false);
+        }
       });
   }, [filters]);
 

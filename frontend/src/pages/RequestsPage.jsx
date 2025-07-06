@@ -32,7 +32,6 @@ import {
 } from 'lucide-react';
 import BloodRequestForm from '@/components/BloodRequestForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PhoneIcon } from '@heroicons/react/24/outline';
 import { BOGOTA_LOCALITIES, getLocalityLabel } from '@/constants/locations';
 import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
 
@@ -208,31 +207,13 @@ function RequestCard({ request }) {
               {request.description}
             </p>
 
-            {/* Información de contacto */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
-                <MapPinIcon className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-blue-600 font-medium uppercase tracking-wide mb-1">Ubicación</p>
-                  <p className="text-sm text-gray-700 font-medium">{request.location}</p>
-                  <p className="text-xs text-blue-600 font-medium mt-1">{localityLabel}, Bogotá</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
-                <PhoneIcon className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-green-600 font-medium uppercase tracking-wide mb-1">Contacto</p>
-                  <p className="text-sm text-gray-700 font-medium">
-                    <a
-                      href={`tel:${request.vetContact || request.contact}`}
-                      className="hover:underline focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 rounded"
-                      aria-label={`Llamar a ${request.vetContact || request.contact}`}
-                    >
-                      {request.vetContact || request.contact}
-                    </a>
-                  </p>
-                </div>
+            {/* Ubicación */}
+            <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+              <MapPinIcon className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-blue-600 font-medium uppercase tracking-wide mb-1">Ubicación</p>
+                <p className="text-sm text-gray-700 font-medium">{request.location}</p>
+                <p className="text-xs text-blue-600 font-medium mt-1">{localityLabel}, Bogotá</p>
               </div>
             </div>
 

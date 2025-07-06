@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function RequestDetailPage() {
   const { id } = useParams();
+  const { userType } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [request, setRequest] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +52,7 @@ export default function RequestDetailPage() {
   const [applicationsCount, setApplicationsCount] = useState(0); // Nuevo estado para el conteo
   const [loadingApplications, setLoadingApplications] = useState(false);
   const [applicationsError, setApplicationsError] = useState(null);
-  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [selectedApplication, setSelectedApplication] = useState(null); // eslint-disable-line no-unused-vars
   const [selectedApplicationDetails, setSelectedApplicationDetails] = useState(null);
 
   const speciesOptions = [
@@ -172,8 +174,6 @@ const handleDelete = async () => {
       bloodType: request.bloodType,
       urgency: request.urgency,
       description: request.description,
-      location: request.location,
-      contact: request.contact,
       minWeight: request.minWeight
     });
     setIsEditing(true);
@@ -199,7 +199,6 @@ const handleDelete = async () => {
 
     const body = {
     descripcion_solicitud: editForm.description,
-    direccion: editForm.location,
     especie: editForm.species === 'canine' ? 'Perro' : 'Gato',
     estado: editForm.status || 'Activa', // O el estado actual si no editas el estado
     peso_minimo: Number(editForm.minWeight),
@@ -324,7 +323,7 @@ const handleDelete = async () => {
   };
 
   // Nueva función para obtener solo el número de postulaciones
-  const fetchApplicationsCount = async () => {
+  const fetchApplicationsCount = useCallback(async () => {
     try {
       const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones`);
       if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
@@ -333,7 +332,7 @@ const handleDelete = async () => {
     } catch {
       setApplicationsCount(0);
     }
-  };
+  }, [id]);
 
   // Función para cargar detalles de una postulación
   const fetchApplicationDetails = async (postulacionId) => {
@@ -351,7 +350,7 @@ const handleDelete = async () => {
   // Llama a fetchApplicationsCount al cargar la página y cuando se cierra el modal
   useEffect(() => {
     fetchApplicationsCount();
-  }, []);
+  }, [fetchApplicationsCount]);
 
   if (isLoading) {
     return (
@@ -463,7 +462,9 @@ const handleDelete = async () => {
                     <>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div>
-                          <label className="text-xs sm:text-sm text-gray-500 block mb-1">Especie *</label>
+                          <label className="text-xs sm:text-sm text-gray-500 block mb-1">
+                            Especie * {userType === 'clinic' && <span className="text-gray-400">(No editable)</span>}
+                          </label>
                           <Select
                               value={editForm.species}
                               onValueChange={(value) => {
@@ -472,8 +473,9 @@ const handleDelete = async () => {
                                   handleFormChange('bloodType', '');
                                 }
                               }}
+                              disabled={userType === 'clinic'}
                           >
-                            <SelectTrigger className="text-sm">
+                            <SelectTrigger className={`text-sm ${userType === 'clinic' ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
                               <SelectValue placeholder="Seleccionar especie" />
                             </SelectTrigger>
                             <SelectContent>
@@ -545,26 +547,6 @@ const handleDelete = async () => {
                             className="text-sm resize-none"
                         />
                       </div>
-                      <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                        <div>
-                          <label className="text-xs sm:text-sm text-gray-500 block mb-1">Ubicación</label>
-                          <Input
-                              value={editForm.location}
-                              onChange={(e) => handleFormChange('location', e.target.value)}
-                              placeholder="Dirección de la clínica"
-                              className="text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs sm:text-sm text-gray-500 block mb-1">Contacto</label>
-                          <Input
-                              value={editForm.contact}
-                              onChange={(e) => handleFormChange('contact', e.target.value)}
-                              placeholder="Dr. Nombre - Teléfono"
-                              className="text-sm"
-                          />
-                        </div>
-                      </div>
                     </>
                 )}
               </CardContent>
@@ -573,26 +555,28 @@ const handleDelete = async () => {
 
           {/* Columna derecha responsiva */}
           <div className="space-y-4 lg:space-y-6">
-            {/* Información de contacto */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base sm:text-lg">Información de contacto</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 sm:space-y-4">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500">Clínica</p>
-                  <p className="font-medium text-sm sm:text-base break-words">{request.location}</p>
-                </div>
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500">Contacto</p>
-                  <p className="font-medium text-sm sm:text-base break-words">{request.contact}</p>
-                </div>
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500">Fecha de creación</p>
-                  <p className="font-medium text-sm sm:text-base">{request.date}</p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Información de contacto - Solo visible para dueños de mascotas */}
+            {userType !== 'clinic' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base sm:text-lg">Información de contacto</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 sm:space-y-4">
+                  <div>
+                    <p className="text-xs sm:text-sm text-gray-500">Clínica</p>
+                    <p className="font-medium text-sm sm:text-base break-words">{request.location}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs sm:text-sm text-gray-500">Contacto</p>
+                    <p className="font-medium text-sm sm:text-base break-words">{request.contact}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs sm:text-sm text-gray-500">Fecha de creación</p>
+                    <p className="font-medium text-sm sm:text-base">{request.date}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Acciones responsivas */}
             <Card>
