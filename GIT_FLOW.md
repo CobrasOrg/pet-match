@@ -10,9 +10,9 @@ Este proyecto sigue el modelo de ramas **GitFlow** para mantener un desarrollo o
 
 - **main**: contiene el código estable en producción (solo releases y hotfixes)
 - **develop**: contiene el código en desarrollo (base para nuevas features)
-- **feature/***: nuevas funcionalidades (se crean desde develop)
-- **release/***: preparación para una nueva versión (desde develop hacia main)
-- **hotfix/***: correcciones urgentes en producción (desde main hacia main y develop)
+- **feature/\***: nuevas funcionalidades (se crean desde develop)
+- **release/\***: preparación para una nueva versión (desde develop hacia main)
+- **hotfix/\***: correcciones urgentes en producción (desde main hacia main y develop)
 
 ---
 
@@ -28,11 +28,13 @@ cd pet-match
 ### 2. Instalar Git Flow (si no lo tienes)
 
 **macOS:**
+
 ```bash
 brew install git-flow
 ```
 
 **Ubuntu/Debian:**
+
 ```bash
 sudo apt-get install git-flow
 ```
@@ -91,7 +93,7 @@ touch src/components/LoginForm.jsx
 git add src/auth/login.js
 git commit -m "feat: añade lógica de login básica"
 
-git add src/auth/register.js  
+git add src/auth/register.js
 git commit -m "feat: implementa registro de usuarios"
 
 git add src/components/LoginForm.jsx
@@ -251,7 +253,8 @@ git push --tags
 
 ### Branch Protection Rules configuradas:
 
-- **main**: 
+- **main**:
+
   - No push directo
   - Requiere PR con revisión
   - Requiere status checks
@@ -327,16 +330,19 @@ git log --oneline -5
 ## 🛠️ Comandos útiles para el día a día
 
 ### Ver todas las ramas:
+
 ```bash
 git branch -a
 ```
 
 ### Ver features activas:
+
 ```bash
 git flow feature list
 ```
 
 ### Cambiar entre ramas:
+
 ```bash
 git checkout develop
 git checkout feature/mi-feature
@@ -344,12 +350,14 @@ git checkout main
 ```
 
 ### Sincronizar con remoto:
+
 ```bash
 git fetch origin
 git pull origin develop
 ```
 
 ### Limpiar ramas locales eliminadas:
+
 ```bash
 git remote prune origin
 git branch -d nombre-rama-local
@@ -360,6 +368,7 @@ git branch -d nombre-rama-local
 ## 🚨 Casos de emergencia
 
 ### Si te equivocaste de rama:
+
 ```bash
 # Mover commits a la rama correcta
 git log --oneline -3  # ver últimos commits
@@ -369,6 +378,7 @@ git cherry-pick <commit-hash>
 ```
 
 ### Si necesitas deshacer un release:
+
 ```bash
 # Solo antes de hacer push
 git flow release finish 1.0.0
@@ -377,6 +387,7 @@ git tag -d 1.0.0
 ```
 
 ### Si hay conflictos en merge:
+
 ```bash
 git status  # ver archivos en conflicto
 # Resolver conflictos manualmente
@@ -388,29 +399,31 @@ git commit -m "resolve: conflictos en merge"
 
 ## ✅ Recursos útiles
 
-* [Guía visual de GitFlow](https://nvie.com/posts/a-successful-git-branching-model/)
-* [Documentación oficial de GitFlow CLI](https://github.com/nvie/gitflow/wiki)
-* [Conventional Commits](https://www.conventionalcommits.org/)
-* [GitHub Flow vs GitFlow](https://lucamezzalira.com/2014/03/10/git-flow-vs-github-flow/)
+- [Guía visual de GitFlow](https://nvie.com/posts/a-successful-git-branching-model/)
+- [Documentación oficial de GitFlow CLI](https://github.com/nvie/gitflow/wiki)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [GitHub Flow vs GitFlow](https://lucamezzalira.com/2014/03/10/git-flow-vs-github-flow/)
 
 ---
 
 ## 🎯 Checklist para el equipo
 
 ### Antes de empezar a trabajar:
+
 - [ ] Clonar repo y ejecutar `git flow init`
 - [ ] Verificar que estás en la rama correcta
 - [ ] Actualizar con `git pull origin develop`
 
 ### Para cada feature:
+
 - [ ] Crear feature desde develop actualizado
 - [ ] Usar commits descriptivos y regulares
 - [ ] Probar funcionalidad antes de finalizar
 - [ ] Crear PR si es requerido por el equipo
 
 ### Para releases:
+
 - [ ] Actualizar versión en package.json
-- [ ] Actualizar CHANGELOG.md
 - [ ] Ejecutar pruebas completas
 - [ ] Crear tag con descripción clara
 
