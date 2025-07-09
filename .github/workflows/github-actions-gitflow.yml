@@ -1,0 +1,252 @@
+# .github/workflows/gitflow-validation.yml
+name: GitFlow Validation
+
+on:
+  pull_request:
+    branches: [ develop, main ]
+  push:
+    branches: [ develop, main ]
+    tags: [ 'v*' ]
+
+jobs:
+  validate-branch-naming:
+    name: Validate Branch Naming Convention
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Check branch naming convention
+      run: |
+        branch_name="${{ github.head_ref }}"
+        echo "Checking branch: $branch_name"
+        
+        # Validate feature branches
+        if [[ "$branch_name" =~ ^feature/.+ ]]; then
+          echo "✅ Valid feature branch: $branch_name"
+        # Validate hotfix branches
+        elif [[ "$branch_name" =~ ^hotfix/.+ ]]; then
+          echo "✅ Valid hotfix branch: $branch_name"
+        # Validate release branches
+        elif [[ "$branch_name" =~ ^release/.+ ]]; then
+          echo "✅ Valid release branch: $branch_name"
+        # Allow develop and main
+        elif [[ "$branch_name" == "develop" || "$branch_name" == "main" ]]; then
+          echo "✅ Main branch: $branch_name"
+        else
+          echo "❌ Invalid branch name: $branch_name"
+          echo "Branch must follow GitFlow convention:"
+          echo "  - feature/description"
+          echo "  - hotfix/description"
+          echo "  - release/version"
+          exit 1
+        fi
+
+  validate-pr-target:
+    name: Validate PR Target Branch
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Check PR target branch
+      run: |
+        source_branch="${{ github.head_ref }}"
+        target_branch="${{ github.base_ref }}"
+        
+        echo "PR: $source_branch → $target_branch"
+        
+        # Feature branches should target develop
+        if [[ "$source_branch" =~ ^feature/.+ ]]; then
+          if [[ "$target_branch" != "develop" ]]; then
+            echo "❌ Feature branches must target 'develop', not '$target_branch'"
+            exit 1
+          fi
+          echo "✅ Feature branch correctly targets develop"
+        
+        # Hotfix branches should target main
+        elif [[ "$source_branch" =~ ^hotfix/.+ ]]; then
+          if [[ "$target_branch" != "main" ]]; then
+            echo "❌ Hotfix branches must target 'main', not '$target_branch'"
+            exit 1
+          fi
+          echo "✅ Hotfix branch correctly targets main"
+        
+        # Release branches should target main
+        elif [[ "$source_branch" =~ ^release/.+ ]]; then
+          if [[ "$target_branch" != "main" ]]; then
+            echo "❌ Release branches must target 'main', not '$target_branch'"
+            exit 1
+          fi
+          echo "✅ Release branch correctly targets main"
+        fi
+
+  validate-commit-messages:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Check commit messages
+      run: |
+        # Get commits in this PR
+        commits=$(git log --format="%H %s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+        
+        echo "Validating commit messages..."
+        invalid_commits=0
+        
+        while IFS= read -r line; do
+          if [[ -n "$line" ]]; then
+            commit_hash=$(echo "$line" | cut -d' ' -f1)
+            commit_msg=$(echo "$line" | cut -d' ' -f2-)
+            
+            # Check conventional commits format
+            if [[ "$commit_msg" =~ ^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+ ]]; then
+              echo "✅ $commit_hash: $commit_msg"
+            else
+              echo "❌ $commit_hash: $commit_msg"
+              echo "   Must follow format: type(scope): description"
+              echo "   Types: feat, fix, docs, style, refactor, test, chore"
+              invalid_commits=$((invalid_commits + 1))
+            fi
+          fi
+        done <<< "$commits"
+        
+        if [[ $invalid_commits -gt 0 ]]; then
+          echo "❌ Found $invalid_commits invalid commit messages"
+          exit 1
+        fi
+        
+        echo "✅ All commit messages follow conventional commits format"
+
+  validate-version-bump:
+    name: Validate Version Bump
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Check version bump in package.json
+      run: |
+        # Get version from release branch name
+        release_branch="${{ github.head_ref }}"
+        expected_version=$(echo "$release_branch" | sed 's/release\///')
+        
+        # Check if package.json version matches
+        if [[ -f "package.json" ]]; then
+          current_version=$(grep '"version"' package.json | sed 's/.*"version": "\(.*\)".*/\1/')
+          
+          if [[ "$current_version" == "$expected_version" ]]; then
+            echo "✅ Version in package.json ($current_version) matches release branch ($expected_version)"
+          else
+            echo "❌ Version mismatch:"
+            echo "   package.json: $current_version"
+            echo "   release branch: $expected_version"
+            exit 1
+          fi
+        else
+          echo "⚠️  package.json not found, skipping version check"
+        fi
+
+  validate-changelog:
+    name: Validate CHANGELOG.md
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Check CHANGELOG.md update
+      run: |
+        release_branch="${{ github.head_ref }}"
+        expected_version=$(echo "$release_branch" | sed 's/release\///')
+        
+        if [[ -f "CHANGELOG.md" ]]; then
+          if grep -q "## \[$expected_version\]" CHANGELOG.md; then
+            echo "✅ CHANGELOG.md contains entry for version $expected_version"
+          else
+            echo "❌ CHANGELOG.md missing entry for version $expected_version"
+            echo "Please add a section: ## [$expected_version] - $(date +%Y-%m-%d)"
+            exit 1
+          fi
+        else
+          echo "❌ CHANGELOG.md not found"
+          echo "Please create CHANGELOG.md with entry for version $expected_version"
+          exit 1
+        fi
+
+  validate-tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Run build
+      run: npm run build
+
+  notify-team:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'release/') || startsWith(github.head_ref, 'hotfix/'))
+    
+    steps:
+    - name: Notify important PR
+      run: |
+        branch_type=""
+        if [[ "${{ github.head_ref }}" =~ ^release/.+ ]]; then
+          branch_type="🚀 RELEASE"
+        elif [[ "${{ github.head_ref }}" =~ ^hotfix/.+ ]]; then
+          branch_type="🔥 HOTFIX"
+        fi
+        
+        echo "$branch_type PR created: ${{ github.event.pull_request.title }}"
+        echo "Branch: ${{ github.head_ref }}"
+        echo "Author: ${{ github.event.pull_request.user.login }}"
+        echo "URL: ${{ github.event.pull_request.html_url }}"
+        
+        # Aquí puedes agregar notificaciones a Slack, Discord, etc.
+        # curl -X POST -H 'Content-type: application/json' \
+        #   --data '{"text":"'"$branch_type"' PR: ${{ github.event.pull_request.html_url }}"}' \
+        #   ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run security audit
+      run: |
+        if [[ -f "package.json" ]]; then
+          npm audit --audit-level=high
+        fi
+    
+    - name: Check for secrets
+      run: |
+        echo "Checking for potential secrets..."
+        if grep -r -i "password\|secret\|key\|token" --include="*.js" --include="*.ts" --include="*.json" . | grep -v node_modules | grep -v ".git"; then
+          echo "❌ Potential secrets found in code"
+          exit 1
+        fi
+        echo "✅ No secrets detected"

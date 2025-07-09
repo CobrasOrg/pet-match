@@ -1,0 +1,104 @@
+# .github/workflows/branch-protection.yml
+name: Branch Protection
+
+on:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  prevent-direct-push:
+    name: Prevent Direct Push to Protected Branches
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check if push came from PR merge
+      run: |
+        # Este workflow solo debería ejecutarse en merges de PR
+        if [[ "${{ github.event.head_commit.message }}" == *"Merge pull request"* ]]; then
+          echo "✅ Push came from PR merge - allowed"
+        else
+          echo "❌ Direct push detected to protected branch: ${{ github.ref }}"
+          echo "All changes must go through Pull Requests"
+          echo "Please:"
+          echo "1. Create a feature branch"
+          echo "2. Make your changes there"
+          echo "3. Create a Pull Request"
+          exit 1
+        fi
+
+  validate-merge-strategy:
+    name: Validate Merge Strategy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Check merge came from develop or hotfix
+      run: |
+        # Get the merge commit details
+        merge_commit="${{ github.sha }}"
+        
+        # Get the branches that were merged
+        merged_branches=$(git branch --merged $merge_commit | grep -v "^\*" | grep -v "main" | xargs)
+        
+        echo "Branches merged: $merged_branches"
+        
+        # Check if merge came from develop, release, or hotfix
+        if git log --oneline -1 | grep -E "(release/|hotfix/|develop)"; then
+          echo "✅ Merge to main came from appropriate branch"
+        else
+          echo "❌ Invalid merge to main"
+          echo "Main should only receive merges from:"
+          echo "  - develop (via release)"
+          echo "  - release/* branches"
+          echo "  - hotfix/* branches"
+          exit 1
+        fi
+
+  auto-tag-release:
+    name: Auto-tag Release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release/')
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Extract version and create tag
+      run: |
+        # Extract version from commit message
+        commit_msg="${{ github.event.head_commit.message }}"
+        version=$(echo "$commit_msg" | grep -o 'release/[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*' | sed 's/release\///')
+        
+        if [[ -n "$version" ]]; then
+          echo "Creating tag v$version"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag -a "v$version" -m "Release version $version"
+          git push origin "v$version"
+          echo "✅ Created tag v$version"
+        else
+          echo "No version found in commit message"
+        fi
+
+  notify-deployment:
+    name: Notify Deployment
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Notify deployment ready
+      run: |
+        echo "🚀 New deployment ready!"
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Message: ${{ github.event.head_commit.message }}"
+        
+        # Aquí puedes agregar notificaciones para deploy
+        # curl -X POST -H 'Content-type: application/json' \
+        #   --data '{"text":"🚀 New deployment ready: ${{ github.sha }}"}' \
+        #   ${{ secrets.SLACK_WEBHOOK_URL }}
