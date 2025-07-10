@@ -1,9 +1,7 @@
 name: Branch Validation
-
 on:
   pull_request:
     branches: [ develop, main ]
-
 jobs:
   validate-branch-name:
     name: Validate Branch Name
@@ -33,7 +31,6 @@ jobs:
           echo "  - develop (for direct integration)"
           exit 1
         fi
-
   validate-pr-target:
     name: Validate PR Target
     runs-on: ubuntu-latest
@@ -46,12 +43,12 @@ jobs:
         
         echo "PR: $source_branch → $target_branch"
         
-        # Simple validation: features go to develop, others can go to main
+        # Enhanced validation with flexible targets
         if [[ "$source_branch" =~ ^feature/.+ && "$target_branch" != "develop" ]]; then
           echo "❌ Feature branches should target 'develop'"
           exit 1
-        elif [[ "$source_branch" =~ ^(hotfix|release)/.+ && "$target_branch" != "main" ]]; then
-          echo "❌ Hotfix/Release branches should target 'main'"
+        elif [[ "$source_branch" =~ ^release/.+ && "$target_branch" != "main" && "$target_branch" != "develop" ]]; then
+          echo "❌ Release branches should target 'main' or 'develop'"
           exit 1
         elif [[ "$source_branch" == "develop" && "$target_branch" != "main" ]]; then
           echo "❌ Develop branch should target 'main'"
