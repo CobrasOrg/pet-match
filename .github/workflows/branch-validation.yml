@@ -22,12 +22,15 @@ jobs:
           echo "✅ Valid hotfix branch"
         elif [[ "$branch_name" =~ ^release/.+ ]]; then
           echo "✅ Valid release branch"
+        elif [[ "$branch_name" == "develop" ]]; then
+          echo "✅ Valid develop branch"
         else
           echo "❌ Invalid branch name: $branch_name"
           echo "Please use one of these formats:"
           echo "  - feature/your-feature-name"
           echo "  - hotfix/your-hotfix-name"
           echo "  - release/version-number"
+          echo "  - develop (for direct integration)"
           exit 1
         fi
 
@@ -43,12 +46,15 @@ jobs:
         
         echo "PR: $source_branch → $target_branch"
         
-        # Simple validation: features go to develop, hotfix/release go to main
+        # Simple validation: features go to develop, others can go to main
         if [[ "$source_branch" =~ ^feature/.+ && "$target_branch" != "develop" ]]; then
           echo "❌ Feature branches should target 'develop'"
           exit 1
         elif [[ "$source_branch" =~ ^(hotfix|release)/.+ && "$target_branch" != "main" ]]; then
           echo "❌ Hotfix/Release branches should target 'main'"
+          exit 1
+        elif [[ "$source_branch" == "develop" && "$target_branch" != "main" ]]; then
+          echo "❌ Develop branch should target 'main'"
           exit 1
         fi
         
