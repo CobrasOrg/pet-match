@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import apiService from '@/services/api';
 
 export default function ResetPasswordForm({ token, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -42,32 +43,25 @@ export default function ResetPasswordForm({ token, onSuccess }) {
     setIsLoading(true);
     
     try {
-      // Simular validación del token
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simular lista de tokens válidos (en desarrollo)
-      const validTokens = [
-        'token123',
-        'reset456', 
-        'recovery789'
-      ];
-      
-      if (!validTokens.includes(token)) {
-        alert('El enlace de recuperación es inválido o ha expirado. Solicita uno nuevo.');
-        return;
-      }
-      
       console.log('Restableciendo contraseña con token:', token);
-      console.log('Nueva contraseña:', data.password);
       
-      setResetSuccess(true);
+      // Llamar a la API de reset password
+      const response = await apiService.resetPassword(token, data.password, data.confirmPassword);
       
-      if (onSuccess) {
-        onSuccess();
+      if (response.success) {
+        console.log('Contraseña restablecida exitosamente');
+        setResetSuccess(true);
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        alert('Error inesperado. Intenta nuevamente.');
       }
       
-    } catch {
-      alert('Error al restablecer la contraseña. Intenta nuevamente.');
+    } catch (error) {
+      console.error('Error en reset password:', error);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

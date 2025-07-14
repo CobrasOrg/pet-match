@@ -2,8 +2,8 @@ import { useForm } from 'react-hook-form';
 import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
-import { generateMockClinics, generateMockPetOwners } from '@/constants/mockUsers';
+import { useAuth } from '@/hooks/useAuth';
+import apiService from '@/services/api';
 
 export default function ForgotPasswordForm({ onSuccess, prefilledEmail = null }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -47,30 +47,24 @@ export default function ForgotPasswordForm({ onSuccess, prefilledEmail = null })
     setIsLoading(true);
     
     try {
-      // Simular llamada a API para envío de email
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       console.log('Solicitud de recuperación enviada para:', data.email);
       
-      // Simular verificación de email registrado usando datos mock
-      const owners = generateMockPetOwners();
-      const clinics = generateMockClinics();
+      // Llamar a la API de forgot password
+      const response = await apiService.forgotPassword(data.email);
       
-      const emailExists = owners.some(owner => owner.email === data.email) || 
-                          clinics.some(clinic => clinic.email === data.email);
-      
-      if (emailExists) {
+      if (response.success) {
         setEmailSent(true);
         
         if (onSuccess) {
           onSuccess(data.email);
         }
       } else {
-        alert('El correo electrónico no está registrado en nuestro sistema.');
+        alert('Error inesperado. Intenta nuevamente.');
       }
       
-    } catch {
-      alert('Error al enviar el correo. Intenta nuevamente.');
+    } catch (error) {
+      console.error('Error en forgot password:', error);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -160,17 +154,6 @@ export default function ForgotPasswordForm({ onSuccess, prefilledEmail = null })
       >
         {isLoading ? 'Enviando correo...' : userData ? 'Enviar enlace de cambio' : 'Enviar enlace de recuperación'}
       </Button>
-
-      {/* Información adicional - solo mostrar si no está logueado */}
-      {!userData && (
-        <div className="mt-6 p-3 bg-gray-50 rounded-md">
-          <p className="text-xs text-gray-600 font-medium mb-2">Correos de prueba (desde mockUsers.jsx):</p>
-          <div className="text-xs text-gray-500 space-y-1">
-            <p>{generateMockPetOwners()[0].email}</p>
-            <p>{generateMockClinics()[0].email}</p>
-          </div>
-        </div>
-      )}
 
       {/* Indicador de campos obligatorios */}
       <p className="text-xs text-gray-500 text-center mt-2">

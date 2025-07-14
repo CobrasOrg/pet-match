@@ -1,6 +1,6 @@
 // Hook para verificar si el usuario tiene mascotas registradas
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export const useUserPets = () => {
   const { isLoggedIn, userType, userData } = useAuth();

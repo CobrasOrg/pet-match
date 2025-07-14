@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BOGOTA_LOCALITIES } from '@/constants/locations';
-import { generateMockClinics, generateMockPetOwners } from '@/constants/mockUsers';
+import apiService from '@/services/api';
 
 export default function EditProfileForm({ userData, userType, onSuccess, onCancel }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -66,33 +66,37 @@ export default function EditProfileForm({ userData, userType, onSuccess, onCance
     setIsLoading(true);
     
     try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Actualizando perfil con:', data);
       
-      console.log('Datos actualizados:', data);
+      // Preparar datos para la API - solo enviar campos que pueden cambiar
+      const updateData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address
+      };
       
-      // Simular verificación de email único si cambió usando datos mock
-      if (data.email !== userData.email) {
-        const owners = generateMockPetOwners();
-        const clinics = generateMockClinics();
+      // Solo incluir locality si es una clínica
+      if (userType === 'clinic') {
+        updateData.locality = data.locality;
+      }
+      
+      // Llamar a la API de actualización
+      const response = await apiService.updateUserProfile(updateData);
+      
+      if (response) {
+        alert('¡Perfil actualizado exitosamente! Los cambios se verán reflejados inmediatamente.');
         
-        const emailExists = owners.some(owner => owner.email === data.email && owner.id !== userData.id) || 
-                           clinics.some(clinic => clinic.email === data.email && clinic.id !== userData.id);
-        
-        if (emailExists) {
-          alert('Este correo electrónico ya está en uso por otra cuenta.');
-          return;
+        if (onSuccess) {
+          onSuccess(response);
         }
+      } else {
+        alert('Error inesperado. Intenta nuevamente.');
       }
       
-      alert('¡Perfil actualizado exitosamente! Los cambios se verán reflejados inmediatamente.');
-      
-      if (onSuccess) {
-        onSuccess(data);
-      }
-      
-    } catch {
-      alert('Error al actualizar el perfil. Intenta nuevamente.');
+    } catch (error) {
+      console.error('Error al actualizar perfil:', error);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
