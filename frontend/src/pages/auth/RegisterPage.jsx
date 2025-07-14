@@ -9,7 +9,7 @@ export default function RegisterPage() {
   const [activeTab, setActiveTab] = useState('owner');
 
   const handleRegistrationSuccess = () => {
-    console.log('Registro exitoso. Por favor inicia sesión.');
+    // La redirección se maneja en los componentes de formulario
   };
 
   return (

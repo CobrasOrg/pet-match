@@ -5,11 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import apiService from '@/services/api';
 
 export default function ChangePasswordForm({ onSuccess }) {
   const navigate = useNavigate();
-  const { userData } = useAuth();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -77,25 +76,6 @@ export default function ChangePasswordForm({ onSuccess }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const simulatePasswordChange = async () => {
-    // Simular llamada al backend
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Obtener la contraseña actual del usuario autenticado desde los datos mock
-    const currentPassword = userData?.password;
-    
-    if (!currentPassword) {
-      throw new Error('No se pudo verificar la contraseña actual');
-    }
-    
-    if (formData.currentPassword !== currentPassword) {
-      throw new Error('La contraseña actual es incorrecta');
-    }
-    
-    // Simular éxito
-    return { success: true, message: 'Contraseña actualizada exitosamente' };
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -106,27 +86,44 @@ export default function ChangePasswordForm({ onSuccess }) {
     setIsLoading(true);
     
     try {
-      await simulatePasswordChange();
+      console.log('Cambiando contraseña...');
       
-      // Mostrar mensaje de éxito
-      if (onSuccess) {
-        onSuccess();
+      // Llamar a la API de cambio de contraseña
+      const response = await apiService.changePassword(
+        formData.currentPassword, 
+        formData.newPassword, 
+        formData.confirmPassword
+      );
+      
+      if (response.success) {
+        // Limpiar formulario
+        setFormData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        
+        // Mostrar mensaje de éxito
+        alert('¡Contraseña actualizada exitosamente!');
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        alert('Error inesperado. Intenta nuevamente.');
       }
       
-      // Limpiar formulario
-      setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      
-      // Opcional: mostrar notificación de éxito
-      alert('¡Contraseña actualizada exitosamente!');
-      
     } catch (error) {
-      setErrors({
-        currentPassword: error.message
-      });
+      console.error('Error en cambio de contraseña:', error);
+      
+      // Manejar errores específicos
+      if (error.message.includes('incorrecta') || error.message.includes('incorrect')) {
+        setErrors({
+          currentPassword: 'La contraseña actual es incorrecta'
+        });
+      } else {
+        alert(`Error: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
