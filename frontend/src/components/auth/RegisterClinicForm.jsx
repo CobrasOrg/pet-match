@@ -1,11 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BOGOTA_LOCALITIES } from '@/constants/locations';
+import apiService from '@/services/api';
 
 export default function RegisterClinicForm({ onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -83,36 +84,44 @@ export default function RegisterClinicForm({ onSuccess }) {
     setIsLoading(true);
     
     try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Intentando registro de clínica con:', data.email);
       
-      const { confirmPassword: _confirmPassword, ...registrationData } = data;
-      console.log('Datos enviados (clínica):', registrationData);
-      
-      const userData = {
-        name: registrationData.name,
-        email: registrationData.email,
-        phone: registrationData.phone,
-        address: registrationData.address,
-        locality: registrationData.locality,
-        userType: 'clinic'
+      // Preparar datos para la API (la API espera confirmPassword)
+      const registrationData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        locality: data.locality,
+        password: data.password,
+        confirmPassword: data.confirmPassword
       };
       
-      // Registrar usuario usando el hook de autenticación
-      login('clinic', userData);
+      // Llamar a la API de registro
+      const response = await apiService.registerClinic(registrationData);
       
-      alert('Registro de clínica veterinaria exitoso. Serás redirigido a la gestión de solicitudes.');
-      
-      // Llamar onSuccess si se proporciona
-      if (onSuccess) {
-        onSuccess();
+      if (response.success && response.token && response.user) {
+        console.log('Registro exitoso:', response.user);
+        
+        // Registrar usuario usando el hook de autenticación
+        login(response.user.userType, response.user, response.token);
+        
+        alert(`¡Registro exitoso! Bienvenida clínica ${response.user.name}. Serás redirigida a la gestión de solicitudes.`);
+        
+        // Llamar onSuccess si se proporciona
+        if (onSuccess) {
+          onSuccess();
+        }
+        
+        // Navegar a la página correspondiente
+        navigate('/requests');
+        
+      } else {
+        alert('Respuesta inesperada del servidor. Intenta nuevamente.');
       }
-      
-      // Navegar a la página correspondiente
-      navigate('/requests');
-      
-    } catch {
-      alert('Error en el registro. Intenta nuevamente.');
+    } catch (error) {
+      console.error('Error en registro:', error);
+      alert(`Error en el registro: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

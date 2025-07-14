@@ -1,9 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import apiService from '@/services/api';
 
 export default function RegisterOwnerForm({ onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -76,35 +77,43 @@ export default function RegisterOwnerForm({ onSuccess }) {
     setIsLoading(true);
     
     try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Intentando registro de owner con:', data.email);
       
-      const { confirmPassword: _confirmPassword, ...registrationData } = data;
-      console.log('Datos enviados (dueño):', registrationData);
-      
-      const userData = {
-        name: registrationData.name,
-        email: registrationData.email,
-        phone: registrationData.phone,
-        address: registrationData.address,
-        userType: 'owner'
+      // Preparar datos para la API (la API espera confirmPassword)
+      const registrationData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        password: data.password,
+        confirmPassword: data.confirmPassword
       };
       
-      // Registrar usuario usando el hook de autenticación
-      login('owner', userData);
+      // Llamar a la API de registro
+      const response = await apiService.registerOwner(registrationData);
       
-      alert('Registro de dueño de mascota exitoso. Serás redirigido a las solicitudes públicas.');
-      
-      // Llamar onSuccess si se proporciona
-      if (onSuccess) {
-        onSuccess();
+      if (response.success && response.token && response.user) {
+        console.log('Registro exitoso:', response.user);
+        
+        // Registrar usuario usando el hook de autenticación
+        login(response.user.userType, response.user, response.token);
+        
+        alert(`¡Registro exitoso! Bienvenido ${response.user.name}. Serás redirigido a las solicitudes públicas.`);
+        
+        // Llamar onSuccess si se proporciona
+        if (onSuccess) {
+          onSuccess();
+        }
+        
+        // Navegar a la página correspondiente
+        navigate('/public');
+        
+      } else {
+        alert('Respuesta inesperada del servidor. Intenta nuevamente.');
       }
-      
-      // Navegar a la página correspondiente
-      navigate('/public');
-      
-    } catch {
-      alert('Error en el registro. Intenta nuevamente.');
+    } catch (error) {
+      console.error('Error en registro:', error);
+      alert(`Error en el registro: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Loader2 } from 'lucide-react';
+import apiService from '@/services/api';
 
 export default function DeleteAccountDialog({ isOpen, onClose, onConfirm, userData }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,15 +20,20 @@ export default function DeleteAccountDialog({ isOpen, onClose, onConfirm, userDa
     setError('');
 
     try {
-      // Simular llamada a la API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // En una implementación real, aquí harías la llamada al backend
       console.log('Eliminando cuenta del usuario:', userData.email);
       
-      onConfirm();
-    } catch {
-      setError('Error al eliminar la cuenta. Por favor, inténtalo de nuevo.');
+      // Llamar a la API para eliminar la cuenta
+      const response = await apiService.deleteUserAccount();
+      
+      if (response.success) {
+        onConfirm();
+      } else {
+        setError('Error inesperado al eliminar la cuenta. Por favor, inténtalo de nuevo.');
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('Error al eliminar cuenta:', error);
+      setError(`Error: ${error.message}`);
       setIsLoading(false);
     }
   };

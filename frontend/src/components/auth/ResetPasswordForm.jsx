@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import apiService from '@/services/api';
 
 export default function ResetPasswordForm({ token, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -42,32 +43,21 @@ export default function ResetPasswordForm({ token, onSuccess }) {
     setIsLoading(true);
     
     try {
-      // Simular validación del token
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Llamar a la API de reset password
+      const response = await apiService.resetPassword(token, data.password, data.confirmPassword);
       
-      // Simular lista de tokens válidos (en desarrollo)
-      const validTokens = [
-        'token123',
-        'reset456', 
-        'recovery789'
-      ];
-      
-      if (!validTokens.includes(token)) {
-        alert('El enlace de recuperación es inválido o ha expirado. Solicita uno nuevo.');
-        return;
+      if (response && (response.success || response.message)) {
+        setResetSuccess(true);
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        alert('Error inesperado. Intenta nuevamente.');
       }
       
-      console.log('Restableciendo contraseña con token:', token);
-      console.log('Nueva contraseña:', data.password);
-      
-      setResetSuccess(true);
-      
-      if (onSuccess) {
-        onSuccess();
-      }
-      
-    } catch {
-      alert('Error al restablecer la contraseña. Intenta nuevamente.');
+    } catch (error) {
+      alert(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -190,13 +180,6 @@ export default function ResetPasswordForm({ token, onSuccess }) {
       >
         {isLoading ? 'Restableciendo...' : 'Restablecer contraseña'}
       </Button>
-
-      {/* Token de prueba */}
-      <div className="mt-6 p-3 bg-gray-50 rounded-md">
-        <p className="text-xs text-gray-600 font-medium mb-1">Para testing:</p>
-        <p className="text-xs text-gray-500">Token actual: {token}</p>
-        <p className="text-xs text-gray-500">Tokens válidos: token123, reset456, recovery789</p>
-      </div>
 
       {/* Indicador de campos obligatorios */}
       <p className="text-xs text-gray-500 text-center mt-2">

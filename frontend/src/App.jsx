@@ -15,6 +15,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import ChangePasswordPage from './pages/auth/ChangePasswordPage'
 import ProfilePage from './pages/ProfilePage'
 import MyPetsPage from './pages/MyPetsPage'
+import NotFoundPage from './pages/SimpleNotFoundPage'
 import { 
   ProtectedRoute, 
   OwnerRoute, 
@@ -96,6 +97,9 @@ const App = () => {
               <RequestDetailPage />
             </ProtectedRoute>
           } />
+
+          {/* Ruta catch-all para 404 - DEBE IR AL FINAL */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
       <Footer /> 

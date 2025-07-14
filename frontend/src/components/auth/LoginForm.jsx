@@ -1,10 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { generateMockClinics, generateMockPetOwners } from '@/constants/mockUsers';
+import apiService from '@/services/api';
 
 export default function LoginForm({ onSuccess, onForgotPassword }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -45,64 +45,32 @@ export default function LoginForm({ onSuccess, onForgotPassword }) {
     setIsLoading(true);
     
     try {
-      // Simular llamada a API de autenticación
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Intentando login con:', data.email);
       
-      // Simulación de validación de credenciales
-      const isValidCredentials = simulateLogin(data.email, data.password);
+      // Llamar a la API de login
+      const response = await apiService.login(data.email, data.password);
       
-      if (isValidCredentials.success) {
-        console.log('Inicio de sesión exitoso:', data.email);
-        console.log('Tipo de usuario:', isValidCredentials.userType);
-        console.log('Datos del usuario:', isValidCredentials.userData);
+      if (response.success && response.token && response.user) {
+        console.log('Login exitoso:', response.user);
         
-        // Usar el contexto de autenticación para hacer login con datos completos
-        login(isValidCredentials.userType, isValidCredentials.userData);
+        // Usar el contexto de autenticación para hacer login
+        login(response.user.userType, response.user, response.token);
         
-        alert(`Bienvenido ${isValidCredentials.userData.name}! Redirigiendo al panel de ${isValidCredentials.userType === 'clinic' ? 'clínica' : 'dueño'}...`);
+        alert(`¡Bienvenido ${response.user.name}! Redirigiendo al panel de ${response.user.userType === 'clinic' ? 'clínica' : 'propietario'}...`);
         
         // Llamar callback de éxito
         if (onSuccess) {
-          onSuccess(isValidCredentials.userType);
+          onSuccess(response.user.userType);
         }
       } else {
-        alert('Credenciales incorrectas. Verifica tu correo y contraseña.');
+        alert('Respuesta inesperada del servidor. Intenta nuevamente.');
       }
-    } catch {
-      alert('Error de conexión. Intenta nuevamente.');
+    } catch (error) {
+      console.error('Error en login:', error);
+      alert(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Simulación de validación de credenciales usando datos mock
-  const simulateLogin = (email, password) => {
-    // Obtener usuarios mock
-    const owners = generateMockPetOwners();
-    const clinics = generateMockClinics();
-    
-    // Buscar en propietarios
-    const owner = owners.find(u => u.email === email && u.password === password);
-    if (owner) {
-      return {
-        success: true,
-        userType: 'owner',
-        userData: owner
-      };
-    }
-    
-    // Buscar en clínicas
-    const clinic = clinics.find(u => u.email === email && u.password === password);
-    if (clinic) {
-      return {
-        success: true,
-        userType: 'clinic',
-        userData: clinic
-      };
-    }
-    
-    // No encontrado
-    return { success: false };
   };
 
   const togglePasswordVisibility = () => {
@@ -177,15 +145,6 @@ export default function LoginForm({ onSuccess, onForgotPassword }) {
         >
           ¿Olvidaste tu contraseña?
         </button>
-      </div>
-
-      {/* Información de usuarios de prueba (solo para demo) */}
-      <div className="mt-6 p-3 bg-gray-50 rounded-md">
-        <p className="text-xs text-gray-600 font-medium mb-2">Usuarios de prueba (desde mockUsers.jsx):</p>
-        <div className="text-xs text-gray-500 space-y-1">
-          <p>Dueño: {generateMockPetOwners()[0].email} / {generateMockPetOwners()[0].password}</p>
-          <p>Clínica: {generateMockClinics()[0].email} / {generateMockClinics()[0].password}</p>
-        </div>
       </div>
 
       {/* Indicador de campos obligatorios */}

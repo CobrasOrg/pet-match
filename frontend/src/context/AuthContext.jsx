@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiService from '@/services/api';
 
 const AuthContext = createContext();
 
@@ -10,23 +11,46 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Función helper para limpiar datos de autenticación
+  const clearAuthData = () => {
+    setIsLoggedIn(false);
+    setUserType(null);
+    setUserData(null);
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userType');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('userEmail');
+  };
+
   // Cargar estado desde localStorage al inicializar
   useEffect(() => {
-    const loadAuthState = () => {
+    const loadAuthState = async () => {
       try {
+        const savedToken = localStorage.getItem('authToken');
         const savedIsLoggedIn = localStorage.getItem('isLoggedIn');
         const savedUserType = localStorage.getItem('userType');
         const savedUserData = localStorage.getItem('userData');
         
-        if (savedIsLoggedIn === 'true' && savedUserType) {
-          setIsLoggedIn(true);
-          setUserType(savedUserType);
-          if (savedUserData) {
-            setUserData(JSON.parse(savedUserData));
+        if (savedIsLoggedIn === 'true' && savedToken && savedUserType) {
+          // Verificar si el token sigue siendo válido
+          try {
+            await apiService.verifyToken();
+            // Si el token es válido, restaurar el estado
+            setIsLoggedIn(true);
+            setUserType(savedUserType);
+            if (savedUserData) {
+              setUserData(JSON.parse(savedUserData));
+            }
+          } catch (error) {
+            console.log('Token inválido o expirado, limpiando sesión:', error.message);
+            // Si el token no es válido, limpiar todo
+            clearAuthData();
           }
         }
       } catch (error) {
         console.error('Error loading auth state:', error);
+        clearAuthData();
       } finally {
         setIsLoading(false);
       }
@@ -45,32 +69,33 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const login = (type, data = null) => {
+  const login = (userType, userData, token) => {
     setIsLoggedIn(true);
-    setUserType(type);
-    setUserData(data);
+    setUserType(userType);
+    setUserData(userData);
     
     // Persistir en localStorage
     localStorage.setItem('isLoggedIn', 'true');
-    localStorage.setItem('userType', type);
-    if (data) {
-      localStorage.setItem('userData', JSON.stringify(data));
+    localStorage.setItem('userType', userType);
+    localStorage.setItem('authToken', token);
+    if (userData) {
+      localStorage.setItem('userData', JSON.stringify(userData));
     }
   };
 
-  const logout = () => {
-    setIsLoggedIn(false);
-    setUserType(null);
-    setUserData(null);
-    
-    // Limpiar localStorage
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userType');
-    localStorage.removeItem('userData');
-    localStorage.removeItem('userEmail');
-    
-    // Navegar a la página de inicio
-    navigate('/');
+  const logout = async () => {
+    try {
+      // Intentar hacer logout en el servidor
+      await apiService.logout();
+    } catch (error) {
+      // Si falla el logout en el servidor, proceder de todas formas
+      console.warn('Error durante logout en servidor:', error.message);
+    } finally {
+      // Limpiar estado local independientemente del resultado del servidor
+      clearAuthData();
+      // Navegar a la página de inicio
+      navigate('/');
+    }
   };
 
   const updateUserData = (newData) => {
@@ -79,6 +104,19 @@ export const AuthProvider = ({ children }) => {
     
     // Actualizar localStorage
     localStorage.setItem('userData', JSON.stringify(updatedData));
+  };
+
+  // Función para refrescar los datos del usuario desde el servidor
+  const refreshUserData = async () => {
+    try {
+      const profileData = await apiService.getUserProfile();
+      setUserData(profileData);
+      localStorage.setItem('userData', JSON.stringify(profileData));
+      return profileData;
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      throw error;
+    }
   };
 
   const isOwner = () => userType === 'owner';
@@ -92,6 +130,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateUserData,
+    refreshUserData,
     isOwner,
     isClinic
   };
@@ -103,10 +142,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export { AuthContext };

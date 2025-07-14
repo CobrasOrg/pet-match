@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ForgotPasswordPage() {
   const { userData } = useAuth();
