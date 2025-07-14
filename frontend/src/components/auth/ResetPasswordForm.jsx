@@ -43,13 +43,10 @@ export default function ResetPasswordForm({ token, onSuccess }) {
     setIsLoading(true);
     
     try {
-      console.log('Restableciendo contraseña con token:', token);
-      
       // Llamar a la API de reset password
       const response = await apiService.resetPassword(token, data.password, data.confirmPassword);
       
-      if (response.success) {
-        console.log('Contraseña restablecida exitosamente');
+      if (response && (response.success || response.message)) {
         setResetSuccess(true);
         
         if (onSuccess) {
@@ -60,7 +57,6 @@ export default function ResetPasswordForm({ token, onSuccess }) {
       }
       
     } catch (error) {
-      console.error('Error en reset password:', error);
       alert(`Error: ${error.message}`);
     } finally {
       setIsLoading(false);
@@ -184,13 +180,6 @@ export default function ResetPasswordForm({ token, onSuccess }) {
       >
         {isLoading ? 'Restableciendo...' : 'Restablecer contraseña'}
       </Button>
-
-      {/* Token de prueba */}
-      <div className="mt-6 p-3 bg-gray-50 rounded-md">
-        <p className="text-xs text-gray-600 font-medium mb-1">Para testing:</p>
-        <p className="text-xs text-gray-500">Token actual: {token}</p>
-        <p className="text-xs text-gray-500">Tokens válidos: token123, reset456, recovery789</p>
-      </div>
 
       {/* Indicador de campos obligatorios */}
       <p className="text-xs text-gray-500 text-center mt-2">

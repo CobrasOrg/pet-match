@@ -3,37 +3,44 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
+import apiService from '@/services/api';
 
 export default function ResetPasswordPage() {
   const { token } = useParams();
   const navigate = useNavigate();
   const [tokenValid, setTokenValid] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simular validación inicial del token
+    // Validación REAL del token con el backend
     const validateToken = async () => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!token) {
+          setTokenValid(false);
+          setError('No se proporcionó un token de recuperación');
+          return;
+        }
+
+        // Validar el token con el backend
+        const result = await apiService.validateResetToken(token);
         
-        // Simular tokens válidos
-        const validTokens = ['token123', 'reset456', 'recovery789'];
-        const isValid = validTokens.includes(token);
+        if (result.valid) {
+          setTokenValid(true);
+        } else {
+          setTokenValid(false);
+          setError(result.error || 'Token inválido o expirado');
+        }
         
-        setTokenValid(isValid);
       } catch {
         setTokenValid(false);
+        setError('Error al validar el enlace de recuperación');
       }
     };
 
-    if (token) {
-      validateToken();
-    } else {
-      setTokenValid(false);
-    }
+    validateToken();
   }, [token]);
 
   const handleResetSuccess = () => {
-    console.log('Contraseña restablecida exitosamente');
     // La redirección se maneja en el componente ResetPasswordForm
   };
 
@@ -81,12 +88,14 @@ export default function ResetPasswordPage() {
               </div>
               
               <h3 className="text-xl font-semibold text-gray-900">
-                El enlace ha expirado o es inválido
+                {error || 'El enlace ha expirado o es inválido'}
               </h3>
               
               <p className="text-gray-600">
-                El enlace de recuperación de contraseña puede haber expirado o ser incorrecto.
-                Solicita un nuevo enlace para restablecer tu contraseña.
+                {error ? 
+                  'Por favor, solicita un nuevo enlace de recuperación.' :
+                  'El enlace de recuperación de contraseña puede haber expirado o ser incorrecto. Solicita un nuevo enlace para restablecer tu contraseña.'
+                }
               </p>
               
               <div className="space-y-3">

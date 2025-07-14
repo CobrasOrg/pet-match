@@ -27,24 +27,30 @@ const createFetchConfig = (method = 'GET', body = null, includeAuth = false) => 
 };
 
 // Función helper para manejar respuestas de la API
-const handleApiResponse = async (response) => {
+const handleApiResponse = async (response, endpoint = '') => {
   const contentType = response.headers.get('content-type');
   
   // Verificar si la respuesta contiene JSON
   if (contentType && contentType.includes('application/json')) {
     const data = await response.json();
+
+
     
     if (!response.ok) {
       // Manejar errores específicos de la API
       if (response.status === 401) {
-        // Token inválido o expirado - limpiar autenticación local
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('userType');
-        localStorage.removeItem('userData');
-        throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        if (endpoint.includes('/auth/login')) {
+          // Error de login - credenciales incorrectas
+          throw new Error('Email o contraseña incorrectos');
+        } else {
+          // Token inválido o expirado - limpiar autenticación local
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('userType');
+          localStorage.removeItem('userData');
+          throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        }
       }
-      
       if (response.status === 422) {
         // Error de validación
         const errorMessage = data.detail?.[0]?.msg || 'Error de validación';
@@ -75,7 +81,7 @@ class ApiService {
     try {
       const config = createFetchConfig(method, body, includeAuth);
       const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-      return await handleApiResponse(response);
+      return await handleApiResponse(response, endpoint);
     } catch (error) {
       console.error(`API Error [${method} ${endpoint}]:`, error.message);
       throw error;
@@ -140,6 +146,30 @@ class ApiService {
     });
   }
 
+  // Método para validar tokens de reset específicamente
+  async validateResetToken(token) {
+    try {
+      // Intentar validar el token haciendo una petición con datos vacíos
+      // Si el token es válido, obtendremos error de validación (422)
+      // Si es inválido, obtendremos error 401 o 404
+      await this.request('/auth/reset-password', {
+        method: 'POST',
+        body: { token, newPassword: '', confirmPassword: '' }
+      });
+      
+      return { valid: true };
+    } catch (error) {
+      // Si el error es de validación (422), el token es válido pero faltan datos
+      if (error.message.includes('validación') || error.message.includes('validation') || 
+          error.message.includes('field required') || error.message.includes('required')) {
+        return { valid: true };
+      }
+      
+      // Otros errores indican token inválido/expirado
+      return { valid: false, error: error.message };
+    }
+  }
+
   // Métodos de usuario
   async getUserProfile() {
     return this.request('/user/profile', {
@@ -188,6 +218,7 @@ export const {
   resetPassword,
   changePassword,
   verifyToken,
+  validateResetToken,
   getUserProfile,
   updateUserProfile,
   deleteUserAccount,

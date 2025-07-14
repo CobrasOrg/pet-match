@@ -20,17 +20,7 @@ const SPECIES_OPTIONS = [
 const BLOOD_TYPES = {
   canine: [
     'DEA 1.1+',
-    'DEA 1.1-', 
-    'DEA 1.2+',
-    'DEA 1.2-',
-    'DEA 3+',
-    'DEA 3-',
-    'DEA 4+',
-    'DEA 4-',
-    'DEA 5+',
-    'DEA 5-',
-    'DEA 7+',
-    'DEA 7-'
+    'DEA 1.1-'
   ],
   feline: [
     'A',
@@ -153,18 +143,26 @@ export default function PetRegistrationForm({ onSuccess, onCancel, initialData =
     age: {
       required: 'La edad es obligatoria',
       min: {
-        value: 0.5,
-        message: 'La edad mínima es 6 meses'
+        value: 1,
+        message: 'La edad mínima es 1 año'
       },
       max: {
-        value: 20,
-        message: 'La edad máxima es 20 años'
+        value: 10,
+        message: 'La edad máxima es 10 años'
       },
       pattern: {
-        value: /^\d+(\.\d{1,2})?$/,
-        message: 'Formato de edad inválido (ej: 2 o 2.5)'
-      }
+        value: /^\d+$/,
+        message: 'Solo se permiten números enteros (ej: 2, 5, 8)'
+      
     },
+    validate: (value) => {
+      const numValue = parseInt(value);
+      if (isNaN(numValue) || numValue !== parseFloat(value)) {
+        return 'Solo se permiten números enteros';
+    }
+    return true;
+    }
+  },
     weight: {
       required: 'El peso es obligatorio',
       min: {
@@ -236,7 +234,7 @@ export default function PetRegistrationForm({ onSuccess, onCancel, initialData =
         petName: data.petName,
         species: data.species,
         breed: data.breed === 'Otro' ? data.customBreed : data.breed,
-        age: parseFloat(data.age),
+        age: parseInt(data.age),
         weight: parseFloat(data.weight),
         bloodType: data.bloodType,
         lastVaccination: data.lastVaccination,
@@ -376,18 +374,17 @@ export default function PetRegistrationForm({ onSuccess, onCancel, initialData =
               </label>
               <Input
                 type="number"
-                step="0.5"
-                min="0.5"
-                max="20"
+                min="1"
+                max="10"
                 {...register('age', validations.age)}
-                placeholder="2.5"
+                placeholder="2"
                 className={errors.age ? 'border-red-500' : ''}
               />
               {errors.age && (
                 <p className="text-red-500 text-xs mt-1">{errors.age.message}</p>
               )}
               <p className="text-xs text-gray-500 mt-1">
-                Edad mínima: 6 meses (0.5 años)
+                Edad mínima: 1 año
               </p>
             </div>
 
