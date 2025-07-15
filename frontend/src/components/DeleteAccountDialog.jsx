@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import apiService from '@/services/api';
+import apiService from '@/services/AuthApi';
 
 export default function DeleteAccountDialog({ isOpen, onClose, onConfirm, userData }) {
   const [isLoading, setIsLoading] = useState(false);

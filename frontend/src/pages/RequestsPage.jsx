@@ -33,6 +33,7 @@ import BloodRequestForm from '@/components/BloodRequestForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BOGOTA_LOCALITIES } from '@/constants/locations';
 import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
+import solicitudesApi from '@/services/solicitudesApi';
 
 // Mapeos para los valores que espera la API
 const MAP_SPECIES_TO_API = { canine: 'Perro', feline: 'Gato' };
@@ -89,24 +90,70 @@ function RequestCard({ request }) {
   const speciesEmoji = request.species === 'canine' ? '🐶' : request.species === 'feline' ? '🐱' : '';
   const formattedDate = useMemo(() => {
     if (!request.date) return '';
-    const date = new Date(request.date);
-    const today = new Date();
-    const diffTime = today.getTime() - date.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-    if (diffTime < 0) return 'Fecha futura';
-    if (diffMinutes < 60) return diffMinutes < 1 ? 'Hace unos segundos' : `Hace ${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''}`;
-    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
-    if (diffDays === 0) return 'Hoy';
-    if (diffDays === 1) return 'Hace 1 día';
-    if (diffDays < 30) return `Hace ${diffDays} días`;
-    if (diffDays < 365) {
-      const diffMonths = Math.floor(diffDays / 30);
-      return `Hace ${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
+    
+    // Obtener la fecha actual en la zona horaria local
+    const now = new Date();
+    let createdDate;
+
+    try {
+      // Si la fecha viene como string, parsearlo
+      if (typeof request.date === 'string') {
+        // Si la fecha contiene 'T' (formato ISO)
+        if (request.date.includes('T')) {
+          createdDate = new Date(request.date);
+        } else {
+          // Para otros formatos, intentar parsearlo directamente
+          createdDate = new Date(request.date);
+        }
+      } else {
+        createdDate = new Date(request.date);
+      }
+
+      // Verificar si la fecha es válida
+      if (isNaN(createdDate.getTime())) {
+        console.warn('Fecha inválida recibida:', request.date);
+        return 'Fecha inválida';
+      }
+
+      const diffMs = now.getTime() - createdDate.getTime();
+      if (diffMs < -3600000) { // -1 hora en ms
+        console.warn('Fecha en el futuro detectada, ajustando zona horaria:', request.date);
+        createdDate = new Date(createdDate.getTime() - (5 * 60 * 60 * 1000));
+      }
+
+      const timeDiff = now.getTime() - createdDate.getTime();
+    
+      const seconds = Math.floor(timeDiff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      const months = Math.floor(days / 30);
+      const years = Math.floor(days / 365);
+
+      if (timeDiff < 0) {
+        return 'Hace unos segundos';
+      }
+
+      if (seconds < 60) {
+        return 'Hace unos segundos';
+      } else if (minutes < 60) {
+        return `Hace ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+      } else if (hours < 24) {
+        return `Hace ${hours} hora${hours !== 1 ? 's' : ''}`;
+      } else if (days === 1) {
+        return 'Hace 1 día';
+      } else if (days < 30) {
+        return `Hace ${days} días`;
+      } else if (months < 12) {
+        return `Hace ${months} mes${months !== 1 ? 'es' : ''}`;
+      } else {
+        return `Hace ${years} año${years !== 1 ? 's' : ''}`;
+      }
+
+    } catch (error) {
+      console.error('Error parseando fecha:', error, request.date);
+      return 'Fecha inválida';
     }
-    const diffYears = Math.floor(diffDays / 365);
-    return `Hace ${diffYears} año${diffYears !== 1 ? 's' : ''}`;
   }, [request.date]);
 
   // Estado visual
@@ -177,14 +224,22 @@ function RequestCard({ request }) {
         <div className="space-y-4 pt-8 pb-16">
           {/* Header con emoji más grande y prominente */}
           <header className="flex items-center gap-4">
-            <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-pink-100 to-pink-200 rounded-full flex items-center justify-center border-2 border-pink-300">
-              <span
-                className="text-3xl"
-                role="img"
-                aria-label={`${SPECIES_LABELS[request.species]}`}
-              >
-                {speciesEmoji}
-              </span>
+            <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-pink-100 to-pink-200 rounded-full flex items-center justify-center border-2 border-pink-300 overflow-hidden">
+              {request.photo ? (
+                <img
+                  src={request.photo}
+                  alt={`Foto de ${request.petName}`}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <span
+                  className="text-3xl"
+                  role="img"
+                  aria-label={`${SPECIES_LABELS[request.species]}`}
+                >
+                  {speciesEmoji}
+                </span>
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <h2
@@ -297,6 +352,7 @@ export default function RequestsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Estado de filtros
   const [searchTerm, setSearchTerm] = useState(searchParams.get('busqueda') || '');
@@ -311,31 +367,36 @@ export default function RequestsPage() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // Cargar solicitudes desde la API usando el endpoint de filtrar
+  // Cargar solicitudes desde la API
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
+    const fetchRequests = async () => {
+      setIsLoading(true);
+      setError(null);
 
-    const params = new URLSearchParams();
+      try {
+        // Mapear filtros del frontend al formato de la API
+        const apiFilters = {
+          especie: filters.species.map(s => MAP_SPECIES_TO_API[s] || s),
+          tipo_sangre: filters.bloodType,
+          urgencia: filters.urgency.map(u => MAP_URGENCY_TO_API[u] || u),
+          localidad: filters.locality
+        };
 
-    // Solo agregar el estado si NO hay búsqueda por texto
-    if (!debouncedSearchTerm && activeTab) {
-      params.append('estado', MAP_STATUS_TO_API[activeTab]);
-    }
-    // Filtros
-    filters.species.forEach(s => params.append('especie', MAP_SPECIES_TO_API[s] || s));
-    filters.bloodType.forEach(b => params.append('tipo_sangre', b));
-    filters.urgency.forEach(u => params.append('urgencia', MAP_URGENCY_TO_API[u] || u));
-    filters.locality.forEach(l => params.append('localidad', l));
+        // Solo agregar el estado si NO hay búsqueda por texto
+        if (!debouncedSearchTerm && activeTab) {
+          apiFilters.estado = MAP_STATUS_TO_API[activeTab];
+        }
 
-    const url = `http://localhost:8000/api/v1/vet/solicitudes/filtrar?${params.toString()}`;
+        // Limpiar arrays vacíos
+        Object.keys(apiFilters).forEach(key => {
+          if (Array.isArray(apiFilters[key]) && apiFilters[key].length === 0) {
+            delete apiFilters[key];
+          }
+        });
 
-    fetch(url)
-      .then(async (res) => {
-        if (!res.ok) throw new Error('Error al cargar las solicitudes');
-        const data = await res.json();
+        const data = await solicitudesApi.filterSolicitudes(apiFilters);
 
-        // Mapea los campos de la API a los que espera tu frontend
+        // Mapear los campos de la API 
         const mapEstadoToStatus = (estado) => {
           switch ((estado || '').toLowerCase()) {
             case 'activa': return 'active';
@@ -362,47 +423,59 @@ export default function RequestsPage() {
           clinicName: item.nombre_veterinaria,
           vetContact: item.contacto,
           photo: item.foto_mascota
-        }));
-
-        setRequests(mapped);
-        setIsLoading(false);
-      })
-      .catch(() => {
+        }));        setRequests(mapped);
+      } catch (error) {
+        console.error('Error cargando solicitudes:', error);
         setError('Error al cargar las solicitudes');
+      } finally {
         setIsLoading(false);
-      });
-  }, [filters, activeTab, debouncedSearchTerm]); // <-- agregar debouncedSearchTerm a las dependencias
+      }
+    };
+
+    fetchRequests();
+  }, [filters, activeTab, debouncedSearchTerm, refreshTrigger]);
 
   // Cargar contadores de tabs (solo si no hay búsqueda por texto)
   useEffect(() => {
     if (debouncedSearchTerm) return;
 
     const fetchCounts = async () => {
-      const states = ['active', 'pending', 'completed', 'cancelled'];
-      const promises = states.map(tab => {
-        const params = new URLSearchParams();
-        params.append('estado', MAP_STATUS_TO_API[tab]);
-        filters.species.forEach(s => params.append('especie', MAP_SPECIES_TO_API[s] || s));
-        filters.bloodType.forEach(b => params.append('tipo_sangre', b));
-        filters.urgency.forEach(u => params.append('urgencia', MAP_URGENCY_TO_API[u] || u));
-        filters.locality.forEach(l => params.append('localidad', l));
-        return fetch(`http://localhost:8000/api/v1/vet/solicitudes/filtrar?${params.toString()}`)
-          .then(res => res.ok ? res.json() : [])
-          .then(data => Array.isArray(data) ? data.length : 0)
-          .catch(() => 0);
-      });
+      try {
+        const states = ['active', 'pending', 'completed', 'cancelled'];
+        const promises = states.map(async tab => {
+          const apiFilters = {
+            estado: MAP_STATUS_TO_API[tab],
+            especie: filters.species.map(s => MAP_SPECIES_TO_API[s] || s),
+            tipo_sangre: filters.bloodType,
+            urgencia: filters.urgency.map(u => MAP_URGENCY_TO_API[u] || u),
+            localidad: filters.locality
+          };
 
-      const counts = await Promise.all(promises);
-      setTabCounts({
-        active: counts[0],
-        pending: counts[1],
-        completed: counts[2],
-        cancelled: counts[3]
-      });
+          // Limpiar arrays vacíos
+          Object.keys(apiFilters).forEach(key => {
+            if (Array.isArray(apiFilters[key]) && apiFilters[key].length === 0) {
+              delete apiFilters[key];
+            }
+          });
+
+          const data = await solicitudesApi.filterSolicitudes(apiFilters);
+          return Array.isArray(data) ? data.length : 0;
+        });
+
+        const counts = await Promise.all(promises);
+        setTabCounts({
+          active: counts[0],
+          pending: counts[1],
+          completed: counts[2],
+          cancelled: counts[3]
+        });
+      } catch (error) {
+        console.error('Error cargando contadores:', error);
+      }
     };
 
     fetchCounts();
-  }, [filters, debouncedSearchTerm]);
+  }, [filters, debouncedSearchTerm, refreshTrigger]);
 
   // Actualizar URL con filtros y tab
   const updateURLWithFilters = useCallback((filters, searchTerm, activeTab) => {
@@ -444,6 +517,12 @@ export default function RequestsPage() {
         [filterType]: value ? [value] : []
       };
     });
+  }, []);
+
+  // Función para refrescar la lista después de crear una solicitud
+  const handleRequestCreated = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+    setIsModalOpen(false);
   }, []);
 
   // Limpiar filtros
@@ -536,7 +615,7 @@ export default function RequestsPage() {
           <DialogHeader>
             <DialogTitle>Nueva Solicitud de Donación</DialogTitle>
           </DialogHeader>
-          <BloodRequestForm onRequestCreated={() => setIsModalOpen(false)} />
+          <BloodRequestForm onRequestCreated={handleRequestCreated} />
         </DialogContent>
       </Dialog>
 

@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import apiService from '@/services/api';
+import apiService from '@/services/AuthApi';
 
 export default function ResetPasswordForm({ token, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
