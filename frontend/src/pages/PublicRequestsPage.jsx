@@ -23,7 +23,7 @@ import { FiltersPanel, ActiveFilters } from '@/components/FiltersPanel';
 import { PhoneIcon } from '@heroicons/react/24/outline';
 import { BOGOTA_LOCALITIES, getLocalityLabel } from '@/constants/locations';
 import DonationButton from '@/components/DonationButton';
-import { getMockRequests } from '@/constants/mockData';
+import solicitudesApi from '@/services/solicitudesApi';
 
 // Constantes para mapeo de especie y urgencia
 const SPECIES_LABELS = {
@@ -75,28 +75,70 @@ const URGENCY_BADGES = {
   }
 };
 
-// Formatea la fecha en formato relativo
+// Formatear la fecha
 const formatDate = (dateString) => {
   if (!dateString) return '';
-  const date = new Date(dateString);
-  const today = new Date();
-  const diffTime = today.getTime() - date.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-  const diffMinutes = Math.floor(diffTime / (1000 * 60));
+  
+  // Obtener la fecha actual en la zona horaria local
+  const now = new Date();
+  let createdDate;
 
-  if (diffTime < 0) return 'Fecha futura';
-  if (diffMinutes < 60) return diffMinutes < 1 ? 'Hace unos segundos' : `Hace ${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''}`;
-  if (diffHours < 24) return `Hace ${diffHours} hora${diffHours !== 1 ? 's' : ''}`;
-  if (diffDays === 0) return 'Hoy';
-  if (diffDays === 1) return 'Hace 1 día';
-  if (diffDays < 30) return `Hace ${diffDays} días`;
-  if (diffDays < 365) {
-    const diffMonths = Math.floor(diffDays / 30);
-    return `Hace ${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
+  try {
+    if (typeof dateString === 'string') {
+      if (dateString.includes('T')) {
+        createdDate = new Date(dateString);
+      } else {
+        createdDate = new Date(dateString);
+      }
+    } else {
+      createdDate = new Date(dateString);
+    }
+
+    // Verificar si la fecha es válida
+    if (isNaN(createdDate.getTime())) {
+      console.warn('Fecha inválida recibida:', dateString);
+      return 'Fecha inválida';
+    }
+
+    const diffMs = now.getTime() - createdDate.getTime();
+    if (diffMs < -3600000) { 
+      console.warn('Fecha en el futuro detectada, ajustando zona horaria:', dateString);
+      createdDate = new Date(createdDate.getTime() - (5 * 60 * 60 * 1000)); // Restar 5 horas (Colombia)
+    }
+
+    const timeDiff = now.getTime() - createdDate.getTime();
+    
+    const seconds = Math.floor(timeDiff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+
+    if (timeDiff < 0) {
+      return 'Hace unos segundos';
+    }
+
+    if (seconds < 60) {
+      return 'Hace unos segundos';
+    } else if (minutes < 60) {
+      return `Hace ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+    } else if (hours < 24) {
+      return `Hace ${hours} hora${hours !== 1 ? 's' : ''}`;
+    } else if (days === 1) {
+      return 'Hace 1 día';
+    } else if (days < 30) {
+      return `Hace ${days} días`;
+    } else if (months < 12) {
+      return `Hace ${months} mes${months !== 1 ? 'es' : ''}`;
+    } else {
+      return `Hace ${years} año${years !== 1 ? 's' : ''}`;
+    }
+
+  } catch (error) {
+    console.error('Error parseando fecha:', error, dateString);
+    return 'Fecha inválida';
   }
-  const diffYears = Math.floor(diffDays / 365);
-  return `Hace ${diffYears} año${diffYears !== 1 ? 's' : ''}`;
 };
 
 // Hook de debounce
@@ -279,7 +321,7 @@ const RequestCard = memo(({ request }) => {
 
 RequestCard.displayName = 'RequestCard';
 
-// Función para parsear filtros desde URL
+// parsear filtros desde URL
 const parseFiltersFromURL = (searchParams) => ({
   species: searchParams.getAll('especie').filter(Boolean).slice(0, 1) || [],
   bloodType: searchParams.getAll('tipo_sangre').filter(Boolean).slice(0, 1) || [],
@@ -313,54 +355,54 @@ export default function PublicRequestsFeed() {
 
   // Cargar datos desde la API
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
+    const fetchRequests = async () => {
+      setIsLoading(true);
+      setError(null);
 
-    // Construir query params según los filtros
-    const params = new URLSearchParams();
-    (filters.species || []).forEach(species => params.append('especie', species));
-    (filters.bloodType || []).forEach(bloodType => params.append('tipo_sangre', bloodType));
-    (filters.urgency || []).forEach(urgency => params.append('urgencia', urgency));
-    (filters.locality || []).forEach(locality => params.append('localidad', locality));
+      try {
+        // Mapear filtros del frontend al formato de la API
+        const apiFilters = {
+          especie: (filters.species || []).map(species => {
+            return species === 'canine' ? 'Perro' : 
+                   species === 'feline' ? 'Gato' : species;
+          }),
+          tipo_sangre: filters.bloodType || [],
+          urgencia: (filters.urgency || []).map(urgency => {
+            return urgency === 'high' ? 'Alta' : 
+                   urgency === 'medium' ? 'Media' : urgency;
+          }),
+          localidad: filters.locality || []
+        };
 
-    const url = `http://localhost:8000/api/v1/user/solicitudes/activas/filtrar?${params.toString()}`;
+        // Limpiar arrays vacíos
+        Object.keys(apiFilters).forEach(key => {
+          if (Array.isArray(apiFilters[key]) && apiFilters[key].length === 0) {
+            delete apiFilters[key];
+          }
+        });
 
-    fetch(url)
-      .then(async (res) => {
-        if (!res.ok) throw new Error('Error al obtener las solicitudes');
-        const data = await res.json();
+        const data = await solicitudesApi.filterActiveSolicitudes(apiFilters);
         
         // Mapear los datos de la API al formato esperado por el frontend
         const mappedData = Array.isArray(data) ? data.map(request => ({
           ...request,
           especie: request.especie === 'Perro' ? 'canine' : 
-                  request.especie === 'Gato' ? 'feline' : 
-                  request.especie, // Convertir español a inglés
-          urgencia: request.urgencia || 'Media', // Asegurar que tenga valor
-          direccion: request.direccion || request.ubicacion // Usar ubicacion si no hay direccion
+                   request.especie === 'Gato' ? 'feline' : 
+                   request.especie,
+          urgencia: request.urgencia || 'Media',
+          direccion: request.direccion || request.ubicacion
         })) : [];
-        
+
         setRequests(mappedData);
+      } catch (error) {
+        console.error('Error cargando solicitudes:', error);
+        setError('Error al cargar las solicitudes');
+      } finally {
         setIsLoading(false);
-      })
-      .catch(async () => {
-        // Fallback a datos mock si la API no está disponible
-        console.log('API no disponible, usando datos mock como fallback');
-        try {
-          const mockData = await getMockRequests({
-            especie: filters.species,
-            tipo_sangre: filters.bloodType,
-            urgencia: filters.urgency,
-            localidad: filters.locality
-          });
-          setRequests(mockData);
-        } catch (mockError) {
-          console.error('Error cargando datos mock:', mockError);
-          setError('Error al cargar las solicitudes');
-        } finally {
-          setIsLoading(false);
-        }
-      });
+      }
+    };
+
+    fetchRequests();
   }, [filters]);
 
   // Actualizar URL con filtros

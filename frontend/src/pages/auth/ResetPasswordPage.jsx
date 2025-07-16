@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
-import apiService from '@/services/api';
+import apiService from '@/services/AuthApi';
 
 export default function ResetPasswordPage() {
   const { token } = useParams();
