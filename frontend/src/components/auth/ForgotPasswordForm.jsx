@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import apiService from '@/services/api';
+import apiService from '@/services/AuthApi';
 
 export default function ForgotPasswordForm({ onSuccess, prefilledEmail = null }) {
   const [isLoading, setIsLoading] = useState(false);

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CardMascotaPostulada from "@/components/CardMascotaPostulada";
+import solicitudesApi from '@/services/solicitudesApi';
 import {
   Table,
   TableBody,
@@ -70,17 +71,15 @@ export default function RequestDetailPage() {
     feline: ['A', 'B', 'AB']
   };
 
-  // --- AQUÍ va el useEffect, fuera de cualquier función ---
+  
   useEffect(() => {
-    setIsLoading(true);
-    setError(null);
+    const fetchRequest = async () => {
+      setIsLoading(true);
+      setError(null);
 
-    fetch(`http://localhost:8000/api/v1/vet/solicitudes/${id}`)
-      .then(res => {
-        if (!res.ok) throw new Error('No se pudo cargar la solicitud');
-        return res.json();
-      })
-      .then(data => {
+      try {
+        const data = await solicitudesApi.getSolicitudById(id);
+        
         setRequest({
           id: data.id,
           petName: data.nombre_mascota,
@@ -106,68 +105,63 @@ export default function RequestDetailPage() {
           photo: data.foto_mascota,
           locality: data.localidad?.toLowerCase() || '',
         });
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setIsLoading(false));
+      } catch (err) {
+        console.error('Error cargando solicitud:', err);
+        setError('No se pudo cargar la solicitud');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRequest();
   }, [id]);
-  // --- FIN DEL useEffect ---
+  
 
 const handleDelete = async () => {
     if (!confirm('¿Estás seguro de eliminar esta solicitud? Esta acción no se puede deshacer.')) return;
 
-    try {
-      const response = await fetch(`http://localhost:8000/api/v1/vet/solicitudes/${id}`, {
-        method: 'DELETE'
-      });
+    // Verificar que el usuario sea una clínica
+    if (userType !== 'clinic') {
+      toast.error('Solo las clínicas pueden eliminar solicitudes');
+      return;
+    }
 
-      if (response.status === 204) {
-        toast.success('Solicitud eliminada correctamente');
-        navigate('/requests');
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al eliminar la solicitud');
-      }
+    const solicitudId = request?.id || id; 
+
+    try {
+      await solicitudesApi.deleteSolicitud(solicitudId);
+      toast.success('Solicitud eliminada correctamente');
+      navigate('/requests');
     } catch (err) {
-      toast.error(err.message || 'Error al eliminar la solicitud');
+      console.error('Error eliminando solicitud:', err);
+      toast.error('Error al eliminar la solicitud');
     }
   };
 
 
   const handleStatusChange = async (newStatus) => {
-    // Mapea el estado interno al valor que espera la API
-  const statusMap = {
-    active: 'Activa',
-    pending: 'Revision',
-    completed: 'Completada',
-    cancelled: 'Cancelada'
-  };
+    // Mapear el estado interno al valor que espera la API
+    const statusMap = {
+      active: 'Activa',
+      pending: 'Revision',
+      completed: 'Completada',
+      cancelled: 'Cancelada'
+    };
 
-  try {
-    const response = await fetch(`http://localhost:8000/api/v1/vet/solicitudes/${id}/estado`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ estado: statusMap[newStatus] })
-    });
+    try {
+      await solicitudesApi.updateSolicitudEstado(id, statusMap[newStatus]);
+      
+      setRequest(prev => ({
+        ...prev,
+        status: newStatus
+      }));
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Error al actualizar el estado');
+      toast.success('Estado actualizado correctamente');
+    } catch (err) {
+      console.error('Error actualizando estado:', err);
+      toast.error('Error al actualizar el estado');
     }
-
-    setRequest(prev => ({
-      ...prev,
-      status: newStatus,
-      // Actualiza otros campos si lo deseas, por ejemplo:
-      // ...otros campos del objeto updated si quieres mantenerlos sincronizados
-    }));
-
-    toast.success('Estado actualizado correctamente');
-  } catch (err) {
-    toast.error(err.message || 'Error al actualizar el estado');
-  }
-};
+  };
 
   const handleEditStart = () => {
     setEditForm({
@@ -185,8 +179,8 @@ const handleDelete = async () => {
     setIsEditing(false);
   };
 
-  const handleEditSave =  async () => {
-    // Validaciones básicas
+  const handleEditSave = async () => {
+    // Validaciones
     if (!editForm.species || !editForm.bloodType || !editForm.urgency || !editForm.description) {
       toast.error('Por favor, completa todos los campos obligatorios');
       return;
@@ -197,62 +191,50 @@ const handleDelete = async () => {
       return;
     }
 
+    const updateData = {
+      descripcion_solicitud: editForm.description,
+      especie: editForm.species === 'canine' ? 'Perro' : 'Gato',
+      peso_minimo: Number(editForm.minWeight),
+      tipo_sangre: editForm.bloodType,
+      urgencia: editForm.urgency === 'high' ? 'Alta' : 'Media'
+    };
 
-    const body = {
-    descripcion_solicitud: editForm.description,
-    especie: editForm.species === 'canine' ? 'Perro' : 'Gato',
-    estado: editForm.status || 'Activa', // O el estado actual si no editas el estado
-    peso_minimo: Number(editForm.minWeight),
-    tipo_sangre: editForm.bloodType,
-    urgencia: editForm.urgency === 'high' ? 'Alta' : 'Media'
-};
     try {
-    const response = await fetch(`http://localhost:8000/api/v1/vet/solicitudes/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
+      const updated = await solicitudesApi.updateSolicitud(id, updateData);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Error al actualizar la solicitud');
+      setRequest({
+        id: updated.id,
+        petName: updated.nombre_mascota,
+        species: updated.especie === 'Perro' ? 'canine' : updated.especie === 'Gato' ? 'feline' : updated.especie,
+        bloodType: updated.tipo_sangre,
+        urgency: updated.urgencia === 'Alta' ? 'high' : 'medium',
+        date: updated.fecha_creacion,
+        status: (() => {
+          switch ((updated.estado || '').toLowerCase()) {
+            case 'activa': return 'active';
+            case 'revision':
+            case 'en revisión': return 'pending';
+            case 'completada': return 'completed';
+            case 'cancelada': return 'cancelled';
+            default: return 'active';
+          }
+        })(),
+        description: updated.descripcion_solicitud,
+        location: updated.direccion,
+        contact: updated.contacto,
+        minWeight: updated.peso_minimo,
+        clinicName: updated.nombre_veterinaria,
+        photo: updated.foto_mascota,
+        locality: updated.localidad?.toLowerCase() || '',
+      });
+
+      setIsEditing(false);
+      toast.success('Solicitud actualizada correctamente');
+    } catch (err) {
+      console.error('Error actualizando solicitud:', err);
+      toast.error('Error al actualizar la solicitud');
     }
-
-    const updated = await response.json();
-
-    setRequest({
-      id: updated.id,
-      species: updated.especie === 'Perro' ? 'canine' : updated.especie === 'Gato' ? 'feline' : updated.especie,
-      bloodType: updated.tipo_sangre,
-      urgency: updated.urgencia === 'Alta' ? 'high' : 'medium',
-      date: updated.fecha_creacion,
-      status: (() => {
-        switch ((updated.estado || '').toLowerCase()) {
-          case 'activa': return 'active';
-          case 'revision':
-          case 'en revisión': return 'pending';
-          case 'completada': return 'completed';
-          case 'cancelada': return 'cancelled';
-          default: return 'active';
-        }
-      })(),
-      description: updated.descripcion_solicitud,
-      location: updated.direccion,
-      contact: updated.contacto,
-      minWeight: updated.peso_minimo,
-      clinicName: updated.nombre_veterinaria,
-      photo: updated.foto_mascota,
-      locality: updated.localidad?.toLowerCase() || '',
-    });
-
-    setIsEditing(false);
-    toast.success('Solicitud actualizada correctamente');
-  } catch (err) {
-    toast.error(err.message || 'Error al actualizar la solicitud');
-  }
-};
+  };
 
 
   const handleFormChange = (field, value) => {
@@ -268,6 +250,70 @@ const handleDelete = async () => {
 
   const getUrgencyLabel = (urgency) => {
     return urgencyOptions.find(opt => opt.value === urgency)?.label || urgency;
+  };
+
+  // Función helper para formatear fechas
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    
+    const now = new Date();
+    let createdDate;
+
+    try {
+      if (typeof dateString === 'string') {
+        if (dateString.includes('T')) {
+          createdDate = new Date(dateString);
+        } else {
+          createdDate = new Date(dateString);
+        }
+      } else {
+        createdDate = new Date(dateString);
+      }
+
+      if (isNaN(createdDate.getTime())) {
+        return 'Fecha inválida';
+      }
+
+      // Ajustar zona horaria
+      const diffMs = now.getTime() - createdDate.getTime();
+      if (diffMs < -3600000) { // -1 hora en ms
+        createdDate = new Date(createdDate.getTime() - (5 * 60 * 60 * 1000)); // Restar 5 horas (Colombia)
+      }
+
+      const timeDiff = now.getTime() - createdDate.getTime();
+      
+      if (timeDiff < 0) {
+        return 'Hace unos segundos';
+      }
+
+      const seconds = Math.floor(timeDiff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (seconds < 60) {
+        return 'Hace unos segundos';
+      } else if (minutes < 60) {
+        return `Hace ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+      } else if (hours < 24) {
+        return `Hace ${hours} hora${hours !== 1 ? 's' : ''}`;
+      } else if (days === 1) {
+        return 'Hace 1 día';
+      } else if (days < 30) {
+        return `Hace ${days} días`;
+      } else {
+        const months = Math.floor(days / 30);
+        if (months < 12) {
+          return `Hace ${months} mes${months !== 1 ? 'es' : ''}`;
+        } else {
+          const years = Math.floor(days / 365);
+          return `Hace ${years} año${years !== 1 ? 's' : ''}`;
+        }
+      }
+    } catch (error) {
+      console.error('Error parseando fecha:', error, dateString);
+      return 'Fecha inválida';
+    }
   };
 
   const StatusBadge = () => {
@@ -348,7 +394,7 @@ const handleDelete = async () => {
     }
   };
 
-  // Llama a fetchApplicationsCount al cargar la página y cuando se cierra el modal
+  // Llamar a fetchApplicationsCount al cargar la página y cuando se cierra el modal
   useEffect(() => {
     fetchApplicationsCount();
   }, [fetchApplicationsCount]);
@@ -383,7 +429,9 @@ const handleDelete = async () => {
                 <ArrowLeftIcon className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
             </Button>
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">Solicitud #{id}</h1>
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+              Solicitud #{id?.slice(-8) || id}
+            </h1>
           </div>
         </div>
 
@@ -577,7 +625,7 @@ const handleDelete = async () => {
                   </div>
                   <div>
                     <p className="text-xs sm:text-sm text-gray-500">Fecha de creación</p>
-                    <p className="font-medium text-sm sm:text-base">{request.date}</p>
+                    <p className="font-medium text-sm sm:text-base">{formatDate(request.date)}</p>
                   </div>
                 </CardContent>
               </Card>

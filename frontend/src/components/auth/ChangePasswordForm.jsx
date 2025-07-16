@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import apiService from '@/services/api';
+import apiService from '@/services/AuthApi';
 
 export default function ChangePasswordForm({ onSuccess }) {
   const navigate = useNavigate();

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BOGOTA_LOCALITIES } from '@/constants/locations';
-import apiService from '@/services/api';
+import apiService from '@/services/AuthApi';
 
 export default function EditProfileForm({ userData, userType, onSuccess, onCancel }) {
   const [isLoading, setIsLoading] = useState(false);

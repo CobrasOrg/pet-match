@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useRef } from 'react';
 import { toast } from 'sonner';
+import solicitudesApi from '@/services/solicitudesApi';
 
 // Esquema de validación con Zod usando los nombres EXACTOS que espera la API
 const formSchema = z.object({
@@ -79,67 +80,47 @@ export default function BloodRequestForm({ onRequestCreated }) {
         }
     };
 
-    // Utilidad para convertir archivo a base64 (si no tienes backend para imágenes)
-    const fileToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-            if (!file) return resolve("");
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-    };
-
     // Función para manejar el envío del formulario
     const handleSubmit = async (data) => {
         try {
-            let foto_mascota = "";
+            // Crear FormData en lugar de JSON
+            const formData = new FormData();
+            
+            // Agregar todos los campos de la solicitud
+            formData.append('descripcion_solicitud', data.descripcion_solicitud);
+            formData.append('especie', data.especie);
+            formData.append('nombre_mascota', data.nombre_mascota);
+            formData.append('peso_minimo', data.peso_minimo.toString());
+            formData.append('tipo_sangre', data.tipo_sangre);
+            formData.append('urgencia', data.urgencia);
+            
+            // Agregar datos del perfil de la veterinaria
+            formData.append('contacto', userData?.phone || "");
+            formData.append('nombre_veterinaria', userData?.name || "");
+            formData.append('direccion', userData?.address || "");
+            formData.append('localidad', userData?.locality || "Bogotá");
+            formData.append('ubicacion', userData?.locality ? `${userData.locality}, Bogotá, Colombia` : userData?.address || "Bogotá, Colombia");
+            
+            // Agregar foto si existe (como archivo, no base64)
             if (data.foto_mascota) {
-                foto_mascota = await fileToBase64(data.foto_mascota);
+                formData.append('foto_mascota', data.foto_mascota);
             }
-
-            const payload = {
-                ...data,
-                foto_mascota,
-                // Agregar automáticamente datos del perfil de la veterinaria
-                contacto: userData?.phone || "",
-                nombre_veterinaria: userData?.name || "",
-                direccion: userData?.address || "",
-                // Usar la localidad del perfil de la veterinaria
-                localidad: userData?.locality || "Bogotá",
-                ubicacion: userData?.locality ? `${userData.locality}, Bogotá, Colombia` : userData?.address || "Bogotá, Colombia",
-            };
 
             // Mostrar en consola el payload que se enviará a la API
-            console.log("Payload enviado a la API:", payload);
+            console.log("FormData enviado a la API:", Object.fromEntries(formData.entries()));
 
-            const response = await fetch('http://localhost:8000/api/v1/vet/solicitudes/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) {
-                // Mostrar en consola la respuesta de error de la API
-                const errorData = await response.json();
-                console.error('Respuesta de error de la API:', errorData);
-                throw new Error('Error al crear la solicitud');
-            }
-
-            const result = await response.json();
+            const response = await solicitudesApi.createSolicitud(formData);
 
             // Llama a la función callback
             if (onRequestCreated) {
-                onRequestCreated(result);
+                onRequestCreated(response);
             }
             toast.success('Solicitud de donación creada exitosamente');
             form.reset(); // Resetea el formulario después de enviar
 
         } catch (error) {
             console.error('Error en el formulario:', error);
-            toast.error('Error al procesar el formulario');
+            toast.error(error.message || 'Error al procesar el formulario');
         }
     };
 

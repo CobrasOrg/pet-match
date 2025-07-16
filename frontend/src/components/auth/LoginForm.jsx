@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import apiService from '@/services/api';
+import apiService from '@/services/AuthApi';
 
 export default function LoginForm({ onSuccess, onForgotPassword }) {
   const [isLoading, setIsLoading] = useState(false);

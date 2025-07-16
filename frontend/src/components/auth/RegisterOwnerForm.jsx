@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import apiService from '@/services/api';
+import apiService from '@/services/AuthApi';
 
 export default function RegisterOwnerForm({ onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
