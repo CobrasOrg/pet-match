@@ -101,14 +101,14 @@ export function usePets() {
     return pets.find(pet => pet.id === petId);
   };
 
-  // Obtener mascotas elegibles para donación
+  // Obtener mascotas elegibles para donación (criterios básicos generales)
   const getEligiblePets = () => {
     return pets.filter(pet => {
       // Criterios básicos para ser elegible como donante
       const isHealthy = pet.healthStatus && !pet.healthStatus.toLowerCase().includes('enferm');
       const hasRecentVaccination = pet.lastVaccination && 
         new Date(pet.lastVaccination) > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000); // Último año
-      const hasAppropriateWeight = pet.weight >= 25; // Peso mínimo típico para donantes
+      const hasAppropriateWeight = pet.weight >= 5; // Peso mínimo básico (5kg para gatos pequeños)
       const hasAppropriateAge = pet.age >= 1 && pet.age <= 8; // Edad apropiada
       
       return isHealthy && hasRecentVaccination && hasAppropriateWeight && hasAppropriateAge;

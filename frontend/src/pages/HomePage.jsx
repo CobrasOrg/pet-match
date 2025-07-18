@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FaPaw, FaUserMd } from 'react-icons/fa';
 import petImg from '../assets/pet-hero.png';
-import { UserPlus, Search, HeartHandshake, Hospital, MapPin, ShieldCheck, Zap } from "lucide-react";
+import { UserPlus, Search, HeartHandshake, Hospital, MapPin, ShieldCheck, Zap, PlusCircle, FileText, Heart, Activity } from "lucide-react";
 import { Quote } from "lucide-react";
+import { useAuth } from '@/hooks/useAuth';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -14,6 +15,98 @@ const fadeInUp = {
 };
 
 const HomePage = () => {
+  const { isLoggedIn, userType, userData } = useAuth();
+
+  // Función para renderizar botones según el estado de autenticación
+  const renderActionButtons = () => {
+    if (!isLoggedIn) {
+      // Usuario no autenticado - mostrar botones de registro
+      return (
+        <div className="flex gap-4">
+          <Link to="/register">
+            <Button size="lg" className="bg-blue-500 hover:bg-pink-600 text-white rounded-xl px-8 py-3 text-lg font-semibold">
+              <FaPaw className="inline mr-2" /> Únete como Donante
+            </Button>
+          </Link>
+          <Link to="/login">
+            <Button size="lg" variant="outline" className="border-blue-500 text-blue-600 rounded-xl px-8 py-3 text-lg font-semibold">
+              <FaUserMd className="inline mr-2" /> Soy Veterinario
+            </Button>
+          </Link>
+        </div>
+      );
+    }
+
+    // Usuario autenticado - mostrar botones según tipo de usuario
+    if (userType === 'owner') {
+      return (
+        <div className="flex gap-4">
+          <Link to="/public">
+            <Button size="lg" className="bg-blue-500 hover:bg-pink-600 text-white rounded-xl px-8 py-3 text-lg font-semibold">
+              <Heart className="inline mr-2" /> Ver Solicitudes de Donación
+            </Button>
+          </Link>
+          <Link to="/my-pets">
+            <Button size="lg" variant="outline" className="border-blue-500 text-blue-600 rounded-xl px-8 py-3 text-lg font-semibold">
+              <PlusCircle className="inline mr-2" /> Mis Mascotas
+            </Button>
+          </Link>
+        </div>
+      );
+    }
+
+    if (userType === 'clinic') {
+      return (
+        <div className="flex gap-4">
+          <Link to="/requests">
+            <Button size="lg" className="bg-blue-500 hover:bg-pink-600 text-white rounded-xl px-8 py-3 text-lg font-semibold">
+              <Activity className="inline mr-2" /> Mis Solicitudes
+            </Button>
+          </Link>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  // Función para renderizar el mensaje de bienvenida personalizado
+  const renderWelcomeMessage = () => {
+    if (!isLoggedIn) {
+      return (
+        <>
+          <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight">
+            <span className="block text-soft-green mb-2">Pet Match</span>
+            <span className="block text-3xl md:text-4xl font-medium text-gray-700">
+              Salvando vidas, conectando corazones
+            </span>
+          </h1>
+          <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+            Conectamos mascotas que necesitan transfusiones de sangre con donantes dispuestos a ayudar.
+            Únete a nuestra comunidad y ayuda a salvar vidas peludas.
+          </p>
+        </>
+      );
+    }
+
+    // Mensaje personalizado para usuarios autenticados
+    return (
+      <>
+        <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight">
+          <span className="block text-soft-green mb-2">¡Bienvenido, {userData?.name}!</span>
+          <span className="block text-3xl md:text-4xl font-medium text-gray-700">
+            {userType === 'owner' ? 'Encuentra solicitudes de donación' : 'Gestiona tus solicitudes'}
+          </span>
+        </h1>
+        <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+          {userType === 'owner' 
+            ? 'Explora las solicitudes de donación activas y ayuda a salvar vidas con tus mascotas registradas.' 
+            : 'Administra tus solicitudes de donación de sangre y revisa las postulaciones recibidas.'
+          }
+        </p>
+      </>
+    );
+  };
   return (
     <div className="min-h-screen bg-white font-[Inter]">
       {/* Hero Section */}
@@ -27,28 +120,8 @@ const HomePage = () => {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 pl-8 md:pl-16 lg:pl-24 ">
           {/* Content */}
           <div className="flex-1 space-y-6 ">
-            <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight tracking-tight">
-              <span className="block text-soft-green mb-2">Pet Match</span>
-              <span className="block text-3xl md:text-4xl font-medium text-gray-700">
-                Salvando vidas, conectando corazones
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-              Conectamos mascotas que necesitan transfusiones de sangre con donantes dispuestos a ayudar.
-              Únete a nuestra comunidad y ayuda a salvar vidas peludas.
-            </p>
-            <div className="flex gap-4">
-              <Link to="/register">
-                <Button size="lg" className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-8 py-3 text-lg font-semibold">
-                  <FaPaw className="inline mr-2" /> Únete como Donante
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button size="lg" variant="outline" className="border-blue-500 text-blue-600 rounded-xl px-8 py-3 text-lg font-semibold">
-                  <FaUserMd className="inline mr-2" /> Soy Veterinario
-                </Button>
-              </Link>
-            </div>
+            {renderWelcomeMessage()}
+            {renderActionButtons()}
           </div>
           {/* Imagen de mascota */}
           <div className="flex-1 flex justify-center">
@@ -90,7 +163,7 @@ const HomePage = () => {
               <p className="text-gray-600">Donantes Registrados</p>
             </div>
             <div className="text-center">
-              <div className="text-5xl font-bold text-purple-600 mb-2">50+</div>
+              <div className="text-5xl font-bold text-pink-600 mb-2">50+</div>
               <p className="text-gray-600">Clínicas Veterinarias</p>
             </div>
           </div>
@@ -229,22 +302,53 @@ const HomePage = () => {
       <section className="py-16 bg-gradient-to-r from-green-300 to-blue-600 w-screen relative left-1/2 right-1/2 mx-[-50vw]">
         <div className="max-w-4xl mx-auto text-center px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            ¿Listo para Hacer la Diferencia?
+            {isLoggedIn ? '¡Sigue Haciendo la Diferencia!' : '¿Listo para Hacer la Diferencia?'}
           </h2>
           <p className="text-xl text-green-100 mb-8">
-            Únete a nuestra comunidad y ayuda a salvar vidas de mascotas hoy mismo.
+            {isLoggedIn 
+              ? 'Continúa ayudando a salvar vidas de mascotas con nuestra plataforma.' 
+              : 'Únete a nuestra comunidad y ayuda a salvar vidas de mascotas hoy mismo.'
+            }
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
-              <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                Registrar mi Mascota
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                Soy Veterinario
-              </Button>
-            </Link>
+            {!isLoggedIn ? (
+              <>
+                <Link to="/register">
+                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                    Registrar mi Mascota
+                  </Button>
+                </Link>
+                <Link to="/login">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    Soy Veterinario
+                  </Button>
+                </Link>
+              </>
+            ) : userType === 'owner' ? (
+              <>
+                <Link to="/public">
+                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                    <Heart className="inline mr-2" />
+                    Ver Solicitudes
+                  </Button>
+                </Link>
+                <Link to="/my-pets">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    <PlusCircle className="inline mr-2" />
+                    Mis Mascotas
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/requests">
+                  <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                    <Activity className="inline mr-2" />
+                    Mis Solicitudes
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>

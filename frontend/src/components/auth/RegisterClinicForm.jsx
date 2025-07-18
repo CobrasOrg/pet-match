@@ -114,7 +114,7 @@ export default function RegisterClinicForm({ onSuccess }) {
         }
         
         // Navegar a la página correspondiente
-        navigate('/requests');
+        navigate('/'); // Redirigir a HomePage personalizada
         
       } else {
         alert('Respuesta inesperada del servidor. Intenta nuevamente.');

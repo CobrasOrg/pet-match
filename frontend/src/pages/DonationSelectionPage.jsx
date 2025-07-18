@@ -296,6 +296,7 @@ export default function DonationSelectionPage() {
           onSelectPet={handlePetSelected}
           requiredSpecies={request.especie}
           requiredBloodType={request.tipo_sangre}
+          requiredWeight={request.peso_minimo}
           title={`Seleccionar donante para ${request.nombre_mascota}`}
         />
       </div>

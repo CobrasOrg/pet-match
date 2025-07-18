@@ -51,6 +51,55 @@ const NavBar = () => {
 
             {/* Desktop Menu */}
             <div className="hidden sm:flex items-center gap-6">
+                {isLoggedIn && (
+                    <div className="flex items-center gap-4">
+                        {/* Enlaces principales para dueños */}
+                        {userType === 'owner' && (
+                            <>
+                                <NavLink
+                                    to="/my-pets"
+                                    className={({ isActive }) =>
+                                        `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                            isActive
+                                                ? 'bg-indigo-100 text-indigo-700'
+                                                : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                                        }`
+                                    }
+                                >
+                                    Mis Mascotas
+                                </NavLink>
+                                <NavLink
+                                    to="/public"
+                                    className={({ isActive }) =>
+                                        `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                            isActive
+                                                ? 'bg-indigo-100 text-indigo-700'
+                                                : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                                        }`
+                                    }
+                                >
+                                    Ver Solicitudes
+                                </NavLink>
+                            </>
+                        )}
+
+                        {/* Enlaces principales para veterinarias */}
+                        {userType === 'clinic' && (
+                            <NavLink
+                                to="/requests"
+                                className={({ isActive }) =>
+                                    `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                        isActive
+                                            ? 'bg-indigo-100 text-indigo-700'
+                                            : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                                    }`
+                                }
+                            >
+                                Mis Solicitudes
+                            </NavLink>
+                        )}
+                    </div>
+                )}
 
                 {isLoggedIn ? (
                     <div className="relative">
@@ -93,48 +142,6 @@ const NavBar = () => {
                                         Mi Perfil
                                     </div>
                                 </NavLink>
-                                {userType === 'owner' && (
-                                    <>
-                                        <NavLink
-                                            to="/my-pets"
-                                            className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-                                            onClick={() => setProfileMenuOpen(false)}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                                </svg>
-                                                Mis Mascotas
-                                            </div>
-                                        </NavLink>
-                                        <NavLink
-                                            to="/public"
-                                            className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-                                            onClick={() => setProfileMenuOpen(false)}
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                Ver Solicitudes
-                                            </div>
-                                        </NavLink>
-                                    </>
-                                )}
-                                {userType === 'clinic' && (
-                                    <NavLink
-                                        to="/requests"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
-                                        onClick={() => setProfileMenuOpen(false)}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            Mis Solicitudes
-                                        </div>
-                                    </NavLink>
-                                )}
                                 <hr className="my-1 border-gray-100" />
                                 <button
                                     onClick={handleLogout}
@@ -165,7 +172,7 @@ const NavBar = () => {
                         {!isOnRegisterPage && (
                             <button
                                 onClick={() => navigate('/register')}
-                                className="px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded-full text-sm transition-colors"
+                                className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-full text-sm transition-colors"
                             >
                                 Registrarme
                             </button>
@@ -185,30 +192,71 @@ const NavBar = () => {
 
             {/* Mobile Menu */}
             <div className={`${open ? 'flex' : 'hidden'} absolute top-[60px] left-0 w-full bg-white shadow-md py-4 flex-col items-start gap-4 px-5 text-sm md:hidden`}>
-        
-        
-
-                {isLoggedIn ? (
-                    <div className="w-full border-t border-gray-200 pt-3 mt-2">
-                        <NavLink to="/profile" className="block w-full py-2" onClick={() => setOpen(false)}>Perfil</NavLink>
-
+                {isLoggedIn && (
+                    <div className="w-full">
+                        {/* Enlaces principales para dueños */}
                         {userType === 'owner' && (
                             <>
-                                <NavLink to="/my-pets" className="block w-full py-2" onClick={() => setOpen(false)}>Mis Mascotas</NavLink>
-                                <NavLink to="/public" className="block w-full py-2" onClick={() => setOpen(false)}>Ver Solicitudes</NavLink>
+                                <NavLink 
+                                    to="/my-pets" 
+                                    className={({ isActive }) =>
+                                        `block w-full py-2 px-3 rounded transition-colors ${
+                                            isActive
+                                                ? 'bg-indigo-100 text-indigo-700 font-medium'
+                                                : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                                        }`
+                                    }
+                                    onClick={() => setOpen(false)}
+                                >
+                                    Mis Mascotas
+                                </NavLink>
+                                <NavLink 
+                                    to="/public" 
+                                    className={({ isActive }) =>
+                                        `block w-full py-2 px-3 rounded transition-colors ${
+                                            isActive
+                                                ? 'bg-indigo-100 text-indigo-700 font-medium'
+                                                : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                                        }`
+                                    }
+                                    onClick={() => setOpen(false)}
+                                >
+                                    Ver Solicitudes
+                                </NavLink>
                             </>
                         )}
 
+                        {/* Enlaces principales para veterinarias */}
                         {userType === 'clinic' && (
-                            <NavLink to="/requests" className="block w-full py-2" onClick={() => setOpen(false)}>Mis Solicitudes</NavLink>
+                            <NavLink 
+                                to="/requests" 
+                                className={({ isActive }) =>
+                                    `block w-full py-2 px-3 rounded transition-colors ${
+                                        isActive
+                                            ? 'bg-indigo-100 text-indigo-700 font-medium'
+                                            : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                                    }`
+                                }
+                                onClick={() => setOpen(false)}
+                            >
+                                Mis Solicitudes
+                            </NavLink>
                         )}
+                    </div>
+                )}
+
+                {isLoggedIn ? (
+                    <div className="w-full border-t border-gray-200 pt-3 mt-2">
+                        <NavLink to="/profile" className="block w-full py-2 px-3 rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors" onClick={() => setOpen(false)}>
+                            Mi Perfil
+                        </NavLink>
 
                         <button
                             onClick={() => {
                                 handleLogout();
                                 setOpen(false);
                             }}
-                            className="block w-full text-left py-2"
+                            className="block w-full text-left py-2 px-3 rounded hover:bg-red-50 hover:text-red-600 transition-colors"
                         >
                             Cerrar sesión
                         </button>

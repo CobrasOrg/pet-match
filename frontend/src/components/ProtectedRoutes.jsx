@@ -43,7 +43,7 @@ export const OwnerRoute = ({ children }) => {
   }
 
   if (!isOwner()) {
-    return <Navigate to="/requests" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -69,7 +69,7 @@ export const ClinicRoute = ({ children }) => {
   }
 
   if (!isClinic()) {
-    return <Navigate to="/public" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -77,7 +77,7 @@ export const ClinicRoute = ({ children }) => {
 
 // Componente para rutas públicas (solo accesibles si NO está autenticado)
 export const PublicOnlyRoute = ({ children }) => {
-  const { isLoggedIn, isLoading, userType } = useAuth();
+  const { isLoggedIn, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -91,12 +91,8 @@ export const PublicOnlyRoute = ({ children }) => {
   }
 
   if (isLoggedIn) {
-    // Si está loggeado, redirigir según el tipo de usuario
-    if (userType === 'clinic') {
-      return <Navigate to="/requests" replace />;
-    } else {
-      return <Navigate to="/public" replace />;
-    }
+    // Si está loggeado, redirigir a la HomePage personalizada
+    return <Navigate to="/" replace />;
   }
 
   return children;
