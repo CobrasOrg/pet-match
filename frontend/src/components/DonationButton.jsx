@@ -69,11 +69,11 @@ export default function DonationButton({ request, className = "", size = "sm" })
       };
 
       // Enviar la postulación al backend
-      const response = await fetch(`http://localhost:8001/base/api/solicitudes/${request.id}/postulaciones`, {
+      const response = await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${request.id}/postulaciones`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}` 
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` 
         },
         body: JSON.stringify(payload)
       });

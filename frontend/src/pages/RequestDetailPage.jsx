@@ -356,7 +356,11 @@ const handleDelete = async () => {
     setLoadingApplications(true);
     setApplicationsError(null);
     try {
-      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones`);
+    const res = await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${id}/postulaciones`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+      }
+    });
       if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
       const data = await res.json();
       setApplications(data);
@@ -372,7 +376,11 @@ const handleDelete = async () => {
   // Nueva función para obtener solo el número de postulaciones
   const fetchApplicationsCount = useCallback(async () => {
     try {
-      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones`);
+    const res = await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${id}/postulaciones`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+      }
+    });
       if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
       const data = await res.json();
       setApplicationsCount(Array.isArray(data) ? data.length : 0);
@@ -384,7 +392,11 @@ const handleDelete = async () => {
   // Función para cargar detalles de una postulación
   const fetchApplicationDetails = async (postulacionId) => {
     try {
-      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${postulacionId}`);
+    const res = await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${id}/postulaciones/${postulacionId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+      }
+    });
       if (!res.ok) throw new Error('No se pudo cargar la postulación');
       const data = await res.json();
       setSelectedApplicationDetails(data);
@@ -835,11 +847,14 @@ const handleDelete = async () => {
                                 size="sm"
                                 className="h-8 text-green-600 border-green-200 hover:bg-green-50"
                                 onClick={async () => {
-                                  await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${app.id}/status`, {
-                                    method: 'PATCH',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status: 'approved' })
-                                  });
+                                await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${id}/postulaciones/${app.id}/status`, {
+                                  method: 'PATCH',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+                                  },
+                                  body: JSON.stringify({ status: 'approved' })
+                                });
                                   fetchApplications();
                                 }}
                                 disabled={app.status === 'approved'}
@@ -853,11 +868,15 @@ const handleDelete = async () => {
                                 size="sm"
                                 className="h-8 text-red-600 border-red-200 hover:bg-red-50"
                                 onClick={async () => {
-                                  await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${app.id}/status`, {
-                                    method: 'PATCH',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status: 'rejected' })
-                                  });
+                                await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${id}/postulaciones/${app.id}/status`, {
+                                  method: 'PATCH',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+                                  },
+                                  body: JSON.stringify({ status: 'rejected' })
+                                });
+
                                   fetchApplications();
                                 }}
                                 disabled={app.status === 'rejected'}
