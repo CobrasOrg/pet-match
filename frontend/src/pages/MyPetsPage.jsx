@@ -16,13 +16,10 @@ import {
 } from 'lucide-react';
 import PetRegistrationForm from '@/components/PetRegistrationForm';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
-
-// NOTA: Esta página está configurada en MODO SIMULADO
-// Las llamadas al backend están deshabilitadas para desarrollo
-// Cuando integres el backend, reemplaza las funciones con llamadas reales a la API
+import petsApi from '@/services/petsApi';
 
 export default function MyPetsPage() {
-  const { userData, userType, updateUserData } = useAuth();
+  const { userData, userType } = useAuth();
   const navigate = useNavigate();
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,22 +61,18 @@ export default function MyPetsPage() {
     }
   }, [userData, userType, navigate]);
 
-  // Cargar mascotas del usuario desde datos del contexto
+  // Cargar mascotas del usuario desde la API
   useEffect(() => {
     const loadPets = async () => {
       setIsLoading(true);
       try {
-        // Simular delay de carga
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Obtener mascotas del usuario autenticado
-        const userPets = userData?.pets || [];
-        
+        // Obtener mascotas del usuario autenticado desde la API
+        const userPets = await petsApi.getUserPets();
         setPets(userPets);
         
       } catch (error) {
         console.error('Error cargando mascotas:', error);
-        alert('Error cargando las mascotas.');
+        alert('Error cargando las mascotas: ' + error.message);
       } finally {
         setIsLoading(false);
       }
@@ -91,45 +84,30 @@ export default function MyPetsPage() {
   }, [userData, userType]);
 
   const handlePetRegistered = (newPet) => {
-    // Actualizar estado local
+    // Actualizar estado local con la respuesta de la API
     setPets(prevPets => [...prevPets, newPet]);
     
-    // Actualizar datos del usuario en el contexto
-    const updatedUserData = {
-      ...userData,
-      pets: [...(userData.pets || []), newPet]
-    };
-    updateUserData(updatedUserData);
-    
     setShowRegistrationForm(false);
+    alert('¡Mascota registrada exitosamente!');
   };
 
   const handlePetUpdated = async (updatedPet) => {
     try {
-      // Simular delay de actualización
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Actualizar mascota en la API
+      const response = await petsApi.updatePet(updatedPet.id, updatedPet);
       
-      // Actualizar la lista local
+      // Actualizar la lista local con la respuesta de la API
       setPets(prevPets => 
         prevPets.map(pet => 
-          pet.id === updatedPet.id ? updatedPet : pet
+          pet.id === updatedPet.id ? response : pet
         )
       );
-      
-      // Actualizar datos del usuario en el contexto
-      const updatedUserData = {
-        ...userData,
-        pets: (userData.pets || []).map(pet => 
-          pet.id === updatedPet.id ? updatedPet : pet
-        )
-      };
-      updateUserData(updatedUserData);
       
       setEditingPet(null);
       
     } catch (error) {
       console.error('Error actualizando mascota:', error);
-      alert('Error al actualizar la mascota. Intenta nuevamente.');
+      alert('Error al actualizar la mascota: ' + error.message);
     }
   };
 
@@ -145,18 +123,11 @@ export default function MyPetsPage() {
 
   const handleConfirmDelete = async () => {
     try {
-      // Simular delay de eliminación
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Eliminar mascota en la API
+      await petsApi.deletePet(deletingPet.id);
       
       // Remover mascota de la lista local
       setPets(prevPets => prevPets.filter(pet => pet.id !== deletingPet.id));
-      
-      // Actualizar datos del usuario en el contexto
-      const updatedUserData = {
-        ...userData,
-        pets: (userData.pets || []).filter(pet => pet.id !== deletingPet.id)
-      };
-      updateUserData(updatedUserData);
       
       // Cerrar dialog y limpiar estado
       setShowDeleteDialog(false);
@@ -166,7 +137,7 @@ export default function MyPetsPage() {
       
     } catch (error) {
       console.error('Error eliminando mascota:', error);
-      alert('Error al eliminar la mascota. Intenta nuevamente.');
+      alert('Error al eliminar la mascota: ' + error.message);
     }
   };
 
