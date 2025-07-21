@@ -24,6 +24,20 @@ const NavBar = () => {
         logout();
     };
 
+    // Función para manejar el scroll al inicio
+    const handleLinkClick = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+
+    // Función para manejar clicks en el menú móvil
+    const handleMobileLinkClick = () => {
+        setOpen(false);
+        handleLinkClick();
+    };
+
     // Cerrar el menú de perfil cuando se hace clic fuera
     React.useEffect(() => {
         const handleClickOutside = () => {
@@ -41,7 +55,7 @@ const NavBar = () => {
 
     return (
         <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all ">
-            <NavLink to="/" className="flex items-center gap-3">
+            <NavLink to="/" className="flex items-center gap-3" onClick={handleLinkClick}>
                 <img className="h-12 w-auto" src="/logo_petmatch.png" alt="PetMatch logo" />
                 <div className="flex flex-col">
                     <span className="text-xl font-bold text-gray-800">PetMatch</span>
@@ -51,6 +65,51 @@ const NavBar = () => {
 
             {/* Desktop Menu */}
             <div className="hidden sm:flex items-center gap-6">
+                {/* Links públicos - solo visibles cuando NO está logueado */}
+                {!isLoggedIn && (
+                    <div className="flex items-center gap-4">
+                        <NavLink
+                            to="/"
+                            className={({ isActive }) =>
+                                `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    isActive
+                                        ? 'bg-indigo-100 text-indigo-700'
+                                        : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                                }`
+                            }
+                            onClick={handleLinkClick}
+                        >
+                            Inicio
+                        </NavLink>
+                        <NavLink
+                            to="/about"
+                            className={({ isActive }) =>
+                                `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    isActive
+                                        ? 'bg-indigo-100 text-indigo-700'
+                                        : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                                }`
+                            }
+                            onClick={handleLinkClick}
+                        >
+                            Quiénes Somos
+                        </NavLink>
+                        <NavLink
+                            to="/contact"
+                            className={({ isActive }) =>
+                                `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    isActive
+                                        ? 'bg-indigo-100 text-indigo-700'
+                                        : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
+                                }`
+                            }
+                            onClick={handleLinkClick}
+                        >
+                            Contáctanos
+                        </NavLink>
+                    </div>
+                )}
+
                 {isLoggedIn && (
                     <div className="flex items-center gap-4">
                         {/* Enlaces principales para dueños */}
@@ -65,6 +124,7 @@ const NavBar = () => {
                                                 : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
                                         }`
                                     }
+                                    onClick={handleLinkClick}
                                 >
                                     Mis Mascotas
                                 </NavLink>
@@ -77,6 +137,7 @@ const NavBar = () => {
                                                 : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
                                         }`
                                     }
+                                    onClick={handleLinkClick}
                                 >
                                     Ver Solicitudes
                                 </NavLink>
@@ -94,6 +155,7 @@ const NavBar = () => {
                                             : 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50'
                                     }`
                                 }
+                                onClick={handleLinkClick}
                             >
                                 Mis Solicitudes
                             </NavLink>
@@ -192,6 +254,51 @@ const NavBar = () => {
 
             {/* Mobile Menu */}
             <div className={`${open ? 'flex' : 'hidden'} absolute top-[60px] left-0 w-full bg-white shadow-md py-4 flex-col items-start gap-4 px-5 text-sm md:hidden`}>
+                {/* Enlaces públicos - solo visibles cuando NO está logueado */}
+                {!isLoggedIn && (
+                    <div className="w-full border-b border-gray-200 pb-3">
+                        <NavLink 
+                            to="/" 
+                            className={({ isActive }) =>
+                                `block w-full py-2 px-3 rounded transition-colors ${
+                                    isActive
+                                        ? 'bg-indigo-100 text-indigo-700 font-medium'
+                                        : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                                }`
+                            }
+                            onClick={handleMobileLinkClick}
+                        >
+                            Inicio
+                        </NavLink>
+                        <NavLink 
+                            to="/about" 
+                            className={({ isActive }) =>
+                                `block w-full py-2 px-3 rounded transition-colors ${
+                                    isActive
+                                        ? 'bg-indigo-100 text-indigo-700 font-medium'
+                                        : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                                }`
+                            }
+                            onClick={handleMobileLinkClick}
+                        >
+                            Quiénes Somos
+                        </NavLink>
+                        <NavLink 
+                            to="/contact" 
+                            className={({ isActive }) =>
+                                `block w-full py-2 px-3 rounded transition-colors ${
+                                    isActive
+                                        ? 'bg-indigo-100 text-indigo-700 font-medium'
+                                        : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                                }`
+                            }
+                            onClick={handleMobileLinkClick}
+                        >
+                            Contáctanos
+                        </NavLink>
+                    </div>
+                )}
+
                 {isLoggedIn && (
                     <div className="w-full">
                         {/* Enlaces principales para dueños */}
@@ -206,7 +313,7 @@ const NavBar = () => {
                                                 : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
                                         }`
                                     }
-                                    onClick={() => setOpen(false)}
+                                    onClick={handleMobileLinkClick}
                                 >
                                     Mis Mascotas
                                 </NavLink>
@@ -219,7 +326,7 @@ const NavBar = () => {
                                                 : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
                                         }`
                                     }
-                                    onClick={() => setOpen(false)}
+                                    onClick={handleMobileLinkClick}
                                 >
                                     Ver Solicitudes
                                 </NavLink>
@@ -237,7 +344,7 @@ const NavBar = () => {
                                             : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
                                     }`
                                 }
-                                onClick={() => setOpen(false)}
+                                onClick={handleMobileLinkClick}
                             >
                                 Mis Solicitudes
                             </NavLink>
@@ -247,7 +354,7 @@ const NavBar = () => {
 
                 {isLoggedIn ? (
                     <div className="w-full border-t border-gray-200 pt-3 mt-2">
-                        <NavLink to="/profile" className="block w-full py-2 px-3 rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors" onClick={() => setOpen(false)}>
+                        <NavLink to="/profile" className="block w-full py-2 px-3 rounded hover:bg-indigo-50 hover:text-indigo-600 transition-colors" onClick={handleMobileLinkClick}>
                             Mi Perfil
                         </NavLink>
 

@@ -1,6 +1,11 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const Footer = () => {
+  const handleLinkClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer className="mt-15 px-6 md:px-16 lg:px-24 xl:px-32 pt-8 w-full text-gray-500 bg-soft-green">
       <div className="flex flex-col md:flex-row justify-between w-full gap-10 border-b border-gray-500/30 pb-6">
@@ -24,10 +29,9 @@ PetMatch simplifica la conexión entre donantes y receptores, promoviendo una co
           <div>
             <h2 className="font-semibold mb-5 text-gray-800">Compañia</h2>
             <ul className="text-sm space-y-2">
-              <li><a href="#">Inicio</a></li>
-              <li><a href="#">Sobre nosotros </a></li>
-              <li><a href="#">Contacto</a></li>
-              <li><a href="#">Política de privacidad</a></li>
+              <li><Link to="/" className="hover:text-gray-700 transition-colors" onClick={handleLinkClick}>Inicio</Link></li>
+              <li><Link to="/about" className="hover:text-gray-700 transition-colors" onClick={handleLinkClick}>Sobre nosotros</Link></li>
+              <li><Link to="/contact" className="hover:text-gray-700 transition-colors" onClick={handleLinkClick}>Contacto</Link></li>
             </ul>
           </div>
           <div>

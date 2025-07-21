@@ -114,7 +114,7 @@ const HomePage = () => {
         initial="hidden"
         animate="visible"
         variants={fadeInUp}
-        className="py-20 px-4 bg-soft-green w-screen relative left-1/2 right-1/2 mx-[-50vw] rounded-b-lg"
+        className="py-16 px-4 bg-white w-screen relative left-1/2 right-1/2 mx-[-50vw] rounded-b-lg"
       >
       
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12 pl-8 md:pl-16 lg:pl-24 ">
@@ -141,7 +141,7 @@ const HomePage = () => {
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
         variants={fadeInUp}
-        className="py-16 bg-white"
+        className="py-16 bg-gray-50 w-screen relative left-1/2 right-1/2 mx-[-50vw]"
       >
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
