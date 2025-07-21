@@ -56,7 +56,7 @@ export default function LoginForm({ onSuccess, onForgotPassword }) {
         // Usar el contexto de autenticación para hacer login
         login(response.user.userType, response.user, response.token);
         
-        alert(`¡Bienvenido ${response.user.name}! Redirigiendo al panel de ${response.user.userType === 'clinic' ? 'clínica' : 'propietario'}...`);
+        alert(`¡Bienvenido ${response.user.name}! Redirigiendo a la página principal...`);
         
         // Llamar callback de éxito
         if (onSuccess) {

@@ -20,6 +20,7 @@ export default function PetSelectionModal({
   requiredSpecies = null, 
   requiredBreed = null,
   requiredBloodType = null,
+  requiredWeight = null,
   title = "Seleccionar Mascota",
   isSubmitting = false
 }) {
@@ -44,14 +45,15 @@ export default function PetSelectionModal({
       const matchesSpecies = !requiredSpecies || petSpecies === requiredSpeciesNormalized;
       const matchesBreed = !requiredBreed || pet.breed === requiredBreed;
       const matchesBloodType = !requiredBloodType || pet.bloodType === requiredBloodType;
+      const matchesWeight = !requiredWeight || pet.weight >= requiredWeight;
       
-      const passesAllFilters = matchesSpecies && matchesBreed && matchesBloodType;
+      const passesAllFilters = matchesSpecies && matchesBreed && matchesBloodType && matchesWeight;
       
       return passesAllFilters;
     });
 
     setFilteredPets(filtered);
-  }, [pets, requiredSpecies, requiredBreed, requiredBloodType]);
+  }, [pets, requiredSpecies, requiredBreed, requiredBloodType, requiredWeight]);
 
   const getSpeciesIcon = (species) => {
     return species === 'canine' ? Dog : Cat;
@@ -82,11 +84,11 @@ export default function PetSelectionModal({
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mt-10">{title}</h2>
               <p className="text-gray-600 mt-1">
                 Selecciona la mascota que deseas postular para esta donación
               </p>
-              {(requiredSpecies || requiredBreed || requiredBloodType) && (
+              {(requiredSpecies || requiredBreed || requiredBloodType || requiredWeight) && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {requiredSpecies && (
                     <Badge variant="outline">
@@ -101,6 +103,11 @@ export default function PetSelectionModal({
                   {requiredBloodType && (
                     <Badge variant="outline">
                       Tipo de sangre: {requiredBloodType}
+                    </Badge>
+                  )}
+                  {requiredWeight && (
+                    <Badge variant="outline">
+                      Peso mínimo: {requiredWeight} kg
                     </Badge>
                   )}
                 </div>
@@ -130,7 +137,7 @@ export default function PetSelectionModal({
                 No tienes mascotas compatibles
               </h3>
               <p className="text-gray-600 mb-4 max-w-md mx-auto">
-                {requiredBreed || requiredSpecies || requiredBloodType ? 
+                {requiredBreed || requiredSpecies || requiredBloodType || requiredWeight ? 
                   'No tienes mascotas registradas que cumplan con los requisitos de esta donación.' :
                   'No tienes mascotas registradas para esta donación.'
                 }
@@ -158,7 +165,8 @@ export default function PetSelectionModal({
                 
                 const isCompatible = (!requiredSpecies || petSpecies === requiredSpeciesNormalized) &&
                                    (!requiredBreed || pet.breed === requiredBreed) &&
-                                   (!requiredBloodType || pet.bloodType === requiredBloodType);
+                                   (!requiredBloodType || pet.bloodType === requiredBloodType) &&
+                                   (!requiredWeight || pet.weight >= requiredWeight);
                 
                 return (
                   <Card key={pet.id} className={`relative ${isCompatible ? 'ring-2 ring-green-200' : ''}`}>

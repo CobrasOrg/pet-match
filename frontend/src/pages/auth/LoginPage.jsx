@@ -6,12 +6,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   
   const handleLoginSuccess = (userType) => {
-    // Redirigir según el tipo de usuario
-    if (userType === 'clinic') {
-      navigate('/requests');  // → Gestión de solicitudes
-    } else {
-      navigate('/public');    // → Solicitudes públicas
-    }
+    // Redirigir a la homepage personalizada para ambos tipos de usuario
+    navigate('/');
   };
 
   const handleForgotPassword = () => {
@@ -19,8 +15,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white shadow-lg rounded-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Iniciar Sesión</CardTitle>
           <p className="text-gray-600">Accede a tu cuenta de Pet Match</p>

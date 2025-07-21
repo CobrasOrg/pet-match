@@ -165,11 +165,11 @@ const handleDelete = async () => {
 
   const handleEditStart = () => {
     setEditForm({
-      species: request.species,
-      bloodType: request.bloodType,
-      urgency: request.urgency,
-      description: request.description,
-      minWeight: request.minWeight
+      species: request.species || '',
+      bloodType: request.bloodType || '',
+      urgency: request.urgency || '',
+      description: request.description || '',
+      minWeight: request.minWeight || 0
     });
     setIsEditing(true);
   };
@@ -186,15 +186,34 @@ const handleDelete = async () => {
       return;
     }
 
-    if (editForm.minWeight <= 0) {
+    if (!editForm.minWeight || editForm.minWeight <= 0) {
       toast.error('El peso mínimo debe ser mayor a 0');
+      return;
+    }
+
+    // Verificar si hay cambios reales
+    const currentMinWeight = Number(request.minWeight) || 0;
+    const newMinWeight = Number(editForm.minWeight) || 0;
+    
+    const hasChanges = (
+      editForm.species !== request.species ||
+      editForm.bloodType !== request.bloodType ||
+      editForm.urgency !== request.urgency ||
+      editForm.description !== request.description ||
+      newMinWeight !== currentMinWeight
+    );
+
+    if (!hasChanges) {
+      // No hay cambios, simplemente cerrar el modo edición
+      setIsEditing(false);
+      toast.success('No se realizaron cambios');
       return;
     }
 
     const updateData = {
       descripcion_solicitud: editForm.description,
       especie: editForm.species === 'canine' ? 'Perro' : 'Gato',
-      peso_minimo: Number(editForm.minWeight),
+      peso_minimo: newMinWeight,
       tipo_sangre: editForm.bloodType,
       urgencia: editForm.urgency === 'high' ? 'Alta' : 'Media'
     };
@@ -232,7 +251,9 @@ const handleDelete = async () => {
       toast.success('Solicitud actualizada correctamente');
     } catch (err) {
       console.error('Error actualizando solicitud:', err);
-      toast.error('Error al actualizar la solicitud');
+      console.error('Update data sent:', updateData);
+      console.error('Edit form data:', editForm);
+      toast.error('Error al actualizar la solicitud: ' + (err.message || 'Error desconocido'));
     }
   };
 
@@ -742,7 +763,7 @@ const handleDelete = async () => {
               >
                 <XIcon className="h-5 w-5" />
               </button>
-              <h2 className="text-lg font-bold mb-4">Mascotas postuladas ({id})</h2>
+              <h2 className="text-lg font-bold mb-4">Mascotas postuladas (#{id?.slice(-8) || id})</h2>
               {loadingApplications ? (
                 <div className="text-center py-4">Cargando postulaciones...</div>
               ) : applicationsError ? (

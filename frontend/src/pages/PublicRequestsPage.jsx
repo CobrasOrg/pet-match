@@ -75,18 +75,19 @@ const URGENCY_BADGES = {
   }
 };
 
-// Formatear la fecha
+// Formatear la fecha con manejo de zona horaria
 const formatDate = (dateString) => {
   if (!dateString) return '';
   
-  // Obtener la fecha actual en la zona horaria local
   const now = new Date();
   let createdDate;
 
   try {
+    // Parsing robusto de fechas con manejo de zona horaria
     if (typeof dateString === 'string') {
-      if (dateString.includes('T')) {
-        createdDate = new Date(dateString);
+      // Si la fecha no tiene información de zona horaria, asumimos que es UTC
+      if (dateString.includes('T') && !dateString.includes('Z') && !dateString.includes('+') && !dateString.includes('-', 10)) {
+        createdDate = new Date(dateString + 'Z'); // Agregar Z para UTC
       } else {
         createdDate = new Date(dateString);
       }
@@ -100,44 +101,74 @@ const formatDate = (dateString) => {
       return 'Fecha inválida';
     }
 
-    const diffMs = now.getTime() - createdDate.getTime();
-    if (diffMs < -3600000) { 
-      console.warn('Fecha en el futuro detectada, ajustando zona horaria:', dateString);
-      createdDate = new Date(createdDate.getTime() - (5 * 60 * 60 * 1000)); // Restar 5 horas (Colombia)
+    // Calcular diferencia en milisegundos
+    const timeDiff = now.getTime() - createdDate.getTime();
+
+    // Si la diferencia es muy negativa (más de 1 hora en el futuro), puede ser problema de zona horaria
+    if (timeDiff < -3600000) { // Más de 1 hora en el futuro
+      console.warn('Fecha en el futuro detectada, posible problema de zona horaria:', dateString);
+      // Ajustar restando 5 horas (Colombia es UTC-5)
+      createdDate = new Date(createdDate.getTime() - (5 * 60 * 60 * 1000));
+      const adjustedTimeDiff = now.getTime() - createdDate.getTime();
+      
+      // Usar la diferencia ajustada
+      const seconds = Math.floor(adjustedTimeDiff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      const weeks = Math.floor(days / 7);
+      const months = Math.floor(days / 30.44);
+      const years = Math.floor(days / 365.25);
+
+      return formatTimeString(seconds, minutes, hours, days, weeks, months, years);
     }
 
-    const timeDiff = now.getTime() - createdDate.getTime();
-    
-    const seconds = Math.floor(timeDiff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const months = Math.floor(days / 30);
-    const years = Math.floor(days / 365);
-
+    // Si la diferencia es ligeramente negativa (menos de 1 hora), mostrar "hace unos segundos"
     if (timeDiff < 0) {
       return 'Hace unos segundos';
     }
 
-    if (seconds < 60) {
-      return 'Hace unos segundos';
-    } else if (minutes < 60) {
-      return `Hace ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
-    } else if (hours < 24) {
-      return `Hace ${hours} hora${hours !== 1 ? 's' : ''}`;
-    } else if (days === 1) {
-      return 'Hace 1 día';
-    } else if (days < 30) {
-      return `Hace ${days} días`;
-    } else if (months < 12) {
-      return `Hace ${months} mes${months !== 1 ? 'es' : ''}`;
-    } else {
-      return `Hace ${years} año${years !== 1 ? 's' : ''}`;
-    }
+    // Convertir a diferentes unidades
+    const seconds = Math.floor(timeDiff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30.44); // Promedio más preciso de días por mes
+    const years = Math.floor(days / 365.25); // Incluye años bisiestos
+
+    return formatTimeString(seconds, minutes, hours, days, weeks, months, years);
 
   } catch (error) {
     console.error('Error parseando fecha:', error, dateString);
     return 'Fecha inválida';
+  }
+};
+
+// Función auxiliar para formatear el string de tiempo
+const formatTimeString = (seconds, minutes, hours, days, weeks, months, years) => {
+  if (seconds < 60) {
+    return 'Hace unos segundos';
+  } else if (minutes < 60) {
+    return `Hace ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+  } else if (hours < 24) {
+    return `Hace ${hours} hora${hours !== 1 ? 's' : ''}`;
+  } else if (days === 1) {
+    return 'Hace 1 día';
+  } else if (days < 7) {
+    return `Hace ${days} días`;
+  } else if (weeks === 1) {
+    return 'Hace 1 semana';
+  } else if (weeks < 4) {
+    return `Hace ${weeks} semanas`;
+  } else if (months === 1) {
+    return 'Hace 1 mes';
+  } else if (months < 12) {
+    return `Hace ${months} mes${months !== 1 ? 'es' : ''}`;
+  } else if (years === 1) {
+    return 'Hace 1 año';
+  } else {
+    return `Hace ${years} años`;
   }
 };
 
@@ -505,7 +536,7 @@ export default function PublicRequestsFeed() {
   }
 
   return (
-    <main className="container mx-auto p-3 sm:p-4 lg:p-6 bg-green-50 rounded-lg shadow-md max-w-7xl">
+    <main className="container mx-auto p-3 sm:p-4 lg:p-8 bg-green-50 rounded-lg shadow-md max-w-7xl">
       {/* Encabezado semántico */}
       <header className="mb-6 sm:mb-8 text-center">
         <h1 className="text-3xl font-extrabold text-gray-900 mt-5">
