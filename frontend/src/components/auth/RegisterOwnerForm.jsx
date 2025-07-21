@@ -106,7 +106,7 @@ export default function RegisterOwnerForm({ onSuccess }) {
         }
         
         // Navegar a la página correspondiente
-        navigate('/public');
+        navigate('/'); // Redirigir a HomePage personalizada
         
       } else {
         alert('Respuesta inesperada del servidor. Intenta nuevamente.');

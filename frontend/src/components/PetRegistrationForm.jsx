@@ -6,10 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ImageUploader from '@/components/ui/ImageUploader';
-
-// NOTA: Este componente está configurado en MODO SIMULADO
-// Las llamadas al backend están deshabilitadas para desarrollo
-// Cuando integres el backend, reemplaza la función onSubmit con las llamadas reales a la API
+import petsApi from '@/services/petsApi';
 
 // Constantes para el formulario
 const SPECIES_OPTIONS = [
@@ -59,7 +56,8 @@ const COMMON_BREEDS = {
 
 export default function PetRegistrationForm({ onSuccess, onCancel, initialData = null, mode = 'create' }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(initialData?.petPhoto || null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [originalImage] = useState(initialData?.petPhoto || null);
 
   const isEditMode = mode === 'edit' && initialData;
 
@@ -211,53 +209,61 @@ export default function PetRegistrationForm({ onSuccess, onCancel, initialData =
     setIsLoading(true);
     
     try {
-      // Simular delay de red
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Preparar FormData para enviar al backend
+      const formData = new FormData();
       
-      // Simular procesamiento de imagen
-      let imageUrl = null;
-      if (selectedImage) {
-        if (typeof selectedImage === 'string') {
-          // Si es una URL existente (modo edición)
-          imageUrl = selectedImage;
-        } else {
-          // Si es un archivo nuevo, simular subida
-          imageUrl = URL.createObjectURL(selectedImage);
-          console.log('Imagen simulada subida:', imageUrl);
-        }
+      // Agregar campos básicos
+      formData.append('petName', data.petName);
+      formData.append('species', data.species);
+      formData.append('breed', data.breed === 'Otro' ? data.customBreed : data.breed);
+      formData.append('age', parseInt(data.age));
+      formData.append('weight', parseFloat(data.weight));
+      formData.append('bloodType', data.bloodType);
+      formData.append('lastVaccination', data.lastVaccination);
+      formData.append('healthStatus', data.healthStatus);
+      
+      // Agregar imagen si existe
+      if (selectedImage && selectedImage instanceof File) {
+        formData.append('petPhoto', selectedImage);
+      } else if (isEditMode && originalImage && !selectedImage) {
+        // En modo edición, si no se seleccionó nueva imagen, mantener la original
+        formData.append('petPhoto', originalImage);
       }
       
-      // Preparar datos para el callback (simulando respuesta del backend)
-      const petData = {
-        ...(isEditMode && { id: initialData.id }),
-        id: isEditMode ? initialData.id : Date.now(), // ID simulado para nuevas mascotas
-        petName: data.petName,
-        species: data.species,
-        breed: data.breed === 'Otro' ? data.customBreed : data.breed,
-        age: parseInt(data.age),
-        weight: parseFloat(data.weight),
-        bloodType: data.bloodType,
-        lastVaccination: data.lastVaccination,
-        healthStatus: data.healthStatus,
-        petPhoto: imageUrl,
-        ...(isEditMode ? 
-          { updatedAt: new Date().toISOString() } : 
-          { registeredAt: new Date().toISOString() }
-        )
-      };
+      let response;
       
-      console.log(`${isEditMode ? 'Editando' : 'Registrando'} mascota (SIMULADO):`, petData);
+      if (isEditMode) {
+        // Actualizar mascota existente - pasar solo los datos del formulario, no el FormData completo
+        const updateData = {
+          petName: data.petName,
+          breed: data.breed === 'Otro' ? data.customBreed : data.breed,
+          age: parseInt(data.age),
+          weight: parseFloat(data.weight),
+          bloodType: data.bloodType,
+          lastVaccination: data.lastVaccination,
+          healthStatus: data.healthStatus
+        };
+        
+        // Si no hay imagen nueva, usar la función sin imagen para evitar problemas de CORS
+        if (selectedImage instanceof File) {
+          response = await petsApi.updatePet(initialData.id, updateData, selectedImage);
+        } else {
+          response = await petsApi.updatePetWithoutImage(initialData.id, updateData);
+        }
+      } else {
+        // Crear nueva mascota
+        response = await petsApi.createPet(formData);
+      }
       
-      // Simular éxito
-      alert(`¡Mascota ${isEditMode ? 'actualizada' : 'registrada'} exitosamente! (Modo simulado)`);
+
       
       if (onSuccess) {
-        onSuccess(petData);
+        onSuccess(response);
       }
       
     } catch (error) {
       console.error(`Error ${isEditMode ? 'actualizando' : 'registrando'} mascota:`, error);
-      alert(`Error al ${isEditMode ? 'actualizar' : 'registrar'} la mascota. Intenta nuevamente.`);
+      alert(`Error al ${isEditMode ? 'actualizar' : 'registrar'} la mascota: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -493,7 +499,7 @@ export default function PetRegistrationForm({ onSuccess, onCancel, initialData =
         </CardHeader>
         <CardContent>
           <ImageUploader
-            value={selectedImage}
+            value={isEditMode ? (selectedImage || originalImage) : selectedImage}
             onChange={setSelectedImage}
             accept="image/*"
             maxSize={2 * 1024 * 1024} // 2MB
@@ -523,6 +529,8 @@ export default function PetRegistrationForm({ onSuccess, onCancel, initialData =
           Cancelar
         </Button>
       </div>
+      
+
 
       {/* Información sobre campos obligatorios */}
       <p className="text-xs text-gray-500 text-center">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPets } from '@/hooks/useUserPets';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import PetSelectionModal from './PetSelectionModal';
 
 export default function DonationButton({ request, className = "", size = "sm" }) {
   const { isLoggedIn, userType, userData } = useAuth();
-  const { hasRegisteredPets, isLoading } = useUserPets();
+  const { hasRegisteredPets, isLoading, pets } = useUserPets();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,11 +69,11 @@ export default function DonationButton({ request, className = "", size = "sm" })
       };
 
       // Enviar la postulación al backend
-      const response = await fetch(`http://localhost:8001/base/api/solicitudes/${request.id}/postulaciones`, {
+      const response = await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${request.id}/postulaciones`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}` 
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` 
         },
         body: JSON.stringify(payload)
       });
@@ -106,7 +106,6 @@ export default function DonationButton({ request, className = "", size = "sm" })
       );
 
     } catch (error) {
-      console.error('Error al enviar postulación:', error);
       toast.error('Error al enviar la postulación. Intenta nuevamente.');
     } finally {
       setIsSubmitting(false);
@@ -129,7 +128,7 @@ export default function DonationButton({ request, className = "", size = "sm" })
   }
 
   // Mostrar botón deshabilitado si no tiene mascotas registradas
-  if (isLoggedIn && userType === 'owner' && !hasRegisteredPets) {
+  if (isLoggedIn && userType === 'owner' && !isLoading && !hasRegisteredPets) {
     return (
       <Button
         onClick={handleDonationClick}
@@ -177,6 +176,7 @@ export default function DonationButton({ request, className = "", size = "sm" })
         requiredSpecies={request.especie}
         requiredBreed={request.raza}
         requiredBloodType={request.tipo_sangre}
+        requiredWeight={request.peso_minimo}
         title={`Seleccionar mascota para ayudar a ${request.nombre_mascota}`}
         isSubmitting={isSubmitting}
       />

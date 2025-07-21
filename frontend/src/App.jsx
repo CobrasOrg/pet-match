@@ -6,6 +6,8 @@ import RequestDetailPage from './pages/RequestDetailPage'
 import PublicRequestsFeed from './pages/PublicRequestsPage'
 import RequestApplications from '@/pages/RequestApplicationsPage'
 import HomePage from '@/pages/HomePage'
+import AboutUsPage from '@/pages/AboutUsPage'
+import ContactUsPage from '@/pages/ContactUsPage'
 import Footer from '@/components/Footer'
 import { Toaster } from 'sonner'
 import RegisterPage from './pages/auth/RegisterPage'
@@ -31,6 +33,8 @@ const App = () => {
         <Routes>
           {/* Rutas públicas - accesibles para todos */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutUsPage />} />
+          <Route path="/contact" element={<ContactUsPage />} />
           
           {/* Rutas solo para usuarios NO autenticados */}
           <Route path="/register" element={

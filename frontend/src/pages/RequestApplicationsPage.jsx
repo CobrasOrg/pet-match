@@ -82,7 +82,11 @@ export default function RequestApplications() {
   const fetchApplications = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones`);
+      const res = await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${id}/postulaciones`, {
+        headers: {
+         'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+  }
+  });
       if (!res.ok) throw new Error('No se pudieron cargar las postulaciones');
       const data = await res.json();
       setApplications(data);
@@ -114,7 +118,12 @@ export default function RequestApplications() {
   // Obtener detalles de una postulación
   const handleViewProfile = async (application) => {
     try {
-      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${application.id}`);
+      const res = await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${id}/postulaciones/${application.id}`, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+    }
+  });
+
       if (!res.ok) throw new Error('No se pudo cargar la postulación');
       const data = await res.json();
       setSelectedApplication(data);
@@ -127,11 +136,14 @@ export default function RequestApplications() {
   // Cambiar estado usando PATCH
   const handleStatusChange = async (applicationId, newStatus) => {
     try {
-      const res = await fetch(`http://localhost:8001/base/api/solicitudes/${id}/postulaciones/${applicationId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
+    const res = await fetch(`https://postulaciones-api-production.up.railway.app/base/solicitudes/${id}/postulaciones/${applicationId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+      },
+      body: JSON.stringify({ status: newStatus })
+    });
       if (!res.ok) throw new Error('No se pudo actualizar el estado');
       await fetchApplications();
     } catch (err) {
